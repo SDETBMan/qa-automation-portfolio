@@ -1,0 +1,39 @@
+name: cucumber CI
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'cucumber/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'cucumber/**' ]
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: cucumber
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Uncomment the appropriate setup step once the stack is decided:
+      #
+      # Java / Cucumber-JVM:
+      # - uses: actions/setup-java@v4
+      #   with: { java-version: '17', distribution: 'temurin', cache: 'maven' }
+      # - run: mvn test
+      #
+      # JavaScript / Cucumber.js:
+      # - uses: actions/setup-node@v4
+      #   with: { node-version: '20' }
+      # - run: npm ci && npx cucumber-js
+
+      - name: Placeholder — framework not yet added
+        run: echo "cucumber framework coming soon"

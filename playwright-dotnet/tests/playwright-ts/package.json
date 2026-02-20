@@ -1,0 +1,16 @@
+{
+  "name": "playwright-ts",
+  "version": "1.0.0",
+  "description": "Playwright TypeScript test suite for SauceDemo — demonstrates fixtures, network interception, trace viewer, and cross-browser testing.",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:chromium": "npx playwright test --project=chromium",
+    "test:smoke": "npx playwright test --grep \"@smoke\" --project=chromium",
+    "test:headed": "npx playwright test --project=chromium --headed",
+    "report": "npx playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "typescript": "^5.4.0"
+  }
+}

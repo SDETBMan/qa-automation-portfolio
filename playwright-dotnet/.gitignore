@@ -1,0 +1,32 @@
+# Build outputs
+bin/
+obj/
+
+# Test results
+TestResults/
+allure-results/
+allure-report/
+
+# Playwright browser binaries (downloaded on demand)
+.playwright/
+
+# IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+# NuGet
+*.nupkg
+.nuget/
+
+# Environment overrides (may contain secrets)
+appsettings.local.json
+
+# TypeScript Playwright
+tests/playwright-ts/node_modules/
+tests/playwright-ts/playwright-report/
+tests/playwright-ts/test-results/
+
+# C# Playwright traces (attached to Allure; gitignore the raw files)
+traces/

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <TestRunParameters>
+    <Parameter name="browser"  value="chromium" />
+    <Parameter name="headless" value="true" />
+  </TestRunParameters>
+  <RunConfiguration>
+    <MaxCpuCount>4</MaxCpuCount>
+  </RunConfiguration>
+  <NUnit>
+    <NumberOfTestWorkers>4</NumberOfTestWorkers>
+  </NUnit>
+  <EnvironmentVariables>
+    <Variable name="PLAYWRIGHT_BROWSER"  value="chromium" />
+    <Variable name="PLAYWRIGHT_HEADLESS" value="true" />
+  </EnvironmentVariables>
+</RunSettings>

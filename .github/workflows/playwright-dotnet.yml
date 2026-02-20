@@ -1,0 +1,112 @@
+name: playwright-dotnet CI
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'playwright-dotnet/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'playwright-dotnet/**' ]
+  schedule:
+    # Run nightly at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: playwright-dotnet   # all run steps default to this directory
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore dependencies
+        run: dotnet restore PlaywrightDotNetFramework.sln
+
+      - name: Build solution
+        run: dotnet build PlaywrightDotNetFramework.sln --configuration Release --no-restore
+
+      - name: Install Playwright browsers
+        # npx uses the runner's pre-installed Node — no bundled binary issues.
+        # Microsoft.Playwright 1.44.* maps to npm playwright 1.44.0 (same Chromium build).
+        # --with-deps is omitted: Playwright 1.44 references libasound2 which was renamed
+        # to libasound2t64 in Ubuntu 24.04 (github ubuntu-latest), causing apt-get to fail.
+        # The ubuntu-24.04 runner ships all required Chromium system libs pre-installed.
+        run: npx --yes playwright@1.44.0 install chromium
+
+      - name: Run tests (CI settings)
+        run: >
+          dotnet test PlaywrightDotNetFramework.sln
+          --settings ci.runsettings
+          --configuration Release
+          --no-build
+          --logger "trx"
+          --logger "console;verbosity=normal"
+          --results-directory TestResults
+        env:
+          PLAYWRIGHT_HEADLESS: true
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: playwright-dotnet/allure-results/
+          retention-days: 30
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: playwright-dotnet/TestResults/
+          retention-days: 7
+
+      # ── TypeScript Playwright Tests ──────────────────────────────────────
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: playwright-dotnet/tests/playwright-ts/package-lock.json
+
+      - name: Install TypeScript dependencies
+        working-directory: playwright-dotnet/tests/playwright-ts
+        run: npm ci
+
+      - name: Install Playwright browsers (TypeScript)
+        working-directory: playwright-dotnet/tests/playwright-ts
+        run: npx playwright install chromium
+
+      - name: Run TypeScript Playwright tests
+        working-directory: playwright-dotnet/tests/playwright-ts
+        run: npx playwright test --project=chromium
+        env:
+          CI: 'true'
+          APP_USERNAME: standard_user
+          APP_PASSWORD: secret_sauce
+
+      - name: Upload TypeScript Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-ts-report
+          path: playwright-dotnet/tests/playwright-ts/playwright-report/
+          retention-days: 30
+
+      - name: Upload TypeScript traces (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-ts-traces
+          path: playwright-dotnet/tests/playwright-ts/test-results/
+          retention-days: 7

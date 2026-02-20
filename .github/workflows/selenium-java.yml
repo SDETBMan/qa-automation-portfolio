@@ -1,0 +1,46 @@
+name: selenium-java CI
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'selenium-java/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'selenium-java/**' ]
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: selenium-java
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Uncomment and configure once selenium-java framework is added:
+      # - name: Run tests
+      #   run: mvn test -Dsurefire.failIfNoSpecifiedTests=false
+      #
+      # - name: Upload Surefire reports
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: surefire-reports
+      #     path: selenium-java/target/surefire-reports/
+      #     retention-days: 30
+
+      - name: Placeholder — framework not yet added
+        run: echo "selenium-java framework coming soon"

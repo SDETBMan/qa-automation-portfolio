@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <TestRunParameters>
+    <!-- Playwright browser: chromium | firefox | webkit -->
+    <Parameter name="browser"  value="chromium" />
+    <Parameter name="headless" value="false" />
+  </TestRunParameters>
+  <RunConfiguration>
+    <MaxCpuCount>4</MaxCpuCount>
+  </RunConfiguration>
+  <NUnit>
+    <NumberOfTestWorkers>4</NumberOfTestWorkers>
+  </NUnit>
+  <!-- Playwright NUnit reads PLAYWRIGHT_BROWSER and PLAYWRIGHT_HEADLESS -->
+  <EnvironmentVariables>
+    <Variable name="PLAYWRIGHT_BROWSER"  value="chromium" />
+    <Variable name="PLAYWRIGHT_HEADLESS" value="false" />
+  </EnvironmentVariables>
+</RunSettings>
