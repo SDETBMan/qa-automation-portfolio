@@ -28,7 +28,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'maven'
+          # cache: 'maven'  ← re-enable once pom.xml exists in selenium-java/
 
       # Uncomment and configure once selenium-java framework is added:
       # - name: Run tests
