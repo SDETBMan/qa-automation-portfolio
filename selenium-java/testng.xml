@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Local Development Suite" parallel="tests" thread-count="4">
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.framework.listeners.TestListener"/>
+        <listener class-name="com.framework.utils.AnnotationTransformer"/>
+    </listeners>
+
+    <test name="Web - Smoke &amp; Regression">
+        <parameter name="browser" value="chrome" />
+        <parameter name="headless" value="false" />
+        <groups>
+            <run>
+                <include name="smoke" />
+                <include name="regression" />
+            </run>
+        </groups>
+        <classes>
+            <class name="com.framework.tests.LoginTest" />
+            <class name="com.framework.tests.DashboardTest" />
+            <class name="com.framework.tests.AddToCartTest" />
+        </classes>
+    </test>
+
+    <test name="Sanity">
+        <parameter name="browser" value="chrome" />
+        <parameter name="headless" value="false" />
+        <groups>
+            <run>
+                <include name="sanity" />
+            </run>
+        </groups>
+        <classes>
+            <class name="com.framework.tests.SanityTest" />
+        </classes>
+    </test>
+
+    <test name="API &amp; Integration">
+        <parameter name="browser" value="chrome" />
+        <parameter name="headless" value="false" />
+        <classes>
+            <class name="com.framework.api.UserApiTest" />
+        </classes>
+    </test>
+
+    <test name="Unit">
+        <parameter name="browser" value="chrome" />
+        <parameter name="headless" value="false" />
+        <groups>
+            <run>
+                <include name="unit" />
+            </run>
+        </groups>
+        <classes>
+            <class name="com.framework.unit.FrameworkUnitTest" />
+            <class name="com.framework.unit.StringUtilsTest" />
+            <class name="com.framework.unit.LoginServiceTest" />
+        </classes>
+    </test>
+</suite>

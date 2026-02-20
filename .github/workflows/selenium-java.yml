@@ -10,6 +10,22 @@ on:
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
+    inputs:
+      test_browser:
+        description: 'Browser to run tests on'
+        required: false
+        default: 'chrome'
+        type: choice
+        options: [ chrome, firefox, edge ]
+      test_suite:
+        description: 'TestNG suite XML file'
+        required: false
+        default: 'testng.xml'
+      run_performance:
+        description: 'Run JMeter performance tests'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   test:
@@ -28,19 +44,37 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          # cache: 'maven'  ← re-enable once pom.xml exists in selenium-java/
+          # cache: 'maven'  ← re-enable once pom.xml is stable (needs pom.xml to fingerprint)
 
-      # Uncomment and configure once selenium-java framework is added:
-      # - name: Run tests
-      #   run: mvn test -Dsurefire.failIfNoSpecifiedTests=false
-      #
-      # - name: Upload Surefire reports
-      #   if: always()
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: surefire-reports
-      #     path: selenium-java/target/surefire-reports/
-      #     retention-days: 30
+      - name: Run TestNG suite
+        run: >
+          mvn clean test
+          -Dbrowser=${{ github.event.inputs.test_browser || 'chrome' }}
+          -Dheadless=true
+          -Dexecution_mode=local
+          -DsuiteXmlFile=${{ github.event.inputs.test_suite || 'testng.xml' }}
+          -Dgroups=smoke,regression
+        env:
+          SAUCE_USERNAME:    ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY:  ${{ secrets.SAUCE_ACCESS_KEY }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-      - name: Placeholder — framework not yet added
-        run: echo "selenium-java framework coming soon"
+      - name: Run JMeter performance tests
+        if: ${{ github.event.inputs.run_performance == 'true' }}
+        run: mvn jmeter:jmeter
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-java-allure-results
+          path: selenium-java/target/allure-results/
+          retention-days: 30
+
+      - name: Upload Surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-java-surefire-reports
+          path: selenium-java/target/surefire-reports/
+          retention-days: 7

@@ -28,6 +28,14 @@ test-results/
 *.suo
 .vscode/
 
+# ── Mobile app binaries (large; download on demand) ──────────────────────────
+*.apk
+*.ipa
+*.app
+
+# ── Claude Code local settings ────────────────────────────────────────────────
+.claude/
+
 # ── Environment overrides (may contain secrets) ───────────────────────────────
 appsettings.local.json
 .env

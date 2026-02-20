@@ -1,0 +1,29 @@
+# --- .gitignore (Root) ---
+
+# 1. SECURITY (Crucial)
+.env
+secret.properties
+
+# 2. Build & Compilation
+target/
+out/
+build/
+.mvn/
+
+# 3. IDE Files (Ignore the entire folder so the inner gitignore doesn't matter)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# 4. Allure Reports
+.allure/
+target/allure-results/
+allure-report/
+
+# 5. OS Generated Files
+.DS_Store
+Thumbs.db
+
+# 6. Logs
+*.log

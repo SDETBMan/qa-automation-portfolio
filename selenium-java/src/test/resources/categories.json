@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Product Defects",
+    "matchedStatuses": ["failed"]
+  },
+  {
+    "name": "Test Infrastructure / Flakiness",
+    "matchedStatuses": ["broken"],
+    "messageRegex": ".*timeout.*|.*session.*|.*driver.*"
+  },
+  {
+    "name": "Healenium / Self-Healing Success",
+    "matchedStatuses": ["passed"],
+    "messageRegex": ".*Standard click failed.*"
+  }
+]

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Mobile Automation Suite" parallel="tests" thread-count="1">
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.framework.listeners.TestListener"/>
+        <listener class-name="com.framework.utils.AnnotationTransformer"/>
+    </listeners>
+
+    <test name="Mobile - iOS (iPhone 15)">
+        <parameter name="browser" value="ios" />
+        <parameter name="headless" value="false" />
+        <parameter name="deviceName" value="iPhone 15" />
+        <classes>
+            <class name="com.framework.tests.LoginTest" />
+        </classes>
+    </test>
+
+    <test name="Mobile - Android (Pixel)">
+        <parameter name="browser" value="android" />
+        <parameter name="headless" value="false" />
+        <parameter name="deviceName" value="Pixel_7_Pro" />
+        <classes>
+            <class name="com.framework.tests.LoginTest" />
+        </classes>
+    </test>
+</suite>

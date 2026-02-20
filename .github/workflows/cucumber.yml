@@ -10,6 +10,11 @@ on:
   schedule:
     - cron: '0 4 * * *'
   workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Cucumber tag filter (e.g. @smoke, @regression, @login)'
+        required: false
+        default: '@smoke or @regression'
 
 jobs:
   test:
@@ -23,17 +28,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Uncomment the appropriate setup step once the stack is decided:
-      #
-      # Java / Cucumber-JVM:
-      # - uses: actions/setup-java@v4
-      #   with: { java-version: '17', distribution: 'temurin', cache: 'maven' }
-      # - run: mvn test
-      #
-      # JavaScript / Cucumber.js:
-      # - uses: actions/setup-node@v4
-      #   with: { node-version: '20' }
-      # - run: npm ci && npx cucumber-js
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Placeholder — framework not yet added
-        run: echo "cucumber framework coming soon"
+      - name: Run Cucumber tests
+        run: >
+          mvn clean test
+          -Dheadless=true
+          -Dcucumber.filter.tags="${{ github.event.inputs.tags || '@smoke or @regression' }}"
+        env:
+          APP_USERNAME: standard_user
+          APP_PASSWORD: secret_sauce
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-allure-results
+          path: cucumber/target/allure-results/
+          retention-days: 30
+
+      - name: Upload Cucumber HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-html-report
+          path: cucumber/target/cucumber-reports/
+          retention-days: 7

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Grid Execution Suite" parallel="tests" thread-count="3">
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.framework.listeners.TestListener"/>
+        <listener class-name="com.framework.utils.AnnotationTransformer"/>
+    </listeners>
+
+    <test name="Grid - Chrome">
+        <parameter name="browser" value="chrome" />
+        <parameter name="headless" value="true" />
+        <classes>
+            <class name="com.framework.tests.LoginTest" />
+            <class name="com.framework.tests.DashboardTest" />
+            <class name="com.framework.tests.AddToCartTest" />
+        </classes>
+    </test>
+
+    <test name="Grid - Firefox">
+        <parameter name="browser" value="firefox" />
+        <parameter name="headless" value="true" />
+        <classes>
+            <class name="com.framework.tests.LoginTest" />
+            <class name="com.framework.tests.DashboardTest" />
+            <class name="com.framework.tests.AddToCartTest" />
+        </classes>
+    </test>
+
+    <test name="Grid - Edge">
+        <parameter name="browser" value="edge" />
+        <parameter name="headless" value="true" />
+        <classes>
+            <class name="com.framework.tests.LoginTest" />
+        </classes>
+    </test>
+</suite>
