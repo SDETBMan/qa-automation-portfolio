@@ -44,7 +44,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          # cache: 'maven'  ← re-enable once pom.xml is stable (needs pom.xml to fingerprint)
+          cache: 'maven'
 
       - name: Run TestNG suite
         run: >

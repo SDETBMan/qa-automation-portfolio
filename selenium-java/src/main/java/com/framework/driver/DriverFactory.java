@@ -42,7 +42,8 @@ public class DriverFactory {
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--remote-allow-origins=*");
         if (isHeadless) {
-            chromeOptions.addArguments("--headless=new", "--window-size=1920,1080");
+            chromeOptions.addArguments("--headless=new", "--no-sandbox",
+                    "--disable-dev-shm-usage", "--window-size=1920,1080");
         }
 
         FirefoxOptions firefoxOptions = new FirefoxOptions();

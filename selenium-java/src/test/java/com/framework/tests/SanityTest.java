@@ -35,6 +35,8 @@ public class SanityTest {
             // 1. Setup Options (Headless for CI stability)
             ChromeOptions options = new ChromeOptions();
             options.addArguments("--headless=new");
+            options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
             options.addArguments("--remote-allow-origins=*");
 
             // 2. Direct Driver Launch (Uses Selenium Manager built-in to 4.x)
