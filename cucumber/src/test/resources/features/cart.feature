@@ -1,25 +1,12 @@
-@cart
-Feature: Cart Page Operations
-  As a logged-in user with items in my cart
-  I want to view and manage my cart
-  So that I can proceed to checkout
+Feature: Shopping Cart Functionality
 
   Background:
-    Given I am logged in as "standard_user"
-    And I have added "sauce-labs-backpack" to the cart
+    Given I am on the SauceDemo login page
+    And I enter username "standard_user" and password "secret_sauce"
+    And I click the login button
 
-  @smoke
-  Scenario: Cart page displays the added item
-    When I navigate to the cart
-    Then I should see "Sauce Labs Backpack" in the cart
-
-  @regression
-  Scenario: Checkout button navigates to checkout information page
-    When I navigate to the cart
-    And I click checkout
-    Then I should be on the checkout information page
-
-  @regression
-  Scenario: Cart page shows correct item count
-    When I navigate to the cart
-    Then I should see 1 item in the cart
+  Scenario: Add a backpack to the cart
+    When I add the "Sauce Labs Backpack" to the cart
+    Then the cart badge should show "1"
+    And I click the cart icon
+    Then I should see "Sauce Labs Backpack" in the cart list

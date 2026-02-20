@@ -11,10 +11,33 @@ on:
     - cron: '0 4 * * *'
   workflow_dispatch:
     inputs:
-      tags:
-        description: 'Cucumber tag filter (e.g. @smoke, @regression, @login)'
-        required: false
-        default: '@smoke or @regression'
+      execution_mode:
+        description: 'Execution Environment'
+        required: true
+        default: 'local'
+        type: choice
+        options:
+          - local
+          - grid
+          - browserstack
+          - android
+          - ios
+      test_browser:
+        description: 'Browser (local/grid only)'
+        required: true
+        default: 'chrome'
+        type: choice
+        options:
+          - chrome
+          - firefox
+          - edge
+      run_performance:
+        description: 'Run JMeter Performance Tests?'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
 
 jobs:
   test:
@@ -23,6 +46,9 @@ jobs:
     defaults:
       run:
         working-directory: cucumber
+
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     steps:
       - name: Checkout code
@@ -33,29 +59,96 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'maven'
+          cache: maven
 
-      - name: Run Cucumber tests
-        run: >
-          mvn clean test
-          -Dheadless=true
-          -Dcucumber.filter.tags="${{ github.event.inputs.tags || '@smoke or @regression' }}"
-        env:
-          APP_USERNAME: standard_user
-          APP_PASSWORD: secret_sauce
+      # ── Web Tests: Headless Chrome (auto-runs on push/PR/schedule) ──────
+      - name: Run Cucumber Tests (Headless - CI)
+        if: github.event_name != 'workflow_dispatch' || inputs.execution_mode == 'local'
+        run: mvn clean test -Dheadless=true -Dbrowser=${{ github.event.inputs.test_browser || 'chrome' }}
 
+      # ── Web Tests: Selenium Grid ─────────────────────────────────────────
+      - name: Start Selenium Grid
+        if: github.event_name == 'workflow_dispatch' && inputs.execution_mode == 'grid'
+        run: docker compose up -d selenium-hub chrome firefox edge
+
+      - name: Run Cucumber Tests (Grid)
+        if: github.event_name == 'workflow_dispatch' && inputs.execution_mode == 'grid'
+        run: |
+          mvn clean test \
+            -Dtarget=grid \
+            -Dbrowser=${{ inputs.test_browser }} \
+            -Dgrid_url=http://localhost:4444/wd/hub \
+            -Dheadless=true
+
+      # ── Cloud: BrowserStack ──────────────────────────────────────────────
+      - name: Run Cucumber Tests (BrowserStack)
+        if: github.event_name == 'workflow_dispatch' && inputs.execution_mode == 'browserstack'
+        run: mvn clean test -Dtarget=browserstack -Dbs_user=${{ secrets.BS_USER }} -Dbs_key=${{ secrets.BS_KEY }}
+
+      # ── Mobile: Android ──────────────────────────────────────────────────
+      - name: Run Cucumber Tests (Android)
+        if: github.event_name == 'workflow_dispatch' && inputs.execution_mode == 'android'
+        run: mvn clean test -Dtarget=android
+
+      # ── Mobile: iOS ──────────────────────────────────────────────────────
+      - name: Run Cucumber Tests (iOS)
+        if: github.event_name == 'workflow_dispatch' && inputs.execution_mode == 'ios'
+        run: mvn clean test -Dtarget=ios
+
+      # ── Performance (optional) ───────────────────────────────────────────
+      - name: Run JMeter Performance Tests
+        if: github.event_name == 'workflow_dispatch' && inputs.run_performance == true
+        run: mvn jmeter:jmeter
+
+      # ── Artifacts & Reporting ────────────────────────────────────────────
       - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cucumber-allure-results
           path: cucumber/target/allure-results/
-          retention-days: 30
+          retention-days: 7
 
-      - name: Upload Cucumber HTML report
+      - name: Build Allure Report
+        if: always()
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: cucumber/target/allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+
+      - name: Deploy Allure Report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+
+      - name: Upload Extent Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cucumber-html-report
-          path: cucumber/target/cucumber-reports/
+          name: cucumber-extent-report
+          path: cucumber/target/spark-reports/
           retention-days: 7
+
+      # ── Notifications ────────────────────────────────────────────────────
+      - name: Send Email Notification on Failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "Test Notification Failure: ${{ github.repository }}"
+          to: brian.padgett11@outlook.com
+          from: ${{ secrets.EMAIL_USERNAME }}
+          body: |
+            Build Status: ${{ job.status }}
+
+            Commit: ${{ github.sha }}
+            View logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

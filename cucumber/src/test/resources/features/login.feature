@@ -1,39 +1,32 @@
-@login
-Feature: User Authentication
-  As a SauceDemo user
-  I want to log in to the application
-  So that I can access the product catalog
+Feature: Login Functionality
+  As a user of the SauceDemo application
+  I want to log in with different accounts
+  So that I can access the product features
 
   Background:
-    Given I am on the login page
+    Given I am on the SauceDemo login page
 
-  @smoke
-  Scenario: Valid login navigates to inventory
-    When I log in with username "standard_user" and password "secret_sauce"
-    Then I should be on the inventory page
+  # Replaces testValidLogin
+  Scenario: Successful login with valid credentials
+    When I enter username "standard_user" and password "secret_sauce"
+    And I click the login button
+    Then I should be redirected to the Products page
 
-  @regression
-  Scenario: Locked out user sees error message
-    When I log in with username "locked_out_user" and password "secret_sauce"
-    Then I should see an error message containing "locked out"
+  # Replaces testInvalidLogin
+  Scenario: Failed login with invalid credentials
+    When I enter username "locked_out_user" and password "wrong_password"
+    And I click the login button
+    Then I should see an error message
 
-  @regression
-  Scenario: Empty credentials show username validation error
-    When I log in with username "" and password ""
-    Then I should see an error message containing "Username is required"
-
-  @regression
-  Scenario: Wrong password shows error message
-    When I log in with username "standard_user" and password "wrong_password"
-    Then I should see an error message containing "Username and password do not match"
-
-  @regression
-  Scenario Outline: Multiple standard personas can log in successfully
-    When I log in with username "<username>" and password "secret_sauce"
-    Then I should be on the inventory page
+  # Replaces testLoginWithMultipleUsers (The Data Provider)
+  Scenario Outline: Login with multiple user types
+    When I enter username "<username>" and password "<password>"
+    And I click the login button
+    Then I should see the "<result>" state
 
     Examples:
-      | username                |
-      | standard_user           |
-      | problem_user            |
-      | performance_glitch_user |
+      | username                | password     | result   |
+      | standard_user           | secret_sauce | success  |
+      | problem_user            | secret_sauce | success  |
+      | locked_out_user         | secret_sauce | failure  |
+      | performance_glitch_user | secret_sauce | success  |

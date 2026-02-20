@@ -1,0 +1,15 @@
+# IntelliJ specific configuration files
+.idea/
+*.iml
+
+# Maven build output (compiled code)
+target/
+
+# TestNG reports
+test-output/
+
+# Mac OS clutter (just in case)
+.DS_Store
+
+# Logs
+logs/

@@ -1,0 +1,89 @@
+version: '3'
+services:
+
+  # ============================================================
+  # 1. TEST RUNNER  (the framework itself)
+  # ============================================================
+  test-runner:
+    build: .
+    container_name: cucumber-test-runner
+    depends_on:
+      - selenium-hub
+      - hlm-backend
+    environment:
+      - target=grid
+      - grid_url=http://selenium-hub:4444/wd/hub
+      - headless=true
+
+  # ============================================================
+  # 2. SELENIUM GRID  (cross-browser infrastructure)
+  # ============================================================
+  selenium-hub:
+    image: selenium/hub:4.16.1
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+      - "4442:4442"
+      - "4443:4443"
+
+  chrome:
+    image: selenium/node-chrome:4.16.1
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  firefox:
+    image: selenium/node-firefox:4.16.1
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  edge:
+    image: selenium/node-edge:4.16.1
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  # ============================================================
+  # 3. HEALENIUM  (self-healing brain + backend services)
+  # ============================================================
+  postgres-db:
+    image: postgres:12-alpine
+    container_name: postgres-db
+    environment:
+      - POSTGRES_USER=healenium_user
+      - POSTGRES_PASSWORD=healenium_pass
+      - POSTGRES_DB=healenium_db
+    ports:
+      - "5432:5432"
+
+  hlm-backend:
+    image: healenium/hlm-backend:3.3.0
+    container_name: hlm-backend
+    ports:
+      - "7878:7878"
+    depends_on:
+      - postgres-db
+    environment:
+      - POSTGRES_HOST=postgres-db
+      - POSTGRES_DB=healenium_db
+      - POSTGRES_USER=healenium_user
+      - POSTGRES_PASSWORD=healenium_pass
+
+  hlm-selector-imitator:
+    image: healenium/hlm-selector-imitator:1.0.2
+    container_name: hlm-selector-imitator
+    ports:
+      - "8000:8000"
