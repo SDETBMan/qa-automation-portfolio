@@ -30,14 +30,13 @@ A monorepo housing three independent, production-grade test automation framework
 | **BDD / Gherkin** | — | — | ✅ 5 feature files · 16+ scenarios |
 | **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline |
 | **REST API testing** | ✅ `HttpClient` | ✅ RestAssured | ✅ RestAssured |
-| **Network interception** | ✅ 4 patterns (C# + TS) | — | — |
-| **Trace viewer** | ✅ `retain-on-failure` | — | — |
-| **Self-healing locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 |
+| **Mocking & Service Virtualization** | ✅ 4 patterns — block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — |
+| **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`) — DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages |
+| **AI/ML Self-Healing Locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 |
 | **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS |
 | **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin |
 | **Database validation** | — | ✅ JDBC / MySQL | ✅ JDBC / MySQL |
 | **Containerized infra** | — | ✅ Docker Compose | ✅ Docker Compose |
-| **Allure reporting** | ✅ GitHub Pages | ✅ | ✅ GitHub Pages |
 | **Slack notifications** | — | ✅ Webhook | ✅ Webhook |
 | **GitHub Actions CI** | ✅ | ✅ | ✅ |
 
@@ -64,6 +63,10 @@ make all
 **Prerequisites:** [Java 17](https://adoptium.net) · [Maven 3.9+](https://maven.apache.org)
 
 ```bash
+# From the repo root
+make selenium
+
+# Or manually
 cd selenium-java
 
 # Headless Chrome (default)
@@ -85,6 +88,10 @@ mvn jmeter:jmeter
 **Prerequisites:** [Java 17](https://adoptium.net) · [Maven 3.9+](https://maven.apache.org)
 
 ```bash
+# From the repo root
+make cucumber
+
+# Or manually
 cd cucumber
 
 # Headless Chrome (default)
@@ -121,12 +128,14 @@ qa-automation-portfolio/
 ├── selenium-java/                  # Selenium 4 · TestNG · Java · Maven
 │   ├── src/main/java/              # Page objects, driver factory, utilities
 │   ├── src/test/java/              # Tests, listeners, unit tests
-│   └── testng.xml
+│   ├── testng.xml                  # Web · API · Unit suites
+│   └── testng_mobile.xml           # Android & iOS Appium suites
 ├── cucumber/                       # Cucumber 7 · TestNG · Selenium 4 · Java
 │   ├── src/main/java/              # Utilities: ConfigReader, RetryAnalyzer, SlackUtils
 │   ├── src/test/java/              # Step definitions, runners, page objects
 │   ├── src/test/resources/features/
 │   └── docker-compose.yaml
+├── Makefile                            # One-command runner for all three suites
 ├── .gitignore
 └── README.md
 ```

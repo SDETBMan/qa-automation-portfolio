@@ -145,6 +145,40 @@ Generate & View Report:
 
 * ### Benefit: Tests cover edge cases (long strings, special chars) that hardcoded data misses.
 
+## Mobile Testing (Appium)
+
+The mobile and web tests share the **same page object classes**. Each page detects the active driver at runtime and initialises the correct locator strategy — no duplication, no separate mobile-only test hierarchy.
+
+```java
+// Example: LoginPage.java — runtime locator selection
+boolean isNativeMobile = (driver instanceof AndroidDriver) || (driver instanceof IOSDriver);
+if (isNativeMobile) {
+    usernameField = AppiumBy.accessibilityId("test-Username");  // native app
+} else {
+    usernameField = By.id("user-name");                         // web
+}
+```
+
+**Where the implementation lives:**
+
+| Component | File | Purpose |
+|:---|:---|:---|
+| Mobile driver setup | `src/main/java/.../driver/DriverFactory.java` | Creates `AndroidDriver` / `IOSDriver` with `UiAutomator2Options` / `XCUITestOptions` capabilities |
+| Thread-safe driver | `src/main/java/.../driver/DriverManager.java` | `ThreadLocal` isolation — mobile and web tests run in parallel without contention |
+| Polymorphic page objects | `src/main/java/.../pages/LoginPage.java` `CartPage.java` `DashboardPage.java` | Dual locator sets per class — `AppiumBy.accessibilityId()` for native, `By.*` for web |
+| Mobile test suite | `testng_mobile.xml` | TestNG suite: Android (Pixel 8 / UiAutomator2) + iOS (iPhone 15 / XCUITest), `thread-count="1"` |
+| App binaries | `src/test/resources/apps/` | `.apk` (Android) · `.ipa` (iOS real device) · `.app` (iOS Simulator) — bundled in-repo, no download required |
+| Device config | `src/test/resources/config.properties` | `appium_url`, `android_device_name`, `ios_device_name`, `ios_version` |
+
+**Run the mobile suite:**
+```bash
+# Android or iOS (Appium must be running on port 4723, AVD/Simulator booted)
+mvn clean test -Pmobile
+
+# Or target the suite file directly
+mvn clean test -Dsurefire.suiteXmlFiles=testng_mobile.xml
+```
+
 ## 📂 Project Structure
 
 The framework follows a modular, scalable architecture designed for hybrid (Web + Mobile + API) automation.
