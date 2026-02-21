@@ -96,10 +96,13 @@ public class InventoryPage extends BasePage {
         // Use the same ID pattern as addToCart — reliable, no XPath traversal
         String formattedName = productName.toLowerCase().replace(" ", "-");
         By removeButton = By.id("remove-" + formattedName);
+        By addButton    = By.id("add-to-cart-" + formattedName);
 
         click(removeButton, "Remove Button: " + productName);
-        // No DOM-invisibility wait here — getCartItemCount() is now a direct find (no timeout),
-        // so the test assertion catches the zero state immediately without a 20s hang.
+
+        // Wait for the Add button to reappear — mirrors addToCart's waitForVisibility(removeButton)
+        // and confirms the DOM has committed the removal before getCartItemCount() reads it.
+        waitForVisibility(addButton);
     }
 
     public CartPage goToCart() {
