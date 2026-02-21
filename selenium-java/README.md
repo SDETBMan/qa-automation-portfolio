@@ -10,8 +10,6 @@
 A production-grade, thread-safe automation framework built with **Java, Selenium, Appium, and TestNG**.
 Designed for stability, scalability, and modern CI/CD pipelines, featuring **Self-Healing** capabilities and **AI-driven** test data generation.
 
-[![Master Regression Suite](https://github.com/SDETBMan/SeleniumPOMFramework/actions/workflows/regression.yml/badge.svg)](https://github.com/SDETBMan/SeleniumPOMFramework/actions/workflows/regression.yml)
-
 ## Key Features
 
 * **Hybrid Execution:** Unified framework supporting **Web** (Chrome, Firefox, Edge) and **Mobile** (Android/Appium) in a single suite.
