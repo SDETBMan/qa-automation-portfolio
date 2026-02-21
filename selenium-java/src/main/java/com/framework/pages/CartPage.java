@@ -43,17 +43,9 @@ public class CartPage extends BasePage {
      * Triggers the checkout flow.
      */
     public void clickCheckout() {
-        waitForVisibility(checkoutButton);
-        // Standard click
-        click(checkoutButton, "Checkout Button");
-
-        // Sync check: Did we actually move?
-        boolean moved = waitForUrlToContain("checkout-step-one");
-
-        // Fallback if the UI is stuck
-        if (!moved) {
-            System.out.println("[WARN] Standard Checkout click failed. Forcing JS click.");
-            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", driver.findElement(checkoutButton));
-        }
+        WebElement element = wait.until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(checkoutButton));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
+        System.out.println("[WEB-ACTION] Force Clicking Checkout Button");
+        waitForUrlToContain("checkout-step-one");
     }
 }
