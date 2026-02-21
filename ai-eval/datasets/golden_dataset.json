@@ -1,0 +1,72 @@
+[
+  {
+    "id": "q1",
+    "question": "How much does the Sauce Labs Backpack cost?",
+    "expected_output": "The Sauce Labs Backpack costs $29.99.",
+    "category": "product_pricing",
+    "tags": ["smoke"]
+  },
+  {
+    "id": "q2",
+    "question": "What are the steps to complete a purchase on Swag Labs?",
+    "expected_output": "To complete a purchase, add items to your cart, click the cart icon, click Checkout, enter your First Name, Last Name, and Zip/Postal Code, review the order summary, and click Finish.",
+    "category": "checkout_process",
+    "tags": ["smoke"]
+  },
+  {
+    "id": "q3",
+    "question": "What is the return policy at Swag Labs?",
+    "expected_output": "Swag Labs offers a 30-day return policy. Items must be in original condition with original packaging and a receipt is required. Refunds are processed in 5-7 business days. Sale items are final sale.",
+    "category": "return_policy",
+    "tags": ["regression"]
+  },
+  {
+    "id": "q4",
+    "question": "Why can't the locked_out_user log in?",
+    "expected_output": "The locked_out_user account is locked and does not have permission to log in to Swag Labs.",
+    "category": "account_types",
+    "tags": ["regression"]
+  },
+  {
+    "id": "q5",
+    "question": "Does Swag Labs offer free shipping?",
+    "expected_output": "Yes, standard shipping is free on all Swag Labs orders. Expedited shipping is available for $9.99 and overnight shipping for $19.99.",
+    "category": "shipping",
+    "tags": ["smoke"]
+  },
+  {
+    "id": "q6",
+    "question": "What is the most expensive product at Swag Labs?",
+    "expected_output": "The most expensive product is the Sauce Labs Fleece Jacket at $49.99.",
+    "category": "product_pricing",
+    "tags": ["regression"]
+  },
+  {
+    "id": "q7",
+    "question": "What personal information is required during checkout?",
+    "expected_output": "During checkout, you need to enter your First Name, Last Name, and Zip/Postal Code.",
+    "category": "checkout_process",
+    "tags": ["smoke"]
+  },
+  {
+    "id": "q8",
+    "question": "Is the Sauce Labs Onesie suitable for adults?",
+    "expected_output": "No, the Sauce Labs Onesie is a rib snap infant onesie designed for babies, described as being for the junior automation engineer in development.",
+    "category": "product_catalog",
+    "tags": ["regression"]
+  },
+  {
+    "id": "q9",
+    "question": "How long does standard shipping take?",
+    "expected_output": "Standard shipping takes 5-7 business days. Orders are processed within 1-2 business days after purchase.",
+    "category": "shipping",
+    "tags": ["regression"]
+  },
+  {
+    "id": "q10",
+    "question": "What password do all Swag Labs test accounts use?",
+    "expected_output": "All Swag Labs test accounts use the password: secret_sauce.",
+    "category": "account_types",
+    "tags": ["regression"]
+  }
+]
