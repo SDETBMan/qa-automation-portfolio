@@ -93,15 +93,19 @@ public class InventoryPage extends BasePage {
     }
 
     public void removeFromCart(String productName) {
-        // Use the same ID pattern as addToCart — reliable, no XPath traversal
         String formattedName = productName.toLowerCase().replace(" ", "-");
         By removeButton = By.id("remove-" + formattedName);
         By addButton    = By.id("add-to-cart-" + formattedName);
 
-        click(removeButton, "Remove Button: " + productName);
+        // JS click — same approach as addToCart for CI/headless reliability.
+        // BasePage.click() uses Actions.moveToElement() which can scroll or intercept
+        // in headless Chrome, causing the standard click to miss silently.
+        WebElement element = wait.until(ExpectedConditions.elementToBeClickable(removeButton));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
+        System.out.println("[WEB-ACTION] Force Clicking Remove from Cart: " + productName);
 
-        // Wait for the Add button to reappear — mirrors addToCart's waitForVisibility(removeButton)
-        // and confirms the DOM has committed the removal before getCartItemCount() reads it.
+        // Confirm DOM state change before caller reads cart count.
+        // Mirrors addToCart's waitForVisibility(removeButton).
         waitForVisibility(addButton);
     }
 
