@@ -22,10 +22,16 @@ from deepeval.test_case import LLMTestCase
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets" / "golden_dataset.json"
 with open(DATASET_PATH) as f:
-    DATASET = json.load(f)
+    _raw = json.load(f)
+
+# Convert dataset tags → pytest marks so `-m smoke` / `-m regression` work
+DATASET = [
+    pytest.param(c, id=c["id"], marks=[getattr(pytest.mark, t) for t in c.get("tags", [])])
+    for c in _raw
+]
 
 
-@pytest.mark.parametrize("case", DATASET, ids=[c["id"] for c in DATASET])
+@pytest.mark.parametrize("case", DATASET)
 def test_answer_relevancy(case, retriever, answer_generator):
     """
     RAG pipeline flow:

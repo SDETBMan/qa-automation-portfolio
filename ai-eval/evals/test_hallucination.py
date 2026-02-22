@@ -25,16 +25,23 @@ from deepeval.test_case import LLMTestCase
 
 DATASET_PATH = Path(__file__).parent.parent / "datasets" / "golden_dataset.json"
 with open(DATASET_PATH) as f:
-    DATASET = json.load(f)
+    _raw = json.load(f)
+
+DATASET = [
+    pytest.param(c, id=c["id"], marks=[getattr(pytest.mark, t) for t in c.get("tags", [])])
+    for c in _raw
+]
 
 
-@pytest.mark.parametrize("case", DATASET, ids=[c["id"] for c in DATASET])
+@pytest.mark.parametrize("case", DATASET)
 def test_hallucination(case, retriever, answer_generator):
     """
     Asserts the generated answer does not state facts that directly
-    contradict the retrieved FAQ content.
+    contradict the most relevant FAQ chunk. Using n_results=1 scopes the
+    check to the single most relevant source — the metric judges contradiction,
+    not completeness, so a focused context avoids false positives.
     """
-    context = retriever(case["question"])
+    context = retriever(case["question"], n_results=1)
     actual_output = answer_generator(case["question"], context)
 
     test_case = LLMTestCase(
