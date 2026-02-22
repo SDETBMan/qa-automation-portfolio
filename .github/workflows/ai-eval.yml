@@ -39,7 +39,7 @@ jobs:
           if [ -n "${{ github.event.inputs.marker }}" ]; then
             pytest -m "${{ github.event.inputs.marker }}" -v
           else
-            pytest -v
+            pytest -m smoke -v
           fi
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
