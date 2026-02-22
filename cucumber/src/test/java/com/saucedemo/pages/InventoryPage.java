@@ -50,8 +50,10 @@ public class InventoryPage extends BasePage {
 
     public void removeFromCart(String productName) {
         String formattedName = productName.toLowerCase().replace(" ", "-");
-        By addButton = By.id("add-to-cart-" + formattedName);
-        click(By.id("remove-" + formattedName));
+        By addButton    = By.id("add-to-cart-" + formattedName);
+        By removeButton = By.id("remove-" + formattedName);
+        WebElement element = wait.until(ExpectedConditions.elementToBeClickable(removeButton));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
         // Wait for "Add to Cart" to reappear — confirms DOM has updated before getCartItemCount() is called
         wait.until(ExpectedConditions.visibilityOfElementLocated(addButton));
     }
