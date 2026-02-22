@@ -43,7 +43,6 @@ A monorepo housing three independent, production-grade test automation framework
 | **GitHub Actions CI** | ✅ | ✅ | ✅ | ✅ |
 | **Agentic AI Development** | ✅ | ✅ | ✅ | ✅ |
 
-> **Agentic AI:** This portfolio was built and maintained with [Claude Sonnet 4.6](https://www.anthropic.com/claude) (Anthropic) acting as an autonomous engineering agent — scaffolding frameworks from scratch, debugging CI pipeline failures, resolving race conditions, and iteratively refining architecture across all three suites. Tasks spanned multi-step planning, cross-file edits, shell execution, and GitHub Actions triage without requiring manual intervention at each step.
 
 ---
 
