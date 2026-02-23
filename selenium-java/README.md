@@ -220,7 +220,8 @@ SeleniumPOMFramework
 │       │   │   ├── AiDrivenTest.java
 │       │   │   ├── DashboardTest.java
 │       │   │   ├── LoginTest.java
-│       │   │   └── SanityTest.java
+│       │   │   ├── SanityTest.java
+│       │   │   └── SecurityTest.java     # OWASP: SQL injection, XSS, repeated logins, headers
 │       │   └── unit
 │       │       ├── FrameworkUnitTest.java   # Unit tests for StringFormatter & DateHelper
 │       │       └── StringUtilsTest.java     # Unit tests for utility helpers
@@ -235,6 +236,26 @@ SeleniumPOMFramework
 ├── pom.xml                                  # Maven dependencies
 └── testng.xml                               # Test suite configuration
 ```
+
+## Security Testing
+
+`SecurityTest.java` adds four OWASP-aware test cases to the regression suite (groups: `security`, `regression`, `web`). The class extends `BaseTest` and reuses the existing `LoginPage` page object and RestAssured dependency.
+
+| Test | OWASP category |
+|---|---|
+| `testSqlInjectionIsRejected` | A03 Injection — injects `' OR '1'='1' --`; asserts error shown and message contains no `sql`/`exception` leakage |
+| `testXssInjectionIsHandledSafely` | A03 Injection — injects `<script>document.title='xss'</script>`; asserts error shown and page title unchanged |
+| `testRepeatedFailedLoginAttempts` | A07 Auth Failures — 5 bad logins then valid login; asserts valid login still succeeds |
+| `testSecurityResponseHeaders` | A05 Security Misconfiguration — RestAssured GET to saucedemo.com; `SoftAssert` checks `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy` |
+
+Run security tests only:
+```bash
+mvn clean test -Dheadless=true -Dgroups=security
+```
+
+The CI pipeline also runs an **OWASP ZAP Baseline Scan** after every test run (`if: always()`). The scan is passive, targets `https://www.saucedemo.com`, and uses `continue-on-error: true` so findings never block a green build.
+
+---
 
 # CI/CD Pipeline
 

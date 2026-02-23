@@ -59,6 +59,15 @@ jobs:
           SAUCE_ACCESS_KEY:  ${{ secrets.SAUCE_ACCESS_KEY }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+      - name: OWASP ZAP Baseline Scan
+        if: always()
+        uses: zaproxy/action-baseline@v0.12.0
+        continue-on-error: true
+        with:
+          target: 'https://www.saucedemo.com'
+          allow_issue_writing: false
+          cmd_options: '-I'
+
       - name: Run JMeter performance tests
         if: ${{ github.event.inputs.run_performance == 'true' }}
         run: mvn jmeter:jmeter

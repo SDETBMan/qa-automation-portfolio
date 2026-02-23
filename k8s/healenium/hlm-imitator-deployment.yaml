@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hlm-selector-imitator
+  namespace: selenium-grid
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hlm-selector-imitator
+  template:
+    metadata:
+      labels:
+        app: hlm-selector-imitator
+    spec:
+      containers:
+        - name: hlm-selector-imitator
+          image: healenium/hlm-selector-imitator:1.0.2
+          ports:
+            - containerPort: 8000

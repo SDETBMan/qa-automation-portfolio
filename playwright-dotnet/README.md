@@ -272,6 +272,7 @@ PlaywrightDotNetFramework/
 │   │   │   ├── AddToCartTest.cs           # smoke + regression
 │   │   │   ├── CartFixtureTest.cs         # fixture pattern demo (extends AuthenticatedTest)
 │   │   │   ├── NetworkInterceptionTest.cs # 4 network interception patterns
+│   │   │   ├── SecurityTest.cs            # security + regression: SQL injection, XSS, repeated logins, headers
 │   │   │   ├── AiDrivenTest.cs            # ai category
 │   │   │   └── SanityTest.cs              # sanity (bare-metal Playwright)
 │   │   ├── Api/
@@ -315,6 +316,7 @@ PlaywrightDotNetFramework/
 | `unit` | Pure C# logic, no browser | `--filter "Category=unit"` | — |
 | `smoke` | Critical happy-path flows | `--filter "Category=smoke"` | `--grep "@smoke"` |
 | `regression` | Full negative + edge cases | `--filter "Category=regression"` | `--grep "@regression"` |
+| `security` | OWASP-aware login surface checks | `--filter "Category=security"` | — |
 | `fixture` | Fixture / authenticated base class demos | `--filter "Category=fixture"` | — |
 | `network` | Network interception patterns | `--filter "Category=network"` | — |
 | `integration` | REST API tests | `--filter "Category=integration"` | — |
@@ -354,6 +356,26 @@ The fixture pattern is implemented identically in both languages — the idiom j
 | Setup | `[SetUp] LoginBeforeEach()` | `async ({ page }, use) => { /* setup */ await use(po); }` |
 | Teardown | `[TearDown]` inherited from `BaseTest` | Playwright disposes page automatically |
 | Guard | `Assert.That(Page.Url, Does.Contain("inventory"))` | `await page.waitForURL(/inventory/)` |
+
+---
+
+## Security Testing
+
+`SecurityTest.cs` adds four OWASP-aware test cases (categories: `security`, `regression`). The class extends `BaseTest` and reuses `LoginPage` from `Framework.Core.Pages`. `HttpClient` mirrors the pattern already used in `UserApiTest.cs`.
+
+| Test | OWASP category |
+|---|---|
+| `SqlInjectionIsRejected` | A03 Injection — injects `' OR '1'='1' --`; asserts error visible and message contains no `sql`/`exception` leakage |
+| `XssInjectionIsHandledSafely` | A03 Injection — injects `<script>document.title='xss'</script>`; asserts `Page.TitleAsync()` is not `"xss"` |
+| `RepeatedFailedLoginAttemptsHandledGracefully` | A07 Auth Failures — 5 bad logins then valid login; asserts URL contains `inventory` |
+| `SecurityResponseHeadersPresent` | A05 Security Misconfiguration — `HttpClient.GetAsync` to saucedemo.com; `Assert.Multiple` (soft) checks `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy` |
+
+Run security tests only:
+```bash
+dotnet test --settings ci.runsettings --filter "Category=security"
+```
+
+The CI pipeline also runs an **OWASP ZAP Baseline Scan** after every test run (`if: always()`). Passive scan against `https://www.saucedemo.com` with `continue-on-error: true` so findings never block a green build.
 
 ---
 

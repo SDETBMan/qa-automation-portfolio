@@ -1,0 +1,88 @@
+name: k8s CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      framework:
+        description: 'Framework to run smoke tests in'
+        required: true
+        default: 'selenium-java'
+        type: choice
+        options:
+          - selenium-java
+          - cucumber
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 1. Create local Kind cluster ──────────────────────────────────────
+      - name: Create Kind cluster
+        uses: helm/kind-action@v1.9.0
+        with:
+          cluster_name: selenium-grid
+
+      # ── 2. Java toolchain ─────────────────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # ── 3. Deploy namespace + hub + chrome node ───────────────────────────
+      #    Firefox/Edge manifests exist locally; Chrome only for CI speed.
+      - name: Apply namespace and Selenium Hub manifests
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/selenium-grid/hub-deployment.yaml
+          kubectl apply -f k8s/selenium-grid/hub-service.yaml
+
+      - name: Apply Chrome node manifest
+        run: kubectl apply -f k8s/selenium-grid/chrome-deployment.yaml
+
+      # ── 4. Wait for readiness ─────────────────────────────────────────────
+      - name: Wait for Selenium Hub to be Available
+        run: |
+          kubectl wait deployment/selenium-hub \
+            --for=condition=Available \
+            --timeout=180s \
+            -n selenium-grid
+
+      - name: Wait for Chrome node to be Available
+        run: |
+          kubectl wait deployment/selenium-node-chrome \
+            --for=condition=Available \
+            --timeout=180s \
+            -n selenium-grid
+
+      # ── 5. Port-forward + health check ───────────────────────────────────
+      - name: Port-forward Selenium Hub
+        run: |
+          kubectl port-forward svc/selenium-hub 4444:4444 -n selenium-grid &
+          sleep 5
+          curl --retry 10 --retry-delay 3 --retry-connrefused \
+            http://localhost:4444/wd/hub/status
+
+      # ── 6. Run smoke tests against the K8s grid ───────────────────────────
+      - name: Run smoke tests
+        working-directory: ${{ github.event.inputs.framework }}
+        run: >
+          mvn clean test
+          -Dtarget=grid
+          -Dgrid_url=http://localhost:4444/wd/hub
+          -Dheadless=true
+          -Dgroups=smoke
+
+      # ── 7. Collect artifacts ──────────────────────────────────────────────
+      - name: Upload Surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-surefire-reports
+          path: ${{ github.event.inputs.framework }}/target/surefire-reports/
+          retention-days: 7

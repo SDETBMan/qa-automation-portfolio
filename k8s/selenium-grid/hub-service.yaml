@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: selenium-hub
+  namespace: selenium-grid
+spec:
+  selector:
+    app: selenium-hub
+  ports:
+    - name: grid
+      port: 4444
+      targetPort: 4444
+    - name: publish
+      port: 4442
+      targetPort: 4442
+    - name: subscribe
+      port: 4443
+      targetPort: 4443
+  type: ClusterIP

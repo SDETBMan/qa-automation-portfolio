@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: healenium-config
+  namespace: selenium-grid
+data:
+  # Healenium database credentials — matches docker-compose.yaml environment variables.
+  # For production, migrate sensitive values to a Kubernetes Secret.
+  POSTGRES_HOST: postgres-db
+  POSTGRES_DB: healenium_db
+  POSTGRES_USER: healenium_user
+  POSTGRES_PASSWORD: healenium_pass

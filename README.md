@@ -4,6 +4,7 @@
 [![selenium-java CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/selenium-java.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/selenium-java.yml)
 [![cucumber CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml)
 [![ai-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml)
+[![k8s CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml)
 
 A monorepo housing three independent, production-grade test automation frameworks — each showcasing a distinct language and testing approach used by senior SDETs in the industry.
 
@@ -29,7 +30,7 @@ A monorepo housing three independent, production-grade test automation framework
 | **Fixtures / base classes** | ✅ `AuthenticatedTest` · `test.extend<>` | ✅ `BaseTest` | ✅ Cucumber `Hooks` | ✅ `conftest.py` session fixtures |
 | **Retry on failure** | ✅ `[Retry]` · `retries: 2` in CI | ✅ `RetryAnalyzer` + `AnnotationTransformer` | ✅ `RetryAnalyzer` + `AnnotationTransformer` | — |
 | **Cross-browser** | ✅ Chromium · Firefox · WebKit | ✅ Chrome · Firefox · Edge | ✅ Chrome · Firefox · Edge | — |
-| **BDD / Gherkin** | — | — | ✅ 5 feature files · 16+ scenarios | — |
+| **BDD / Gherkin** | — | — | ✅ 6 feature files · 19+ scenarios | — |
 | **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline | ✅ `golden_dataset.json` · `@pytest.mark.parametrize` |
 | **REST API testing** | ✅ `HttpClient` | ✅ RestAssured | ✅ RestAssured | — |
 | **Mocking & Service Virtualization** | ✅ 4 patterns — block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | — |
@@ -39,7 +40,9 @@ A monorepo housing three independent, production-grade test automation framework
 | **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS | — |
 | **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — |
 | **Database validation** | — | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — |
-| **Containerized infra** | — | ✅ Docker Compose | ✅ Docker Compose | — |
+| **Security testing (OWASP)** | ✅ 4 test cases | ✅ 4 test cases | ✅ 3 BDD scenarios | — |
+| **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — |
+| **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — |
 | **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — |
 | **GitHub Actions CI** | ✅ | ✅ | ✅ | ✅ |
 | **Agentic AI Development** | ✅ | ✅ | ✅ | ✅ |
@@ -145,7 +148,14 @@ qa-automation-portfolio/
 │   └── workflows/
 │       ├── playwright-dotnet.yml   # triggers on: paths playwright-dotnet/**
 │       ├── selenium-java.yml       # triggers on: paths selenium-java/**
-│       └── cucumber.yml            # triggers on: paths cucumber/**
+│       ├── cucumber.yml            # triggers on: paths cucumber/**
+│       ├── ai-eval.yml             # triggers on: paths ai-eval/**
+│       └── k8s.yml                 # workflow_dispatch only — Kind cluster + grid smoke tests
+├── k8s/                            # Kubernetes manifests (mirrors docker-compose.yaml)
+│   ├── namespace.yaml              # selenium-grid namespace
+│   ├── configmap.yaml              # Healenium DB credentials
+│   ├── selenium-grid/              # Hub + Chrome/Firefox/Edge node deployments & services
+│   └── healenium/                  # Postgres, hlm-backend, hlm-selector-imitator
 ├── playwright-dotnet/              # Playwright · NUnit · C# · TypeScript
 │   ├── tests/
 │   │   ├── Framework.Tests/        # NUnit C# test project
@@ -160,7 +170,7 @@ qa-automation-portfolio/
 ├── cucumber/                       # Cucumber 7 · TestNG · Selenium 4 · Java
 │   ├── src/main/java/              # Utilities: ConfigReader, RetryAnalyzer, SlackUtils
 │   ├── src/test/java/              # Step definitions, runners, page objects
-│   ├── src/test/resources/features/
+│   ├── src/test/resources/features/  # login · dashboard · inventory · cart · api · security
 │   └── docker-compose.yaml
 ├── ai-eval/                            # Python · Pytest · DeepEval · OpenAI · ChromaDB
 │   ├── rag/                            # RAG pipeline: document, embedder, retriever
@@ -185,6 +195,9 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | execution mode · browser · JMeter toggle |
 | `ai-eval.yml` | push · PR · nightly 05:00 UTC | pytest marker filter (smoke · regression · safety) |
+| `k8s.yml` | `workflow_dispatch` only | framework (selenium-java · cucumber) |
+
+All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
 
 > **Secret required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** in the GitHub repo for the `ai-eval.yml` workflow to run in CI.
 
@@ -201,3 +214,121 @@ All three frameworks test [SauceDemo](https://www.saucedemo.com/) — a purpose-
 | Inventory | Add item · add multiple · remove item · badge count |
 | Cart | Item verification · checkout navigation |
 | API | Health check · data integrity (JSONPlaceholder) |
+| Security | SQL injection · XSS payload · repeated failed logins · HTTP security headers |
+
+---
+
+## Security Testing
+
+All three frameworks include an OWASP-aware security test suite targeting the SauceDemo login surface. Security tests reuse existing page objects and utilities — no new infrastructure is required.
+
+### Test cases (all 3 frameworks)
+
+| Test | What it verifies | OWASP category |
+|---|---|---|
+| SQL injection rejected | `' OR '1'='1' --` in username triggers an error; error message contains no `sql` / `exception` leakage | A03 Injection |
+| XSS handled safely | `<script>document.title='xss'</script>` in username triggers an error; page title is not changed to `xss` | A03 Injection |
+| Repeated failed logins | 5 consecutive bad logins followed by a valid login — valid login must still succeed | A07 Identification & Authentication Failures |
+| Security response headers | `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy` checked via HTTP GET | A05 Security Misconfiguration |
+
+The headers test uses soft assertions (`SoftAssert` in Java, `Assert.Multiple` in C#) so it documents the site's security posture without blocking CI on a target we do not control.
+
+### Framework-specific notes
+
+| Framework | File | Groups / Tags |
+|---|---|---|
+| selenium-java | `src/test/java/com/framework/tests/SecurityTest.java` | `security`, `regression`, `web` — picked up by `testng.xml` |
+| playwright-dotnet | `tests/Framework.Tests/Tests/SecurityTest.cs` | `[Category("security")]`, `[Category("regression")]` |
+| cucumber | `src/test/resources/features/security.feature` + `SecuritySteps.java` | `@security` — runs with all features by default |
+
+### OWASP ZAP Baseline Scan (CI)
+
+Each workflow runs a passive ZAP scan after tests complete:
+
+```yaml
+- name: OWASP ZAP Baseline Scan
+  if: always()
+  uses: zaproxy/action-baseline@v0.12.0
+  continue-on-error: true
+  with:
+    target: 'https://www.saucedemo.com'
+    allow_issue_writing: false
+    cmd_options: '-I'
+```
+
+- `continue-on-error: true` — ZAP findings never block green CI
+- `allow_issue_writing: false` — no GitHub issues created automatically
+- `-I` — informational mode; suppresses non-zero exit on warnings
+- The HTML scan report (`zap_baseline_scan.html`) is auto-uploaded as a workflow artifact
+
+---
+
+## Kubernetes Infrastructure
+
+The `k8s/` directory contains Kubernetes manifests that mirror the existing `docker-compose.yaml` — providing an alternative deployment target for the Selenium Grid and Healenium stack.
+
+### Directory layout
+
+```
+k8s/
+├── namespace.yaml                  # selenium-grid namespace
+├── configmap.yaml                  # Healenium DB credentials
+├── selenium-grid/
+│   ├── hub-deployment.yaml         # selenium/hub:4.16.1
+│   ├── hub-service.yaml            # ClusterIP — ports 4444, 4442, 4443
+│   ├── chrome-deployment.yaml      # selenium/node-chrome:4.16.1
+│   ├── firefox-deployment.yaml     # selenium/node-firefox:4.16.1
+│   └── edge-deployment.yaml        # selenium/node-edge:4.16.1
+└── healenium/
+    ├── postgres-deployment.yaml    # postgres:12-alpine
+    ├── postgres-service.yaml
+    ├── hlm-backend-deployment.yaml # healenium/hlm-backend:3.3.0
+    ├── hlm-backend-service.yaml
+    ├── hlm-imitator-deployment.yaml# healenium/hlm-selector-imitator:1.0.2
+    └── hlm-imitator-service.yaml
+```
+
+### Design decisions
+
+| Decision | Detail |
+|---|---|
+| Image versions | Pinned to the same tags as `docker-compose.yaml` (e.g. `selenium/hub:4.16.1`) |
+| Shared memory | Chrome/Firefox/Edge nodes mount `/dev/shm` via `emptyDir: {medium: Memory, sizeLimit: 2Gi}` — matches `shm_size: 2gb` in Docker Compose |
+| Postgres storage | `emptyDir` (non-persistent) — sufficient for portfolio/demo; swap for a `PersistentVolumeClaim` in production |
+| Healenium config | Credentials stored in `configmap.yaml`; referenced by `configMapKeyRef` in each dependent deployment |
+| DNS resolution | Browser nodes set `SE_EVENT_BUS_HOST: selenium-hub` — Kubernetes DNS resolves this to the hub `ClusterIP` Service |
+
+### Deploy manually
+
+```bash
+# Namespace + config
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/configmap.yaml
+
+# Selenium Hub
+kubectl apply -f k8s/selenium-grid/hub-deployment.yaml
+kubectl apply -f k8s/selenium-grid/hub-service.yaml
+
+# Browser nodes (add firefox / edge as needed)
+kubectl apply -f k8s/selenium-grid/chrome-deployment.yaml
+
+# Healenium stack
+kubectl apply -f k8s/healenium/
+
+# Wait for hub to be ready
+kubectl wait deployment/selenium-hub --for=condition=Available --timeout=120s -n selenium-grid
+
+# Port-forward and run tests
+kubectl port-forward svc/selenium-hub 4444:4444 -n selenium-grid &
+cd selenium-java && mvn clean test -Dtarget=grid -Dgrid_url=http://localhost:4444/wd/hub -Dheadless=true
+```
+
+### k8s CI workflow (`k8s.yml`)
+
+Triggered via `workflow_dispatch` only (avoids heavy image pulls on every push). Spins up a [Kind](https://kind.sigs.k8s.io/) cluster, deploys the hub + Chrome node, port-forwards, and runs the smoke suite:
+
+```
+Input: framework → selenium-java | cucumber
+Steps: checkout → Kind cluster → JDK 17 → apply k8s manifests → wait for Available
+       → port-forward → health check → mvn smoke tests → upload surefire reports
+```

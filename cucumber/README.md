@@ -64,6 +64,7 @@ Both frameworks (CucumberFramework and SeleniumPOMFramework) cover the same five
 | `inventory.feature` | Add item, add multiple, remove item, checkout navigation |
 | `cart.feature` | Add item, verify cart badge, verify cart contents |
 | `api.feature` | API health check, data integrity validation |
+| `security.feature` | SQL injection rejected, XSS handled safely, security response headers present |
 
 ## How to Run
 
@@ -130,6 +131,27 @@ On every run the pipeline: executes tests, generates an Allure report, deploys i
 | Cucumber HTML | `target/cucumber-reports/cucumber.html` |
 | JaCoCo Coverage | `target/site/jacoco/index.html` |
 
+## Security Testing
+
+`security.feature` adds three OWASP-aware BDD scenarios tagged `@security`. The SQL injection and XSS scenarios reuse the four existing step definitions from `LoginSteps.java` with no changes. `SecuritySteps.java` provides only the three new assertion steps.
+
+| Scenario | Reused steps | New step | OWASP category |
+|---|---|---|---|
+| SQL injection attempt is safely rejected | `Given I am on...` · `When I enter username...` · `When I click...` · `Then I should see an error message` | `Then the error message should not expose system internals` | A03 Injection |
+| XSS payload in login field is handled safely | same 4 steps | `Then the page title should not be "xss"` | A03 Injection |
+| Security response headers are present | `Given I am on...` | `Then the security response headers should be present` | A05 Security Misconfiguration |
+
+The headers step uses `SoftAssert` and RestAssured so missing headers on the demo site document posture without failing the build.
+
+Run security scenarios only:
+```bash
+mvn clean test -Dheadless=true -Dcucumber.filter.tags="@security"
+```
+
+The CI pipeline also runs an **OWASP ZAP Baseline Scan** after every test run (`if: always()`). Passive scan against `https://www.saucedemo.com` with `continue-on-error: true` so findings never block a green build.
+
+---
+
 ## Project Structure
 
 ```
@@ -155,6 +177,7 @@ src/
 │   │   ├── InventorySteps.java
 │   │   ├── CartSteps.java
 │   │   ├── ApiSteps.java
+│   │   ├── SecuritySteps.java         # OWASP step defs: error leakage, XSS title, response headers
 │   │   └── Hooks.java                 # Screenshot on failure, driver teardown
 │   ├── runners/
 │   │   └── TestRunner.java            # Parallel DataProvider, Allure + Extent plugins
@@ -168,7 +191,8 @@ src/
     │   ├── dashboard.feature
     │   ├── inventory.feature
     │   ├── cart.feature
-    │   └── api.feature
+    │   ├── api.feature
+    │   └── security.feature           # @security: SQL injection, XSS, response headers
     ├── config.properties
     ├── extent.properties
     └── healenium.properties

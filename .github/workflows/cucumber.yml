@@ -100,6 +100,15 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.run_performance == true
         run: mvn jmeter:jmeter
 
+      - name: OWASP ZAP Baseline Scan
+        if: always()
+        uses: zaproxy/action-baseline@v0.12.0
+        continue-on-error: true
+        with:
+          target: 'https://www.saucedemo.com'
+          allow_issue_writing: false
+          cmd_options: '-I'
+
       # ── Artifacts & Reporting ────────────────────────────────────────────
       - name: Upload Allure results
         if: always()

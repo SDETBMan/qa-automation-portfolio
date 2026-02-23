@@ -20,6 +20,7 @@
             <class name="com.framework.tests.LoginTest" />
             <class name="com.framework.tests.DashboardTest" />
             <class name="com.framework.tests.AddToCartTest" />
+            <class name="com.framework.tests.SecurityTest" />
         </classes>
     </test>
 
