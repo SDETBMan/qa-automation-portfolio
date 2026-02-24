@@ -6,7 +6,7 @@
 [![ai-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml)
 [![k8s CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml)
 
-A monorepo housing three independent, production-grade test automation frameworks — each showcasing a distinct language and testing approach used by senior SDETs in the industry.
+A monorepo housing three independent, production-grade test automation frameworks, each showcasing a distinct language and testing approach used by senior SDETs in the industry.
 
 ---
 
