@@ -37,12 +37,28 @@ jobs:
       - name: Run AI evaluations
         run: |
           if [ -n "${{ github.event.inputs.marker }}" ]; then
-            pytest -m "${{ github.event.inputs.marker }}" -v
+            pytest -m "${{ github.event.inputs.marker }}" -v --junit-xml=junit-report.xml
           else
-            pytest -m smoke -v
+            pytest -m smoke -v --junit-xml=junit-report.xml
           fi
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DD_API_KEY:     ${{ secrets.DD_API_KEY }}
+          # Disables DeepEval's internal 88.5s per-attempt timeout so slow OpenAI
+          # API responses don't cause false CI failures. The GitHub Actions job
+          # timeout (6 hours default) acts as the outer safety net instead.
+          DEEPEVAL_DISABLE_TIMEOUTS: "true"
+
+      # ── DataDog CI Visibility ────────────────────────────────────────────
+      - name: Upload test results to Datadog CI Visibility
+        if: always()
+        uses: datadog/datadog-ci-github-action@v2.5.0
+        with:
+          api_key: ${{ secrets.DD_API_KEY }}
+          subcommand: junit
+          args: --service qa-automation-portfolio --tags framework:ai-eval ai-eval/junit-report.xml
+        env:
+          DD_SITE: datadoghq.com
 
       - name: Upload evaluation results
         if: always()
