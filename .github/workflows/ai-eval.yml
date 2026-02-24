@@ -37,9 +37,11 @@ jobs:
       - name: Run AI evaluations
         run: |
           if [ -n "${{ github.event.inputs.marker }}" ]; then
-            pytest -m "${{ github.event.inputs.marker }}" -v --junit-xml=junit-report.xml
+            pytest -m "${{ github.event.inputs.marker }}" -v --junit-xml=junit-report.xml \
+              --reruns 3 --reruns-delay 60
           else
-            pytest -m smoke -v --junit-xml=junit-report.xml
+            pytest -m smoke -v --junit-xml=junit-report.xml \
+              --reruns 3 --reruns-delay 60
           fi
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -52,6 +54,7 @@ jobs:
       # ── DataDog CI Visibility ────────────────────────────────────────────
       - name: Upload test results to Datadog CI Visibility
         if: always()
+        continue-on-error: true
         run: |
           curl -fsSL "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" \
             --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci

@@ -113,6 +113,7 @@ jobs:
       # ── DataDog CI Visibility ────────────────────────────────────────────
       - name: Upload test results to Datadog CI Visibility
         if: always()
+        continue-on-error: true
         run: |
           curl -fsSL "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" \
             --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
