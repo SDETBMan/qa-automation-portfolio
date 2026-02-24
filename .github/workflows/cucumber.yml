@@ -49,6 +49,7 @@ jobs:
 
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      DD_API_KEY:        ${{ secrets.DD_API_KEY }}
 
     steps:
       - name: Checkout code
@@ -108,6 +109,19 @@ jobs:
           target: 'https://www.saucedemo.com'
           allow_issue_writing: false
           cmd_options: '-I'
+
+      # ── DataDog CI Visibility ────────────────────────────────────────────
+      - name: Upload test results to Datadog CI Visibility
+        if: always()
+        run: |
+          curl -fsSL "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" \
+            --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
+          datadog-ci junit upload --service qa-automation-portfolio \
+            --tags framework:cucumber \
+            target/surefire-reports/*.xml
+        env:
+          DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
+          DATADOG_SITE: datadoghq.com
 
       # ── Artifacts & Reporting ────────────────────────────────────────────
       - name: Upload Allure results
