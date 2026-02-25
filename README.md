@@ -6,7 +6,7 @@
 [![ai-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml)
 [![k8s CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml)
 
-A monorepo housing three independent, production-grade test automation frameworks, each showcasing a distinct language and testing approach used by senior SDETs in the industry.
+A monorepo housing four independent, production-grade test automation frameworks, each showcasing a distinct language and testing approach used by senior SDETs in the industry.
 
 ---
 
@@ -44,6 +44,7 @@ A monorepo housing three independent, production-grade test automation framework
 | **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — |
 | **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — |
 | **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — |
+| **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · LLM eval scores |
 | **GitHub Actions CI** | ✅ | ✅ | ✅ | ✅ |
 | **Agentic AI Development** | ✅ | ✅ | ✅ | ✅ |
 
@@ -187,7 +188,7 @@ qa-automation-portfolio/
 
 ## CI Strategy
 
-Each workflow has **path filters** so a push to `selenium-java/` only triggers the `selenium-java.yml` pipeline — the other two frameworks are unaffected. A nightly `cron` schedule keeps the full portfolio green without cross-framework interference.
+Each workflow has **path filters** so a push to `selenium-java/` only triggers the `selenium-java.yml` pipeline — the other three frameworks are unaffected. A nightly `cron` schedule keeps the full portfolio green without cross-framework interference.
 
 | Workflow | Trigger | dispatch inputs |
 |---|---|---|
@@ -199,7 +200,19 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
 
-> **Secret required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** in the GitHub repo for the `ai-eval.yml` workflow to run in CI.
+> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all four frameworks — all utilities skip gracefully without it.
+
+### DataDog Observability
+
+Two DataDog features run across all four frameworks:
+
+**CI Visibility** — the `datadog/datadog-ci-github-action@v2.5.0` step (`if: always()`) uploads JUnit/TRX XML results to DataDog's Test Optimization dashboard after every run. Enables pass/fail trend charts, flaky-test detection, and duration tracking without leaving the DataDog UI.
+
+**Custom metrics** — a `DataDogUtils` utility (Java, C#, Python) sends four GAUGE metrics to the v2 HTTP API at suite finish: `test.suite.passed`, `test.suite.failed`, `test.suite.skipped`, `test.suite.duration_ms`. Tagged with `framework:<name>`, `service:qa-automation-portfolio`, `env:ci`.
+
+**ai-eval bonus** — `datadog_reporter.send_eval_score()` sends individual LLM evaluation scores (`llm.eval.answer_relevancy`, `llm.eval.faithfulness`, `llm.eval.hallucination`, `llm.eval.safety`) after each DeepEval assertion, connecting AI model quality directly to observability dashboards.
+
+All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues — CI stays green.
 
 ---
 
