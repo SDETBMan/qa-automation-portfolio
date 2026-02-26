@@ -1,8 +1,10 @@
 package com.framework.api;
 
 import com.framework.utils.ConfigReader;
+import com.framework.utils.TokenManager;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -85,5 +87,46 @@ public class UserApiTest {
         String responseBody = response.getBody().asString();
         Assert.assertNotNull(responseBody, "API Error: Response body is null");
         Assert.assertTrue(responseBody.contains("Leanne Graham"), "Data Integrity Error: Response missing expected user data");
+    }
+
+    /**
+     * testAuthenticatedApiCall: Demonstrates the suite-level token consumption pattern.
+     *
+     * <p>WHY NO RE-AUTHENTICATION HERE: The bearer token was generated once in
+     * {@code @BeforeSuite} by {@link com.framework.services.AuthService} and stored in
+     * {@link TokenManager}. This test simply reads it — no redundant login API call,
+     * no hardcoded credentials. Replacing the auth endpoint in config.properties is
+     * the only change needed to point this at a real authenticated API.
+     *
+     * <p>GRACEFUL FALLBACK: If no token is available (e.g. running locally without
+     * auth configured), the request is sent without an Authorization header. The test
+     * still validates the response — it just won't carry auth credentials. This keeps
+     * the suite green on environments where token generation is not set up.
+     */
+    @Test(groups = {"integration"})
+    public void testAuthenticatedApiCall() {
+        String endpoint = ConfigReader.getProperty("api.base.url") + "/posts/1";
+
+        System.out.println("[API-LOG] Requesting authenticated resource from: " + endpoint);
+
+        // Build the request spec — attach the suite-level bearer token if available.
+        // TokenManager.getToken() returns "Bearer {jwt}" — ready to use as-is.
+        RequestSpecification request = RestAssured.given();
+        if (TokenManager.hasToken()) {
+            request.header("Authorization", TokenManager.getToken());
+            System.out.println("[API-LOG] Authorization header attached from suite-level token.");
+        } else {
+            System.out.println("[API-LOG] No token configured — sending unauthenticated request.");
+        }
+
+        Response response = request.get(endpoint);
+
+        System.out.println("[API-LOG] Status Code: " + response.getStatusCode());
+        System.out.println("[API-LOG] Response Body: " + response.getBody().asString());
+
+        Assert.assertEquals(response.getStatusCode(), 200,
+                "Authenticated API call failed: expected 200 OK");
+        Assert.assertNotNull(response.getBody().asString(),
+                "API Error: Response body is null");
     }
 }

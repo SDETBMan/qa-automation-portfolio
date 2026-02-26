@@ -2,12 +2,16 @@ package com.framework.base;
 
 import com.framework.driver.DriverFactory;
 import com.framework.driver.DriverManager;
+import com.framework.services.AuthService;
 import com.framework.utils.ConfigReader;
+import com.framework.utils.TokenManager;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.testng.ITestContext;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 
@@ -40,6 +44,54 @@ import java.time.Duration;
  * makes parallel test execution safe.
  */
 public class BaseTest {
+
+    // ==========================================================
+    // SUITE LIFECYCLE
+    // ==========================================================
+
+    /**
+     * suiteSetup: Runs once before the entire suite begins — not per test.
+     *
+     * <p>WHY {@code @BeforeSuite}: Some resources are expensive to create and safe
+     * to share across all tests. A bearer token is the prime example — there is no
+     * reason to call the auth endpoint 100 times when one token can serve the whole
+     * suite. {@code @BeforeSuite} guarantees this runs exactly once, before the first
+     * {@code @BeforeMethod} of any test class.
+     *
+     * <p>WHY {@code alwaysRun = true}: Prevents TestNG group filters from accidentally
+     * skipping suite setup when only a subset of tests (e.g. {@code @smoke}) is run.
+     * Without this, running {@code mvn test -Dgroups=smoke} could skip suiteSetup
+     * entirely, leaving API tests with no token.
+     */
+    @BeforeSuite(alwaysRun = true)
+    public void suiteSetup() {
+        System.out.println("==================================================");
+        System.out.println("[SUITE] Starting suite — generating auth token");
+        System.out.println("==================================================");
+
+        // Generate bearer token once. AuthService skips gracefully if api.auth.url
+        // is not configured — safe to run against SauceDemo or any unauth'd environment.
+        AuthService.generateToken();
+
+        if (TokenManager.hasToken()) {
+            System.out.println("[SUITE] Auth token ready. API tests will attach Authorization header.");
+        } else {
+            System.out.println("[SUITE] No auth token configured — API tests will run unauthenticated.");
+        }
+    }
+
+    /**
+     * suiteTeardown: Runs once after all tests in the suite have completed.
+     *
+     * <p>Clears the bearer token from {@link TokenManager} to prevent a stale token
+     * from persisting if the JVM is reused across suite runs (common in certain IDE
+     * and Maven Surefire fork configurations).
+     */
+    @AfterSuite(alwaysRun = true)
+    public void suiteTeardown() {
+        TokenManager.clearToken();
+        System.out.println("[SUITE] Auth token cleared. Suite complete.");
+    }
 
     /**
      * setUp: Creates and configures a browser instance before every test method.
