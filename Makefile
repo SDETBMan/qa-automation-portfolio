@@ -3,11 +3,12 @@
 #
 # Usage:
 #   make              → print available targets
-#   make all          → run all four frameworks sequentially
+#   make all          → run all five frameworks sequentially
 #   make playwright   → playwright-dotnet (C# + TypeScript, headless Chromium)
 #   make selenium     → selenium-java (headless Chrome)
 #   make cucumber     → cucumber (headless Chrome)
 #   make ai-eval      → ai-eval (Python + Pytest + DeepEval)
+#   make postman      → postman (Newman CLI, JSONPlaceholder API tests)
 #   make clean        → remove build artefacts from all frameworks
 #
 # Prerequisites:
@@ -15,20 +16,22 @@
 #   selenium   — Java 17 (java --version) · Maven 3.9+ (mvn --version)
 #   cucumber   — Java 17 (java --version) · Maven 3.9+ (mvn --version)
 #   ai-eval    — Python 3.11+ (python3 --version) · OPENAI_API_KEY in ai-eval/.env
+#   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber ai-eval clean
+.PHONY: help all playwright selenium cucumber ai-eval postman clean
 
 # Print help when `make` is called with no target
 help:
 	@echo ""
 	@echo "  QA Automation Portfolio — available targets"
 	@echo "  ───────────────────────────────────────────"
-	@echo "  make all          Run all four frameworks sequentially"
+	@echo "  make all          Run all five frameworks sequentially"
 	@echo "  make playwright   Run playwright-dotnet suite (C# + TypeScript)"
 	@echo "  make selenium     Run selenium-java suite (headless Chrome)"
 	@echo "  make cucumber     Run cucumber suite (headless Chrome)"
 	@echo "  make ai-eval      Run AI evaluation suite (Python + DeepEval)"
+	@echo "  make postman      Run Postman/Newman API test suite"
 	@echo "  make clean        Remove build artefacts from all frameworks"
 	@echo ""
 	@echo "  Prerequisites:"
@@ -36,13 +39,14 @@ help:
 	@echo "    selenium   — Java 17 · Maven 3.9+"
 	@echo "    cucumber   — Java 17 · Maven 3.9+"
 	@echo "    ai-eval    — Python 3.11+ · OPENAI_API_KEY in ai-eval/.env"
+	@echo "    postman    — Node.js 20+"
 	@echo ""
 
 # ── Full portfolio ─────────────────────────────────────────────────────────────
 
-all: playwright selenium cucumber ai-eval
+all: playwright selenium cucumber ai-eval postman
 	@echo ""
-	@echo ">>> All four suites complete."
+	@echo ">>> All five suites complete."
 	@echo ""
 
 # ── Individual suites ─────────────────────────────────────────────────────────
@@ -79,6 +83,14 @@ ai-eval:
 	@echo ">>> [ai-eval] Done."
 	@echo ""
 
+postman:
+	@echo ""
+	@echo ">>> [postman] Installing Newman and running API test suite..."
+	cd postman && npm install && npm test
+	@echo ""
+	@echo ">>> [postman] Done."
+	@echo ""
+
 # ── Clean ─────────────────────────────────────────────────────────────────────
 
 clean:
@@ -94,6 +106,9 @@ clean:
 	@echo ""
 	@echo ">>> Cleaning ai-eval artefacts..."
 	rm -rf ai-eval/.pytest_cache ai-eval/.deepeval ai-eval/__pycache__
+	@echo ""
+	@echo ">>> Cleaning postman artefacts..."
+	rm -rf postman/node_modules postman/results/*.xml postman/results/*.html
 	@echo ""
 	@echo ">>> Clean complete."
 	@echo ""

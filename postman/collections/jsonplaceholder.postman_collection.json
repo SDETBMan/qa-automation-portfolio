@@ -1,0 +1,434 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "JSONPlaceholder API Tests",
+    "description": "Production-grade Postman/Newman API test collection demonstrating senior SDET proficiency.\n\nCovers four testing layers:\n  • Smoke       — fast connectivity checks on every push\n  • Users       — CRUD functional + negative path tests\n  • Posts       — write operations (POST, DELETE) with body validation\n  • Integration — chained requests using captured response values\n\nRuns headlessly via Newman CLI in GitHub Actions CI.\nResults exported as JUnit XML for DataDog CI Visibility and artifact upload.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://jsonplaceholder.typicode.com",
+      "type": "string",
+      "description": "Base URL — overridden by environment file. Change this to point at staging or prod."
+    }
+  ],
+  "item": [
+    {
+      "name": "Smoke",
+      "description": "Lightweight connectivity checks. Run on every push — must complete in under 5 seconds.\nIf these fail, all downstream tests are skipped in CI.",
+      "item": [
+        {
+          "name": "GET /users/1 — API health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response time is under 3000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});",
+                  "",
+                  "pm.test('Content-Type is application/json', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('Response body is not empty', function () {",
+                  "    pm.expect(pm.response.text()).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/users/1"
+          }
+        },
+        {
+          "name": "GET /posts/1 — posts endpoint health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response time is under 3000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});",
+                  "",
+                  "pm.test('Post has required fields', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.all.keys('id', 'userId', 'title', 'body');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/posts/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "Functional and negative-path tests for the /users resource.\nValidates response structure, data integrity, and error handling.",
+      "item": [
+        {
+          "name": "GET /users — list all users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is a non-empty array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "    pm.expect(body.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "pm.test('Each user has required fields', function () {",
+                  "    const body = pm.response.json();",
+                  "    body.forEach(function (user) {",
+                  "        pm.expect(user).to.have.property('id');",
+                  "        pm.expect(user).to.have.property('name');",
+                  "        pm.expect(user).to.have.property('email');",
+                  "        pm.expect(user).to.have.property('username');",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test('API returns exactly 10 seed users', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.length).to.equal(10);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/users"
+          }
+        },
+        {
+          "name": "GET /users/:id — data integrity check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('User ID matches requested ID', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.id).to.equal(parseInt(pm.environment.get('defaultUserId')));",
+                  "});",
+                  "",
+                  "pm.test('User name is Leanne Graham', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.name).to.equal('Leanne Graham');",
+                  "});",
+                  "",
+                  "pm.test('User email is valid format', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/);",
+                  "});",
+                  "",
+                  "pm.test('User has nested address object', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.address).to.be.an('object');",
+                  "    pm.expect(body.address).to.have.property('city');",
+                  "    pm.expect(body.address).to.have.property('zipcode');",
+                  "});",
+                  "",
+                  "pm.test('User has company information', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.company).to.be.an('object');",
+                  "    pm.expect(body.company.name).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/users/{{defaultUserId}}"
+          }
+        },
+        {
+          "name": "GET /users/999 — negative path, not found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404 for non-existent user', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Response body is empty object for 404', function () {",
+                  "    const body = pm.response.json();",
+                  "    // JSONPlaceholder returns {} for missing resources",
+                  "    pm.expect(Object.keys(body).length).to.equal(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/users/999"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "description": "Write-operation tests (POST, DELETE) with request body validation.\nDemonstrates asserting response echoes sent payload — critical for integration testing\nwhere the API must correctly accept and acknowledge inbound data.",
+      "item": [
+        {
+          "name": "GET /posts — list all posts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is a non-empty array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "    pm.expect(body.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "pm.test('API returns exactly 100 seed posts', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.length).to.equal(100);",
+                  "});",
+                  "",
+                  "pm.test('Each post has required fields', function () {",
+                  "    const body = pm.response.json();",
+                  "    body.slice(0, 5).forEach(function (post) {",
+                  "        pm.expect(post).to.have.all.keys('id', 'userId', 'title', 'body');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/posts"
+          }
+        },
+        {
+          "name": "POST /posts — create new post, validate echo",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Store the payload we're about to send so test script can validate the echo",
+                  "pm.collectionVariables.set('sentTitle', 'Automation test post - ' + Date.now());",
+                  "pm.collectionVariables.set('sentBody', 'Created by Newman in CI pipeline');",
+                  "pm.collectionVariables.set('sentUserId', 1);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response echoes sent title', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.title).to.equal(pm.collectionVariables.get('sentTitle'));",
+                  "});",
+                  "",
+                  "pm.test('Response echoes sent body', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.body).to.equal(pm.collectionVariables.get('sentBody'));",
+                  "});",
+                  "",
+                  "pm.test('Response echoes sent userId', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.userId).to.equal(pm.collectionVariables.get('sentUserId'));",
+                  "});",
+                  "",
+                  "pm.test('Response contains a generated id', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.id).to.be.a('number');",
+                  "    pm.expect(body.id).to.be.greaterThan(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{sentTitle}}\",\n  \"body\": \"{{sentBody}}\",\n  \"userId\": {{sentUserId}}\n}"
+            },
+            "url": "{{baseUrl}}/posts"
+          }
+        },
+        {
+          "name": "DELETE /posts/:id — delete post",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 for successful delete', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response body is empty object after delete', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(Object.keys(body).length).to.equal(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/posts/{{defaultPostId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Integration Flow",
+      "description": "Chained request scenario — demonstrates capturing values from one response\nand injecting them into the next request.\n\nThis pattern is the backbone of integration testing:\n  - Call System A, capture the ID it returns\n  - Pass that ID to System B and validate the round-trip\n\nReal-world equivalent: call the Workday API for an employee ID,\nthen pass that ID to Greenhouse to verify the candidate record exists.",
+      "item": [
+        {
+          "name": "Step 1 — GET /users/1, capture userId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Capture the userId from the response and store it as a collection variable.",
+                  "// The next request in this folder will read this variable automatically.",
+                  "const userId = pm.response.json().id;",
+                  "pm.collectionVariables.set('capturedUserId', userId);",
+                  "",
+                  "pm.test('userId captured and stored in collection variable', function () {",
+                  "    pm.expect(pm.collectionVariables.get('capturedUserId')).to.equal(userId);",
+                  "    console.log('Captured userId:', userId);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/users/1"
+          }
+        },
+        {
+          "name": "Step 2 — GET /posts?userId={{capturedUserId}}, validate filter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is a non-empty array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "    pm.expect(body.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "// Critical integration assertion: every record returned must belong",
+                  "// to the userId we captured in Step 1. This validates that the filter",
+                  "// parameter was correctly applied — a broken filter would return all",
+                  "// records regardless of userId, which this assertion would catch.",
+                  "pm.test('All returned posts belong to the captured userId', function () {",
+                  "    const body = pm.response.json();",
+                  "    const capturedId = parseInt(pm.collectionVariables.get('capturedUserId'));",
+                  "    body.forEach(function (post) {",
+                  "        pm.expect(post.userId).to.equal(capturedId,",
+                  "            'Post userId ' + post.userId + ' does not match captured userId ' + capturedId);",
+                  "    });",
+                  "});",
+                  "",
+                  "// Clean up the collection variable after use",
+                  "pm.collectionVariables.unset('capturedUserId');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/posts?userId={{capturedUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["posts"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{capturedUserId}}",
+                  "description": "Filter posts by the userId captured from Step 1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
