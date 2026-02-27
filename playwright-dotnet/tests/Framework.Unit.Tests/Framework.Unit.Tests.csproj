@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- No Playwright, no Allure — unit tests have zero external dependencies -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit"              Version="3.*" />
+    <PackageReference Include="NUnit3TestAdapter"  Version="4.*" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Framework.Core\Framework.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Global using so test files don't need individual using NUnit.Framework; -->
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+
+</Project>
