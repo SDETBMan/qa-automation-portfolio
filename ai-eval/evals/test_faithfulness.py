@@ -23,6 +23,8 @@ from deepeval import assert_test
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
+from utils.datadog_reporter import send_eval_score
+
 DATASET_PATH = Path(__file__).parent.parent / "datasets" / "golden_dataset.json"
 with open(DATASET_PATH) as f:
     _raw = json.load(f)
@@ -67,4 +69,8 @@ def test_faithfulness(case, retriever, answer_generator):
         retrieval_context=context,
     )
 
-    assert_test(test_case, [metric])
+    try:
+        assert_test(test_case, [metric])
+    finally:
+        if metric.score is not None:
+            send_eval_score("llm.eval.faithfulness", metric.score, ["model:gpt-4o-mini"])

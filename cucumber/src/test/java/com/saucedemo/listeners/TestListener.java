@@ -1,5 +1,6 @@
 package com.saucedemo.listeners;
 
+import com.saucedemo.utils.DataDogUtils;
 import com.saucedemo.utils.SlackUtils;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
@@ -33,6 +34,21 @@ import org.testng.ITestResult;
  * a common requirement in professional QA setups.
  */
 public class TestListener implements ITestListener {
+
+    // Records the wall-clock time when the suite context begins so onFinish can
+    // report accurate duration to DataDog.
+    private long suiteStartTime;
+
+    /**
+     * Called by TestNG when the test context initialises, before any tests run.
+     * Captures the suite start time for DataDog duration reporting.
+     *
+     * @param context TestNG context — represents the test block in testng.xml.
+     */
+    @Override
+    public void onStart(ITestContext context) {
+        suiteStartTime = System.currentTimeMillis();
+    }
 
     /**
      * Called by TestNG at the moment a test method starts executing.
@@ -131,5 +147,16 @@ public class TestListener implements ITestListener {
         System.out.println("[INFO] " + summary);
         // Post the summary to the configured Slack channel for team visibility
         SlackUtils.sendResult(summary);
+
+        // Send suite-level metrics to DataDog (passed/failed/skipped counts + duration).
+        // DataDogUtils.sendTestMetrics() is a no-op if DD_API_KEY is not set.
+        long durationMs = System.currentTimeMillis() - suiteStartTime;
+        DataDogUtils.sendTestMetrics(
+                context.getPassedTests().size(),
+                context.getFailedTests().size(),
+                context.getSkippedTests().size(),
+                durationMs,
+                "cucumber"
+        );
     }
 }

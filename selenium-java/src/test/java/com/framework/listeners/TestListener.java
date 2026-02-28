@@ -1,6 +1,7 @@
 package com.framework.listeners;
 
 import com.framework.driver.DriverManager;
+import com.framework.utils.DataDogUtils;
 import com.framework.utils.SlackUtils;
 import io.qameta.allure.Attachment;
 import org.openqa.selenium.OutputType;
@@ -40,6 +41,21 @@ import org.testng.ITestResult;
  * </ul>
  */
 public class TestListener implements ITestListener {
+
+    // Records the wall-clock time when the suite context begins so onFinish can
+    // report accurate duration to DataDog.
+    private long suiteStartTime;
+
+    /**
+     * onStart: Called by TestNG when the test context initialises, before any tests run.
+     * Captures the suite start time for DataDog duration reporting.
+     *
+     * @param context TestNG context — represents the test block in testng.xml.
+     */
+    @Override
+    public void onStart(ITestContext context) {
+        suiteStartTime = System.currentTimeMillis();
+    }
 
     /**
      * onTestStart: Called by TestNG immediately before each {@code @Test} method runs.
@@ -165,6 +181,17 @@ public class TestListener implements ITestListener {
         // SlackUtils.sendResult() posts the message to a webhook URL configured
         // in config.properties. If no webhook is set, it logs a warning and skips.
         SlackUtils.sendResult(summary);
+
+        // Send suite-level metrics to DataDog (passed/failed/skipped counts + duration).
+        // DataDogUtils.sendTestMetrics() is a no-op if DD_API_KEY is not set.
+        long durationMs = System.currentTimeMillis() - suiteStartTime;
+        DataDogUtils.sendTestMetrics(
+                context.getPassedTests().size(),
+                context.getFailedTests().size(),
+                context.getSkippedTests().size(),
+                durationMs,
+                "selenium-java"
+        );
     }
 
     /**

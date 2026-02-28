@@ -6,10 +6,17 @@ Setup order (once per pytest session):
   2. Build OpenAI client
   3. Embed FAQ chunks into an in-memory ChromaDB collection
   4. Expose retriever and answer_generator fixtures to all test files
+
+DataDog integration:
+  - pytest_sessionstart records the session start time.
+  - pytest_sessionfinish reads pass/fail/skip counts from TerminalReporter and
+    posts suite-level metrics to DataDog via datadog_reporter.send_test_metrics().
+    Skips silently if DD_API_KEY is not set — CI stays green without it.
 """
 
 import os
 import json
+import time as _time
 from pathlib import Path
 
 import pytest
@@ -18,8 +25,36 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 from rag.document import FAQ_CHUNKS
+from utils import datadog_reporter
 
 load_dotenv()
+
+# ── DataDog session timing ─────────────────────────────────────────────────────
+
+_session_start: float = 0.0
+
+
+def pytest_sessionstart(session: pytest.Session) -> None:
+    """Record session start time so pytest_sessionfinish can compute duration."""
+    global _session_start
+    _session_start = _time.time()
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    """Send suite-level metrics to DataDog after all tests complete.
+
+    Uses pytest's TerminalReporter plugin to read aggregate pass/fail/skip counts.
+    No-op if DD_API_KEY is absent — CI stays green without the secret set.
+    """
+    try:
+        reporter = session.config.pluginmanager.get_plugin("terminalreporter")
+        passed  = len(reporter.stats.get("passed",  []))
+        failed  = len(reporter.stats.get("failed",  []))
+        skipped = len(reporter.stats.get("skipped", []))
+        duration_ms = (_time.time() - _session_start) * 1000
+        datadog_reporter.send_test_metrics(passed, failed, skipped, duration_ms, "ai-eval")
+    except Exception as exc:
+        print(f"[WARN] DataDog session finish hook failed: {exc}")
 
 
 # ── OpenAI client ──────────────────────────────────────────────────────────────

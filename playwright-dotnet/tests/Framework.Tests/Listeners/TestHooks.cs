@@ -25,6 +25,9 @@ public class TestHooks
     // NUnit does not expose global pass/fail counts in SetUpFixture.
     // Counts are read from environment variables set by the CI runner (or default to "?").
 
+    // Captures the moment BeforeAll runs so AfterAll can compute total suite duration.
+    private DateTime _suiteStart;
+
     /// <summary>
     /// Runs once before the first test in the entire assembly starts.
     /// Used for suite-level setup tasks: starting external services, printing a header,
@@ -36,6 +39,7 @@ public class TestHooks
     [OneTimeSetUp]
     public void BeforeAll()
     {
+        _suiteStart = DateTime.UtcNow;
         // Log suite start to the NUnit console output — visible in CI build logs.
         Console.WriteLine("[TestHooks] Test suite starting.");
     }
@@ -75,5 +79,14 @@ public class TestHooks
         // Post to Slack. SlackUtils.SendResultAsync is a no-op if the webhook URL
         // is not configured, so this call is always safe to make.
         await SlackUtils.SendResultAsync(summary);
+
+        // Send suite-level metrics to DataDog. Parse env-var counts to integers;
+        // default to 0 if not set. DataDogUtils.SendTestMetricsAsync is a no-op
+        // when DD_API_KEY is absent, so this call is always safe to make.
+        int.TryParse(passed,  out int passedInt);
+        int.TryParse(failed,  out int failedInt);
+        int.TryParse(skipped, out int skippedInt);
+        long durationMs = (long)(DateTime.UtcNow - _suiteStart).TotalMilliseconds;
+        await DataDogUtils.SendTestMetricsAsync(passedInt, failedInt, skippedInt, durationMs, "playwright-dotnet");
     }
 }
