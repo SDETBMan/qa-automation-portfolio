@@ -14,6 +14,10 @@ Metric: RoleAdherenceMetric
   - Runs against all scenarios (smoke + regression + safety) because persona
     consistency is a non-negotiable baseline across all conversation types.
 
+Note on DeepEval 3.x API:
+  ConversationalTestCase now takes Turn(role, content) objects that interleave
+  user and assistant messages — not LLMTestCase objects as in earlier versions.
+
 DeepEval uses GPT-4o-mini as the LLM judge for scoring.
 """
 
@@ -23,7 +27,7 @@ from pathlib import Path
 import pytest
 from deepeval import assert_test
 from deepeval.metrics import RoleAdherenceMetric
-from deepeval.test_case import ConversationalTestCase, LLMTestCase
+from deepeval.test_case import ConversationalTestCase, Turn
 
 from chatbot.swag_support_bot import CHATBOT_ROLE
 from utils.datadog_reporter import send_eval_score
@@ -51,7 +55,8 @@ def test_role_adherence(case, bot):
     turns = []
     for turn in case["turns"]:
         response = bot.chat(turn["content"])
-        turns.append(LLMTestCase(input=turn["content"], actual_output=response))
+        turns.append(Turn(role="user", content=turn["content"]))
+        turns.append(Turn(role="assistant", content=response))
 
     test_case = ConversationalTestCase(chatbot_role=CHATBOT_ROLE, turns=turns)
     metric = RoleAdherenceMetric(threshold=0.7, model="gpt-4o-mini")
