@@ -75,15 +75,18 @@ public class DataDogUtils {
             // Use Jackson for safe serialization — handles any special characters in tags
             String jsonPayload = new ObjectMapper().writeValueAsString(payload);
 
-            RestAssured.given()
+            int status = RestAssured.given()
                     .contentType(ContentType.JSON)
                     .header("DD-API-KEY", apiKey)
                     .body(jsonPayload)
                     .post(DD_API_URL)
-                    .then()
-                    .statusCode(202);  // DataDog v2 returns 202 Accepted on success
+                    .getStatusCode();
 
-            System.out.println("[INFO] DataDog metrics sent successfully.");
+            if (status == 202) {
+                System.out.println("[INFO] DataDog metrics sent successfully.");
+            } else {
+                System.out.println("[WARN] DataDog metrics returned unexpected status: " + status);
+            }
         } catch (Exception e) {
             // Never crash the test run over a metrics delivery failure
             System.err.println("[ERROR] DataDog metrics failed: " + e.getMessage());
