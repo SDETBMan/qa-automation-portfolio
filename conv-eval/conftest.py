@@ -69,14 +69,25 @@ def openai_client() -> OpenAI:
 # ── Stateful chatbot — fresh instance per test ────────────────────────────────
 
 @pytest.fixture
-def bot(openai_client: OpenAI) -> SwagSupportBot:
+def bot(openai_client: OpenAI):
     """
-    Returns a fresh SwagSupportBot for each test.
+    Yields a fresh SwagSupportBot for each test, then emits per-call latency
+    and token usage to DataDog after the test completes.
 
     Function-scoped (default) so each parametrized scenario gets its own
     clean conversation history — tests cannot bleed state into one another.
+    The teardown runs regardless of pass/fail so cost metrics are always captured.
     """
-    return SwagSupportBot(openai_client)
+    instance = SwagSupportBot(openai_client)
+    yield instance
+
+    tags = ["model:gpt-4o-mini", "framework:conv-eval"]
+    for stat in instance.call_stats:
+        datadog_reporter.send_eval_score("llm.api.latency_ms", stat["latency_ms"], tags)
+        if "total_tokens" in stat:
+            datadog_reporter.send_eval_score("llm.api.prompt_tokens",     stat["prompt_tokens"],     tags)
+            datadog_reporter.send_eval_score("llm.api.completion_tokens", stat["completion_tokens"], tags)
+            datadog_reporter.send_eval_score("llm.api.total_tokens",      stat["total_tokens"],      tags)
 
 
 # ── Conversation dataset ───────────────────────────────────────────────────────

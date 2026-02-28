@@ -122,9 +122,14 @@ def answer_generator(openai_client: OpenAI):
     """
     Returns a callable that generates a GPT-4o-mini answer grounded in the
     provided context chunks — the core of the RAG pipeline under test.
+
+    Emits per-call latency and token usage to DataDog so cost and performance
+    regressions are visible alongside eval quality scores.
     """
     def _generate(question: str, context: list[str]) -> str:
         context_text = "\n\n".join(context)
+
+        t0 = _time.time()
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             temperature=0,
@@ -141,6 +146,15 @@ def answer_generator(openai_client: OpenAI):
                 {"role": "user", "content": question},
             ],
         )
+        latency_ms = (_time.time() - t0) * 1000
+
+        tags = ["model:gpt-4o-mini", "framework:ai-eval"]
+        datadog_reporter.send_eval_score("llm.api.latency_ms", latency_ms, tags)
+        if response.usage:
+            datadog_reporter.send_eval_score("llm.api.prompt_tokens",     response.usage.prompt_tokens,     tags)
+            datadog_reporter.send_eval_score("llm.api.completion_tokens", response.usage.completion_tokens, tags)
+            datadog_reporter.send_eval_score("llm.api.total_tokens",      response.usage.total_tokens,      tags)
+
         return response.choices[0].message.content
 
     return _generate
