@@ -4,10 +4,12 @@
 [![selenium-java CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/selenium-java.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/selenium-java.yml)
 [![cucumber CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml)
 [![ai-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml)
+[![conv-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/conv-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/conv-eval.yml)
+[![agent-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/agent-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/agent-eval.yml)
 [![k8s CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml)
 [![postman-newman CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/postman-newman.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/postman-newman.yml)
 
-A monorepo housing five independent, production-grade test automation frameworks, each showcasing a distinct language and testing approach used by senior SDETs in the industry.
+A monorepo housing seven independent, production-grade test automation frameworks, each showcasing a distinct testing approach used by senior SDETs in the industry.
 
 ---
 
@@ -15,41 +17,47 @@ A monorepo housing five independent, production-grade test automation frameworks
 
 | Framework | Language | Stack | README |
 |---|---|---|---|
+| [`ai-eval`](./ai-eval/) | Python | DeepEval · Pytest · OpenAI · ChromaDB · Python 3.11 | [→](./ai-eval/) |
+| [`conv-eval`](./conv-eval/) | Python | DeepEval · Pytest · OpenAI · Python 3.11 | [→](./conv-eval/) |
+| [`agent-eval`](./agent-eval/) | Python | DeepEval · Pytest · OpenAI · Pydantic · Python 3.11 | [→](./agent-eval/) |
 | [`playwright-dotnet`](./playwright-dotnet/) | C# · TypeScript | Playwright 1.44 · NUnit · .NET 8 · TypeScript 5.4 | [→](./playwright-dotnet/README.md) |
 | [`selenium-java`](./selenium-java/) | Java | Selenium 4 · TestNG · Maven · Java 17 | [→](./selenium-java/README.md) |
 | [`cucumber`](./cucumber/) | Java | Cucumber 7 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
-| [`ai-eval`](./ai-eval/) | Python | DeepEval · Pytest · OpenAI · ChromaDB · Python 3.11 | [→](./ai-eval/) |
 | [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
 
 ---
 
 ## Feature Coverage
 
-| Capability | playwright-dotnet | selenium-java | cucumber | ai-eval | postman |
-|---|---|---|---|---|---|
-| **Page Object Model** | ✅ C# + TypeScript | ✅ Java | ✅ Java | — | — |
-| **Parallel execution** | ✅ `[Parallelizable]` · `fullyParallel` | ✅ `ThreadLocal` · `parallel="tests"` | ✅ `ThreadLocal` · `@DataProvider(parallel=true)` | — | — |
-| **Fixtures / base classes** | ✅ `AuthenticatedTest` · `test.extend<>` | ✅ `BaseTest` | ✅ Cucumber `Hooks` | ✅ `conftest.py` session fixtures | — |
-| **Retry on failure** | ✅ `[Retry]` · `retries: 2` in CI | ✅ `RetryAnalyzer` + `AnnotationTransformer` | ✅ `RetryAnalyzer` + `AnnotationTransformer` | — | — |
-| **Cross-browser** | ✅ Chromium · Firefox · WebKit | ✅ Chrome · Firefox · Edge | ✅ Chrome · Firefox · Edge | — | — |
-| **BDD / Gherkin** | — | — | ✅ 6 feature files · 19+ scenarios | — | — |
-| **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline | ✅ `golden_dataset.json` · `@pytest.mark.parametrize` | ✅ pre-request scripts · collection variables |
-| **REST API testing** | ✅ `HttpClient` | ✅ RestAssured | ✅ RestAssured | — | ✅ Newman CLI · 10 requests · 4 test groups |
-| **Mocking & Service Virtualization** | ✅ 4 patterns — block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | — | — |
-| **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`) — DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages | — | ✅ JUnit XML · htmlextra HTML report |
-| **AI/ML Self-Healing Locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 | — | — |
-| **LLM Evaluation (RAG pipeline)** | — | — | — | ✅ Answer Relevancy · Faithfulness · Hallucination · Safety | — |
-| **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS | — | — |
-| **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — | — |
-| **Database validation** | — | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — | — |
-| **Security testing (OWASP)** | ✅ 4 test cases | ✅ 4 test cases | ✅ 3 BDD scenarios | — | — |
-| **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — | — |
-| **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — |
-| **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — | — |
-| **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility (JUnit XML) |
-| **GitHub Actions CI** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Agentic AI Development** | ✅ | ✅ | ✅ | ✅ | ✅ |
-
+| Capability | playwright-dotnet | selenium-java | cucumber | ai-eval | conv-eval | agent-eval | postman |
+|---|---|---|---|---|---|---|---|
+| **Page Object Model** | ✅ C# + TypeScript | ✅ Java | ✅ Java | — | — | — | — |
+| **Parallel execution** | ✅ `[Parallelizable]` · `fullyParallel` | ✅ `ThreadLocal` · `parallel="tests"` | ✅ `ThreadLocal` · `@DataProvider(parallel=true)` | — | — | — | — |
+| **Fixtures / base classes** | ✅ `AuthenticatedTest` · `test.extend<>` | ✅ `BaseTest` | ✅ Cucumber `Hooks` | ✅ `conftest.py` session fixtures | ✅ `conftest.py` session + function fixtures | ✅ `conftest.py` session + function fixtures | — |
+| **Retry on failure** | ✅ `[Retry]` · `retries: 2` in CI | ✅ `RetryAnalyzer` + `AnnotationTransformer` | ✅ `RetryAnalyzer` + `AnnotationTransformer` | — | — | — | — |
+| **Cross-browser** | ✅ Chromium · Firefox · WebKit | ✅ Chrome · Firefox · Edge | ✅ Chrome · Firefox · Edge | — | — | — | — |
+| **BDD / Gherkin** | — | — | ✅ 6 feature files · 19+ scenarios | — | — | — | — |
+| **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline | ✅ `golden_dataset.json` · `@pytest.mark.parametrize` | ✅ `conversations.json` · `@pytest.mark.parametrize` | ✅ `agent_scenarios.json` · `@pytest.mark.parametrize` | ✅ pre-request scripts · collection variables |
+| **REST API testing** | ✅ `HttpClient` | ✅ RestAssured | ✅ RestAssured | — | — | — | ✅ Newman CLI · 10 requests · 4 test groups |
+| **Mocking & Service Virtualization** | ✅ 4 patterns — block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | — | — | — | — |
+| **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`) — DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages | — | — | — | ✅ JUnit XML · htmlextra HTML report |
+| **AI/ML Self-Healing Locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 | — | — | — | — |
+| **LLM Evaluation (RAG pipeline)** | — | — | — | ✅ Answer Relevancy · Faithfulness · Hallucination · Safety · JSON Schema | — | — | — |
+| **LLM Evaluation (Conversational)** | — | — | — | — | ✅ Turn Relevancy · Knowledge Retention · Role Adherence · Graceful Handling | — | — |
+| **LLM Evaluation (Agentic / tool-use)** | — | — | — | — | — | ✅ Tool Correctness · Task Completion | — |
+| **Function-calling agent** | — | — | — | — | — | ✅ Multi-step tool orchestration · deterministic tool implementations | — |
+| **JSON schema validation** | — | — | — | ✅ `JsonCorrectnessMetric` · Pydantic `BaseModel` schemas | — | — | — |
+| **Cost & latency tracking** | — | — | — | ✅ per-call tokens · `latency_ms` → DataDog | ✅ per-turn tokens · `latency_ms` → DataDog | ✅ per-step tokens · `latency_ms` → DataDog | — |
+| **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS | — | — | — | — |
+| **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — | — | — | — |
+| **Database validation** | — | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — | — | — | — |
+| **Security testing (OWASP)** | ✅ 4 test cases | ✅ 4 test cases | ✅ 3 BDD scenarios | — | — | — | — |
+| **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — | — | — | — |
+| **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — | — | — |
+| **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — | — | — | — |
+| **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility (JUnit XML) |
+| **GitHub Actions CI** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Agentic AI Development** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -141,6 +149,42 @@ pytest -m smoke -v
 pytest -m safety -v
 ```
 
+### conv-eval
+
+**Prerequisites:** [Python 3.11+](https://python.org) · OpenAI API key in `conv-eval/.env`
+
+```bash
+cd conv-eval
+pip install -r requirements.txt
+
+# Smoke tests only (fast) — turn relevancy + role adherence across normal scenarios
+pytest -m smoke -v
+
+# Retention tests — knowledge retention across implicit reference and correction scenarios
+pytest -m retention -v
+
+# Safety tests — graceful handling of out-of-scope queries and prompt injection
+pytest -m safety -v
+
+# Full suite
+pytest -v
+```
+
+### agent-eval
+
+**Prerequisites:** [Python 3.11+](https://python.org) · OpenAI API key in `agent-eval/.env`
+
+```bash
+cd agent-eval
+pip install -r requirements.txt
+
+# Smoke tests only (fast) — tool correctness + task completion across single-tool scenarios
+pytest -m smoke -v
+
+# Full suite — includes multi-tool orchestration scenarios
+pytest -v
+```
+
 ### postman (Newman API tests)
 
 **Prerequisites:** [Node.js 20 LTS](https://nodejs.org)
@@ -180,6 +224,8 @@ qa-automation-portfolio/
 │       ├── selenium-java.yml       # triggers on: paths selenium-java/**
 │       ├── cucumber.yml            # triggers on: paths cucumber/**
 │       ├── ai-eval.yml             # triggers on: paths ai-eval/**
+│       ├── conv-eval.yml           # triggers on: paths conv-eval/**
+│       ├── agent-eval.yml          # triggers on: paths agent-eval/**
 │       ├── postman-newman.yml      # triggers on: paths postman/**
 │       └── k8s.yml                 # workflow_dispatch only — Kind cluster + grid smoke tests
 ├── k8s/                            # Kubernetes manifests (mirrors docker-compose.yaml)
@@ -206,15 +252,27 @@ qa-automation-portfolio/
 ├── ai-eval/                            # Python · Pytest · DeepEval · OpenAI · ChromaDB
 │   ├── rag/                            # RAG pipeline: document, embedder, retriever
 │   ├── datasets/golden_dataset.json    # Ground truth Q&A pairs (SauceDemo FAQ)
-│   ├── evals/                          # test_answer_relevancy · faithfulness · hallucination · safety
-│   ├── conftest.py                     # Session fixtures: OpenAI client, ChromaDB, retriever
+│   ├── evals/                          # test_answer_relevancy · faithfulness · hallucination · safety · json_correctness
+│   ├── conftest.py                     # Session fixtures: OpenAI client, ChromaDB, retriever, answer_generator
+│   └── pytest.ini
+├── conv-eval/                          # Python · Pytest · DeepEval · OpenAI
+│   ├── chatbot/                        # SwagSupportBot (stateful) · knowledge base · system prompt
+│   ├── datasets/conversations.json     # 7 multi-turn conversation scenarios
+│   ├── evals/                          # test_conversation_relevancy · knowledge_retention · role_adherence · graceful_handling
+│   ├── conftest.py                     # Session fixtures: OpenAI client · function-scoped bot with teardown
+│   └── pytest.ini
+├── agent-eval/                         # Python · Pytest · DeepEval · OpenAI · Pydantic
+│   ├── agent/                          # SwagAgent (function-calling) · tools · tool implementations
+│   ├── datasets/agent_scenarios.json   # 7 scenarios: single-tool and multi-tool orchestration
+│   ├── evals/                          # test_tool_correctness · test_task_completion
+│   ├── conftest.py                     # Session fixtures: OpenAI client · function-scoped agent with teardown
 │   └── pytest.ini
 ├── postman/                            # Postman Collection v2.1 · Newman · Node.js 20
 │   ├── collections/                   # jsonplaceholder.postman_collection.json — 10 requests, 4 folders
 │   ├── environments/                  # jsonplaceholder.postman_environment.json
 │   ├── results/                       # JUnit XML · HTML report (git-ignored)
 │   └── package.json                   # Newman + htmlextra reporter
-├── Makefile                            # One-command runner for all five suites
+├── Makefile                            # One-command runner for all suites
 ├── .gitignore
 └── README.md
 ```
@@ -223,7 +281,7 @@ qa-automation-portfolio/
 
 ## CI Strategy
 
-Each workflow has **path filters** so a push to `selenium-java/` only triggers the `selenium-java.yml` pipeline — the other four frameworks are unaffected. A nightly `cron` schedule keeps the full portfolio green without cross-framework interference.
+Each workflow has **path filters** so a push to `selenium-java/` only triggers the `selenium-java.yml` pipeline — the other frameworks are unaffected. A nightly `cron` schedule keeps the full portfolio green without cross-framework interference.
 
 | Workflow | Trigger | dispatch inputs |
 |---|---|---|
@@ -231,22 +289,31 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | execution mode · browser · JMeter toggle |
 | `ai-eval.yml` | push · PR · nightly 05:00 UTC | pytest marker filter (smoke · regression · safety) |
-| `postman-newman.yml` | push · PR · nightly 07:00 UTC | folder filter (Smoke · Users · Posts · Integration Flow) |
+| `conv-eval.yml` | push · PR · nightly 06:00 UTC | pytest marker filter (smoke · regression · safety · retention) |
+| `agent-eval.yml` | push · PR · nightly 07:00 UTC | pytest marker filter (smoke · regression) |
+| `postman-newman.yml` | push · PR · nightly 08:00 UTC | folder filter (Smoke · Users · Posts · Integration Flow) |
 | `k8s.yml` | `workflow_dispatch` only | framework (selenium-java · cucumber) |
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
 
-> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all five frameworks — all utilities skip gracefully without it.
+> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, and `agent-eval.yml`. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks — all utilities skip gracefully without it.
 
 ### DataDog Observability
 
-Two DataDog features run across all four frameworks:
+Two DataDog features run across all frameworks:
 
 **CI Visibility** — the `datadog/datadog-ci-github-action@v2.5.0` step (`if: always()`) uploads JUnit/TRX XML results to DataDog's Test Optimization dashboard after every run. Enables pass/fail trend charts, flaky-test detection, and duration tracking without leaving the DataDog UI.
 
 **Custom metrics** — a `DataDogUtils` utility (Java, C#, Python) sends four GAUGE metrics to the v2 HTTP API at suite finish: `test.suite.passed`, `test.suite.failed`, `test.suite.skipped`, `test.suite.duration_ms`. Tagged with `framework:<name>`, `service:qa-automation-portfolio`, `env:ci`.
 
-**ai-eval bonus** — `datadog_reporter.send_eval_score()` sends individual LLM evaluation scores (`llm.eval.answer_relevancy`, `llm.eval.faithfulness`, `llm.eval.hallucination`, `llm.eval.safety`) after each DeepEval assertion, connecting AI model quality directly to observability dashboards.
+**AI evaluation frameworks bonus** — `datadog_reporter.send_eval_score()` sends LLM evaluation scores after each DeepEval assertion, connecting AI model quality directly to observability dashboards:
+
+| Framework | DataDog metrics |
+|---|---|
+| `ai-eval` | `llm.eval.answer_relevancy` · `llm.eval.faithfulness` · `llm.eval.hallucination` · `llm.eval.safety` · `llm.eval.json_correctness` |
+| `conv-eval` | `llm.conv.turn_relevancy` · `llm.conv.knowledge_retention` · `llm.conv.role_adherence` · `llm.conv.graceful_handling` |
+| `agent-eval` | `llm.agent.tool_correctness` · `llm.agent.task_completion` |
+| all three | `llm.api.latency_ms` · `llm.api.prompt_tokens` · `llm.api.completion_tokens` · `llm.api.total_tokens` |
 
 All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues — CI stays green.
 
@@ -254,7 +321,7 @@ All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KE
 
 ## Target Application
 
-All three frameworks test [SauceDemo](https://www.saucedemo.com/) — a purpose-built e-commerce demo with stable, publicly documented test credentials. No back-end setup is required.
+All three browser frameworks test [SauceDemo](https://www.saucedemo.com/) — a purpose-built e-commerce demo with stable, publicly documented test credentials. No back-end setup is required. The three AI evaluation frameworks (`ai-eval`, `conv-eval`, `agent-eval`) also use the SauceDemo domain as their knowledge base, simulating a real customer support system.
 
 | Page | Coverage |
 |---|---|
