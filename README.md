@@ -63,6 +63,64 @@ A monorepo housing seven independent, production-grade test automation framework
 
 ## Quick Start
 
+### ai-eval
+
+**Prerequisites:** [Python 3.11+](https://python.org) · OpenAI API key in `ai-eval/.env`
+
+```bash
+# From the repo root
+make ai-eval
+
+# Or manually
+cd ai-eval
+pip install -r requirements.txt
+
+# Run all evaluations
+pytest -v
+
+# Smoke tests only (fast)
+pytest -m smoke -v
+
+# Safety tests only
+pytest -m safety -v
+```
+
+### conv-eval
+
+**Prerequisites:** [Python 3.11+](https://python.org) · OpenAI API key in `conv-eval/.env`
+
+```bash
+cd conv-eval
+pip install -r requirements.txt
+
+# Smoke tests only (fast) — turn relevancy + role adherence across normal scenarios
+pytest -m smoke -v
+
+# Retention tests — knowledge retention across implicit reference and correction scenarios
+pytest -m retention -v
+
+# Safety tests — graceful handling of out-of-scope queries and prompt injection
+pytest -m safety -v
+
+# Full suite
+pytest -v
+```
+
+### agent-eval
+
+**Prerequisites:** [Python 3.11+](https://python.org) · OpenAI API key in `agent-eval/.env`
+
+```bash
+cd agent-eval
+pip install -r requirements.txt
+
+# Smoke tests only (fast) — tool correctness + task completion across single-tool scenarios
+pytest -m smoke -v
+
+# Full suite — includes multi-tool orchestration scenarios
+pytest -v
+```
+
 ### playwright-dotnet (C# + TypeScript)
 
 **Prerequisites:** [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8) · [Node.js 20 LTS](https://nodejs.org)
@@ -127,64 +185,6 @@ mvn clean test -Dtarget=grid -Dheadless=true
 mvn jmeter:jmeter
 ```
 
-### ai-eval
-
-**Prerequisites:** [Python 3.11+](https://python.org) · OpenAI API key in `ai-eval/.env`
-
-```bash
-# From the repo root
-make ai-eval
-
-# Or manually
-cd ai-eval
-pip install -r requirements.txt
-
-# Run all evaluations
-pytest -v
-
-# Smoke tests only (fast)
-pytest -m smoke -v
-
-# Safety tests only
-pytest -m safety -v
-```
-
-### conv-eval
-
-**Prerequisites:** [Python 3.11+](https://python.org) · OpenAI API key in `conv-eval/.env`
-
-```bash
-cd conv-eval
-pip install -r requirements.txt
-
-# Smoke tests only (fast) — turn relevancy + role adherence across normal scenarios
-pytest -m smoke -v
-
-# Retention tests — knowledge retention across implicit reference and correction scenarios
-pytest -m retention -v
-
-# Safety tests — graceful handling of out-of-scope queries and prompt injection
-pytest -m safety -v
-
-# Full suite
-pytest -v
-```
-
-### agent-eval
-
-**Prerequisites:** [Python 3.11+](https://python.org) · OpenAI API key in `agent-eval/.env`
-
-```bash
-cd agent-eval
-pip install -r requirements.txt
-
-# Smoke tests only (fast) — tool correctness + task completion across single-tool scenarios
-pytest -m smoke -v
-
-# Full suite — includes multi-tool orchestration scenarios
-pytest -v
-```
-
 ### postman (Newman API tests)
 
 **Prerequisites:** [Node.js 20 LTS](https://nodejs.org)
@@ -220,35 +220,14 @@ npm run test:html
 qa-automation-portfolio/
 ├── .github/
 │   └── workflows/
-│       ├── playwright-dotnet.yml   # triggers on: paths playwright-dotnet/**
-│       ├── selenium-java.yml       # triggers on: paths selenium-java/**
-│       ├── cucumber.yml            # triggers on: paths cucumber/**
 │       ├── ai-eval.yml             # triggers on: paths ai-eval/**
 │       ├── conv-eval.yml           # triggers on: paths conv-eval/**
 │       ├── agent-eval.yml          # triggers on: paths agent-eval/**
+│       ├── playwright-dotnet.yml   # triggers on: paths playwright-dotnet/**
+│       ├── selenium-java.yml       # triggers on: paths selenium-java/**
+│       ├── cucumber.yml            # triggers on: paths cucumber/**
 │       ├── postman-newman.yml      # triggers on: paths postman/**
 │       └── k8s.yml                 # workflow_dispatch only — Kind cluster + grid smoke tests
-├── k8s/                            # Kubernetes manifests (mirrors docker-compose.yaml)
-│   ├── namespace.yaml              # selenium-grid namespace
-│   ├── configmap.yaml              # Healenium DB credentials
-│   ├── selenium-grid/              # Hub + Chrome/Firefox/Edge node deployments & services
-│   └── healenium/                  # Postgres, hlm-backend, hlm-selector-imitator
-├── playwright-dotnet/              # Playwright · NUnit · C# · TypeScript
-│   ├── tests/
-│   │   ├── Framework.Tests/        # NUnit C# test project
-│   │   └── playwright-ts/          # TypeScript Playwright project
-│   ├── Makefile
-│   └── run-all.sh
-├── selenium-java/                  # Selenium 4 · TestNG · Java · Maven
-│   ├── src/main/java/              # Page objects, driver factory, utilities
-│   ├── src/test/java/              # Tests, listeners, unit tests
-│   ├── testng.xml                  # Web · API · Unit suites
-│   └── testng_mobile.xml           # Android & iOS Appium suites
-├── cucumber/                       # Cucumber 7 · TestNG · Selenium 4 · Java
-│   ├── src/main/java/              # Utilities: ConfigReader, RetryAnalyzer, SlackUtils
-│   ├── src/test/java/              # Step definitions, runners, page objects
-│   ├── src/test/resources/features/  # login · dashboard · inventory · cart · api · security
-│   └── docker-compose.yaml
 ├── ai-eval/                            # Python · Pytest · DeepEval · OpenAI · ChromaDB
 │   ├── rag/                            # RAG pipeline: document, embedder, retriever
 │   ├── datasets/golden_dataset.json    # Ground truth Q&A pairs (SauceDemo FAQ)
@@ -267,11 +246,32 @@ qa-automation-portfolio/
 │   ├── evals/                          # test_tool_correctness · test_task_completion
 │   ├── conftest.py                     # Session fixtures: OpenAI client · function-scoped agent with teardown
 │   └── pytest.ini
+├── playwright-dotnet/              # Playwright · NUnit · C# · TypeScript
+│   ├── tests/
+│   │   ├── Framework.Tests/        # NUnit C# test project
+│   │   └── playwright-ts/          # TypeScript Playwright project
+│   ├── Makefile
+│   └── run-all.sh
+├── selenium-java/                  # Selenium 4 · TestNG · Java · Maven
+│   ├── src/main/java/              # Page objects, driver factory, utilities
+│   ├── src/test/java/              # Tests, listeners, unit tests
+│   ├── testng.xml                  # Web · API · Unit suites
+│   └── testng_mobile.xml           # Android & iOS Appium suites
+├── cucumber/                       # Cucumber 7 · TestNG · Selenium 4 · Java
+│   ├── src/main/java/              # Utilities: ConfigReader, RetryAnalyzer, SlackUtils
+│   ├── src/test/java/              # Step definitions, runners, page objects
+│   ├── src/test/resources/features/  # login · dashboard · inventory · cart · api · security
+│   └── docker-compose.yaml
 ├── postman/                            # Postman Collection v2.1 · Newman · Node.js 20
 │   ├── collections/                   # jsonplaceholder.postman_collection.json — 10 requests, 4 folders
 │   ├── environments/                  # jsonplaceholder.postman_environment.json
 │   ├── results/                       # JUnit XML · HTML report (git-ignored)
 │   └── package.json                   # Newman + htmlextra reporter
+├── k8s/                            # Kubernetes manifests (mirrors docker-compose.yaml)
+│   ├── namespace.yaml              # selenium-grid namespace
+│   ├── configmap.yaml              # Healenium DB credentials
+│   ├── selenium-grid/              # Hub + Chrome/Firefox/Edge node deployments & services
+│   └── healenium/                  # Postgres, hlm-backend, hlm-selector-imitator
 ├── Makefile                            # One-command runner for all suites
 ├── .gitignore
 └── README.md
