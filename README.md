@@ -19,7 +19,7 @@ A monorepo housing five independent, production-grade test automation frameworks
 | [`selenium-java`](./selenium-java/) | Java | Selenium 4 · TestNG · Maven · Java 17 | [→](./selenium-java/README.md) |
 | [`cucumber`](./cucumber/) | Java | Cucumber 7 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
 | [`ai-eval`](./ai-eval/) | Python | DeepEval · Pytest · OpenAI · ChromaDB · Python 3.11 | [→](./ai-eval/) |
-| [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | — |
+| [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
 
 ---
 
