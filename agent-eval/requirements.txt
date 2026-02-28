@@ -1,0 +1,6 @@
+deepeval>=1.0.0
+openai>=1.30.0
+python-dotenv>=1.0.0
+pytest>=8.0.0
+requests>=2.31.0          # used by datadog_reporter
+pytest-rerunfailures>=14.0  # retries tests that fail due to transient OpenAI API timeouts

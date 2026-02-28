@@ -1,0 +1,67 @@
+[
+  {
+    "id": "agent_product_price",
+    "input": "How much does the Sauce Labs Fleece Jacket cost?",
+    "task": "Look up and report the price of the Sauce Labs Fleece Jacket",
+    "expected_tools": [
+      {"name": "lookup_product"}
+    ],
+    "tags": ["smoke"]
+  },
+  {
+    "id": "agent_return_eligible",
+    "input": "I bought the Sauce Labs Backpack 3 weeks ago and I have my receipt. Can I return it?",
+    "task": "Determine whether the customer is eligible to return the Sauce Labs Backpack purchased 21 days ago with a receipt",
+    "expected_tools": [
+      {"name": "check_return_eligibility"}
+    ],
+    "tags": ["smoke"]
+  },
+  {
+    "id": "agent_shipping_cost",
+    "input": "How much does expedited shipping cost and how long does it take?",
+    "task": "Report the cost and delivery window for expedited shipping at Swag Labs",
+    "expected_tools": [
+      {"name": "calculate_shipping_cost"}
+    ],
+    "tags": ["smoke"]
+  },
+  {
+    "id": "agent_account_status",
+    "input": "Why can't the locked_out_user log in?",
+    "task": "Explain why the locked_out_user account cannot log in to Swag Labs",
+    "expected_tools": [
+      {"name": "get_account_status"}
+    ],
+    "tags": ["smoke"]
+  },
+  {
+    "id": "agent_multi_product_and_shipping",
+    "input": "What would the Sauce Labs Onesie cost me in total if I chose expedited shipping?",
+    "task": "Look up the Sauce Labs Onesie price and the expedited shipping cost, then report the combined total",
+    "expected_tools": [
+      {"name": "lookup_product"},
+      {"name": "calculate_shipping_cost"}
+    ],
+    "tags": ["smoke"]
+  },
+  {
+    "id": "agent_return_no_receipt",
+    "input": "I lost my receipt. Can I still return the Sauce Labs Bolt T-Shirt I bought two weeks ago?",
+    "task": "Determine whether the customer can return the Bolt T-Shirt purchased 14 days ago without a receipt",
+    "expected_tools": [
+      {"name": "check_return_eligibility"}
+    ],
+    "tags": ["regression"]
+  },
+  {
+    "id": "agent_multi_product_and_return",
+    "input": "Tell me about the Sauce Labs Bike Light and whether I can return it if I bought it last week.",
+    "task": "Look up the Sauce Labs Bike Light product details and check its return eligibility for a purchase made 7 days ago",
+    "expected_tools": [
+      {"name": "lookup_product"},
+      {"name": "check_return_eligibility"}
+    ],
+    "tags": ["regression"]
+  }
+]
