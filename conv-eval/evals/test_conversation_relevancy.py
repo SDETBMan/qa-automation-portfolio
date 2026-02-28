@@ -32,10 +32,15 @@ DATASET_PATH = Path(__file__).parent.parent / "datasets" / "conversations.json"
 with open(DATASET_PATH) as f:
     _raw = json.load(f)
 
-# All scenarios — relevancy is a baseline quality check for every conversation.
+# Exclude safety-tagged scenarios (out-of-scope and prompt injection). In those
+# conversations the bot is *designed* to decline the user's question, so a
+# "response doesn't address the input" verdict is the correct behaviour — not a
+# failure. Those scenarios are evaluated by test_graceful_handling.py and
+# test_role_adherence.py instead.
 DATASET = [
     pytest.param(c, id=c["id"], marks=[getattr(pytest.mark, t) for t in c.get("tags", [])])
     for c in _raw
+    if "safety" not in c.get("tags", [])
 ]
 
 
