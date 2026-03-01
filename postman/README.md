@@ -6,16 +6,16 @@
 ![Postman](https://img.shields.io/badge/Tool-Postman-orange)
 ![Newman](https://img.shields.io/badge/CLI-Newman-blue)
 
-A production-grade API test suite built with **Postman Collection v2.1** and executed headlessly via **Newman CLI**. Demonstrates senior SDET proficiency across four testing layers — smoke, functional, write-operation, and integration — targeting the [JSONPlaceholder](https://jsonplaceholder.typicode.com) REST API.
+A production-grade API test suite built with **Postman Collection v2.1** and executed headlessly via **Newman CLI**. Demonstrates Senior SDET proficiency across four testing layers: smoke, functional, write-operation, and integration, targeting the [JSONPlaceholder](https://jsonplaceholder.typicode.com) REST API.
 
 ## Key Features
 
 * **Four Test Layers:** Smoke connectivity checks, Users CRUD + negative-path tests, Posts write-operation validation, and a chained Integration Flow scenario.
-* **Request Chaining:** The Integration Flow folder captures a `userId` from Step 1's response and injects it into Step 2's query parameter — demonstrating cross-request state management with collection variables.
+* **Request Chaining:** The Integration Flow folder captures a `userId` from Step 1's response and injects it into Step 2's query parameter, demonstrating cross-request state management with collection variables.
 * **Pre-request Scripts:** Dynamic payload generation using `Date.now()` timestamps prevents test pollution between runs; stored variables are cleaned up post-assertion.
 * **Negative Path Coverage:** Explicit 404 test for a non-existent user (`GET /users/999`) validates error-handling behavior alongside happy-path tests.
 * **Dual Reporting:** JUnit XML for CI Visibility and DataDog integration; `htmlextra` HTML report for human-readable run summaries.
-* **CI/CD Ready:** GitHub Actions pipeline with a `workflow_dispatch` folder filter — run Smoke, Users, Posts, or Integration Flow independently without modifying the collection.
+* **CI/CD Ready:** GitHub Actions pipeline with a `workflow_dispatch` folder filter to run: Smoke, Users, Posts, or Integration Flow independently without modifying the collection.
 * **DataDog CI Visibility:** JUnit XML results uploaded to DataDog Test Optimization on every run for pass/fail trend tracking and duration metrics.
 
 ## Tech Stack
@@ -82,7 +82,7 @@ The `postman-newman.yml` workflow triggers on every push/PR to `main` that touch
 5. Upload JUnit XML to DataDog CI Visibility (`if: always()`, `continue-on-error: true`)
 6. Upload `newman-results.xml` as a workflow artifact (retained 30 days)
 
-> **Secret required:** `DD_API_KEY` in repository secrets enables DataDog CI Visibility. The upload step skips gracefully without it — CI stays green.
+> **Secret required:** `DD_API_KEY` in repository secrets enables DataDog CI Visibility. The upload step skips gracefully without it, while the CI stays green.
 
 ## Project Structure
 
