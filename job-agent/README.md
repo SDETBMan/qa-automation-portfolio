@@ -1,7 +1,7 @@
 # job-agent
 
 A Claude-powered agentic tool that finds relevant job postings, scores them against your
-resume/portfolio, and drafts tailored cover letters — all in one automated run.
+resume/portfolio, and drafts tailored cover letters. All in one automated run.
 
 Demonstrates **Anthropic Claude tool-use / agentic loops** alongside the portfolio's
 existing OpenAI-based evaluation frameworks.
