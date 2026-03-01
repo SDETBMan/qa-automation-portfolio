@@ -39,12 +39,13 @@ _MAX_ITER   = 30
 _TEMP       = 0
 
 # Roles to search — 5 queries, one per role type.
+# Targets fully remote roles OR hybrid positions in the Salt Lake City / Utah County corridor.
 SEARCH_QUERIES = [
-    "SDET remote job opening 2026",
-    "Lead QA Engineer remote job opening 2026",
-    "Quality Engineering Manager remote job 2026",
-    "AI QA Engineer LLM testing remote 2026",
-    "QA Automation Lead Selenium Playwright remote 2026",
+    "SDET remote OR \"Salt Lake City\" OR \"Lehi Utah\" OR \"South Jordan\" OR \"Draper\" job 2026",
+    "Lead QA Engineer remote OR \"Salt Lake City\" OR \"Lehi Utah\" OR \"South Jordan\" OR \"Draper\" job 2026",
+    "Quality Engineering Manager remote OR Utah \"full time\" OR \"contract to hire\" 2026",
+    "AI QA Engineer LLM testing remote OR Utah job 2026",
+    "QA Automation Lead Selenium Playwright remote OR \"Salt Lake City\" OR Utah job 2026",
 ]
 
 _SYSTEM_TEMPLATE = """\
@@ -65,6 +66,12 @@ candidate's profile, and draft tailored cover letters for the best matches.
 3. Call score_job_fit() for every unique job. Provide the full job_description text.
    score_job_fit returns {{score, strengths, gaps, recommendation}}.
    Score 0-10 based on alignment with the candidate profile above.
+   When scoring, also consider location fit: fully remote roles score higher than
+   hybrid roles outside Salt Lake City / Utah County corridor (Lehi, South Jordan,
+   Draper, West Valley). On-site-only roles outside that area should score <= 4
+   regardless of technical fit. Deprioritise roles that appear to be contract-only
+   (C2C / 1099) unless they are explicitly contract-to-hire. Strongly favour
+   full-time W2 and contract-to-hire positions.
 
 4. Filter to jobs with score >= 6. Sort descending by score.
 
