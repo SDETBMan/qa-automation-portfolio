@@ -281,7 +281,7 @@ qa-automation-portfolio/
 
 ## CI Strategy
 
-Each workflow has **path filters** so a push to `selenium-java/` only triggers the `selenium-java.yml` pipeline — the other frameworks are unaffected. A nightly `cron` schedule keeps the full portfolio green without cross-framework interference.
+Each workflow has **path filters** so a push to `selenium-java/` only triggers the `selenium-java.yml` pipeline, the other frameworks are unaffected. A nightly `cron` schedule keeps the full portfolio green without cross-framework interference.
 
 | Workflow | Trigger | dispatch inputs |
 |---|---|---|
@@ -296,17 +296,17 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
 
-> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, and `agent-eval.yml`. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks — all utilities skip gracefully without it.
+> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, and `agent-eval.yml`. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it.
 
 ### DataDog Observability
 
 Two DataDog features run across all frameworks:
 
-**CI Visibility** — the `datadog/datadog-ci-github-action@v2.5.0` step (`if: always()`) uploads JUnit/TRX XML results to DataDog's Test Optimization dashboard after every run. Enables pass/fail trend charts, flaky-test detection, and duration tracking without leaving the DataDog UI.
+**CI Visibility**: the `datadog/datadog-ci-github-action@v2.5.0` step (`if: always()`) uploads JUnit/TRX XML results to DataDog's Test Optimization dashboard after every run. Enables pass/fail trend charts, flaky-test detection, and duration tracking without leaving the DataDog UI.
 
-**Custom metrics** — a `DataDogUtils` utility (Java, C#, Python) sends four GAUGE metrics to the v2 HTTP API at suite finish: `test.suite.passed`, `test.suite.failed`, `test.suite.skipped`, `test.suite.duration_ms`. Tagged with `framework:<name>`, `service:qa-automation-portfolio`, `env:ci`.
+**Custom metrics**: a `DataDogUtils` utility (Java, C#, Python) sends four GAUGE metrics to the v2 HTTP API at suite finish: `test.suite.passed`, `test.suite.failed`, `test.suite.skipped`, `test.suite.duration_ms`. Tagged with `framework:<name>`, `service:qa-automation-portfolio`, `env:ci`.
 
-**AI evaluation frameworks bonus** — `datadog_reporter.send_eval_score()` sends LLM evaluation scores after each DeepEval assertion, connecting AI model quality directly to observability dashboards:
+**AI evaluation frameworks bonus**: `datadog_reporter.send_eval_score()` sends LLM evaluation scores after each DeepEval assertion, connecting AI model quality directly to observability dashboards:
 
 | Framework | DataDog metrics |
 |---|---|
@@ -315,13 +315,13 @@ Two DataDog features run across all frameworks:
 | `agent-eval` | `llm.agent.tool_correctness` · `llm.agent.task_completion` |
 | all three | `llm.api.latency_ms` · `llm.api.prompt_tokens` · `llm.api.completion_tokens` · `llm.api.total_tokens` |
 
-All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues — CI stays green.
+All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues, while the CI stays green.
 
 ---
 
 ## Target Application
 
-All three browser frameworks test [SauceDemo](https://www.saucedemo.com/) — a purpose-built e-commerce demo with stable, publicly documented test credentials. No back-end setup is required. The three AI evaluation frameworks (`ai-eval`, `conv-eval`, `agent-eval`) also use the SauceDemo domain as their knowledge base, simulating a real customer support system.
+All three browser frameworks test [SauceDemo](https://www.saucedemo.com/), a purpose-built e-commerce demo with stable, publicly documented test credentials. No back-end setup is required. The three AI evaluation frameworks (`ai-eval`, `conv-eval`, `agent-eval`) also use the SauceDemo domain as their knowledge base, simulating a real customer support system.
 
 | Page | Coverage |
 |---|---|
@@ -336,7 +336,7 @@ All three browser frameworks test [SauceDemo](https://www.saucedemo.com/) — a 
 
 ## Security Testing
 
-All three frameworks include an OWASP-aware security test suite targeting the SauceDemo login surface. Security tests reuse existing page objects and utilities — no new infrastructure is required.
+All three frameworks include an OWASP-aware security test suite targeting the SauceDemo login surface. Security tests reuse existing page objects and utilities. No new infrastructure is required.
 
 ### Test cases (all 3 frameworks)
 
@@ -344,7 +344,7 @@ All three frameworks include an OWASP-aware security test suite targeting the Sa
 |---|---|---|
 | SQL injection rejected | `' OR '1'='1' --` in username triggers an error; error message contains no `sql` / `exception` leakage | A03 Injection |
 | XSS handled safely | `<script>document.title='xss'</script>` in username triggers an error; page title is not changed to `xss` | A03 Injection |
-| Repeated failed logins | 5 consecutive bad logins followed by a valid login — valid login must still succeed | A07 Identification & Authentication Failures |
+| Repeated failed logins | 5 consecutive bad logins followed by a valid login. Valid login must still succeed | A07 Identification & Authentication Failures |
 | Security response headers | `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy` checked via HTTP GET | A05 Security Misconfiguration |
 
 The headers test uses soft assertions (`SoftAssert` in Java, `Assert.Multiple` in C#) so it documents the site's security posture without blocking CI on a target we do not control.
@@ -353,9 +353,9 @@ The headers test uses soft assertions (`SoftAssert` in Java, `Assert.Multiple` i
 
 | Framework | File | Groups / Tags |
 |---|---|---|
-| selenium-java | `src/test/java/com/framework/tests/SecurityTest.java` | `security`, `regression`, `web` — picked up by `testng.xml` |
+| selenium-java | `src/test/java/com/framework/tests/SecurityTest.java` | `security`, `regression`, `web` picked up by `testng.xml` |
 | playwright-dotnet | `tests/Framework.Tests/Tests/SecurityTest.cs` | `[Category("security")]`, `[Category("regression")]` |
-| cucumber | `src/test/resources/features/security.feature` + `SecuritySteps.java` | `@security` — runs with all features by default |
+| cucumber | `src/test/resources/features/security.feature` + `SecuritySteps.java` | `@security` runs with all features by default |
 
 ### OWASP ZAP Baseline Scan (CI)
 
@@ -372,16 +372,16 @@ Each workflow runs a passive ZAP scan after tests complete:
     cmd_options: '-I'
 ```
 
-- `continue-on-error: true` — ZAP findings never block green CI
-- `allow_issue_writing: false` — no GitHub issues created automatically
-- `-I` — informational mode; suppresses non-zero exit on warnings
+- `continue-on-error: true`: ZAP findings never block green CI
+- `allow_issue_writing: false`: no GitHub issues created automatically
+- `-I`: informational mode; suppresses non-zero exit on warnings
 - The HTML scan report (`zap_baseline_scan.html`) is auto-uploaded as a workflow artifact
 
 ---
 
 ## Kubernetes Infrastructure
 
-The `k8s/` directory contains Kubernetes manifests that mirror the existing `docker-compose.yaml` — providing an alternative deployment target for the Selenium Grid and Healenium stack.
+The `k8s/` directory contains Kubernetes manifests that mirror the existing `docker-compose.yaml` providing an alternative deployment target for the Selenium Grid and Healenium stack.
 
 ### Directory layout
 
@@ -409,10 +409,10 @@ k8s/
 | Decision | Detail |
 |---|---|
 | Image versions | Pinned to the same tags as `docker-compose.yaml` (e.g. `selenium/hub:4.16.1`) |
-| Shared memory | Chrome/Firefox/Edge nodes mount `/dev/shm` via `emptyDir: {medium: Memory, sizeLimit: 2Gi}` — matches `shm_size: 2gb` in Docker Compose |
-| Postgres storage | `emptyDir` (non-persistent) — sufficient for portfolio/demo; swap for a `PersistentVolumeClaim` in production |
+| Shared memory | Chrome/Firefox/Edge nodes mount `/dev/shm` via `emptyDir: {medium: Memory, sizeLimit: 2Gi}`: matches `shm_size: 2gb` in Docker Compose |
+| Postgres storage | `emptyDir` (non-persistent) sufficient for portfolio/demo; swap for a `PersistentVolumeClaim` in production |
 | Healenium config | Credentials stored in `configmap.yaml`; referenced by `configMapKeyRef` in each dependent deployment |
-| DNS resolution | Browser nodes set `SE_EVENT_BUS_HOST: selenium-hub` — Kubernetes DNS resolves this to the hub `ClusterIP` Service |
+| DNS resolution | Browser nodes set `SE_EVENT_BUS_HOST: selenium-hub` Kubernetes DNS resolves this to the hub `ClusterIP` Service |
 
 ### Deploy manually
 
