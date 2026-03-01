@@ -8,8 +8,9 @@
 [![agent-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/agent-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/agent-eval.yml)
 [![k8s CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml)
 [![postman-newman CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/postman-newman.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/postman-newman.yml)
+[![job-agent CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/job-agent.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/job-agent.yml)
 
-A monorepo housing seven independent, production-grade test automation frameworks, each showcasing a distinct testing approach used by senior SDETs in the industry.
+A monorepo housing eight independent, production-grade test automation frameworks, each showcasing a distinct testing approach used by senior SDETs in the industry.
 
 ---
 
@@ -24,40 +25,43 @@ A monorepo housing seven independent, production-grade test automation framework
 | [`selenium-java`](./selenium-java/) | Java | Selenium 4 · TestNG · Maven · Java 17 | [→](./selenium-java/README.md) |
 | [`cucumber`](./cucumber/) | Java | Cucumber 7 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
 | [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
+| [`job-agent`](./job-agent/) | Python | Anthropic Claude · Tavily · Python 3.11 | [→](./job-agent/README.md) |
 
 ---
 
 ## Feature Coverage
 
-| Capability | playwright-dotnet | selenium-java | cucumber | ai-eval | conv-eval | agent-eval | postman |
-|---|---|---|---|---|---|---|---|
-| **Page Object Model** | ✅ C# + TypeScript | ✅ Java | ✅ Java | — | — | — | — |
-| **Parallel execution** | ✅ `[Parallelizable]` · `fullyParallel` | ✅ `ThreadLocal` · `parallel="tests"` | ✅ `ThreadLocal` · `@DataProvider(parallel=true)` | — | — | — | — |
-| **Fixtures / base classes** | ✅ `AuthenticatedTest` · `test.extend<>` | ✅ `BaseTest` | ✅ Cucumber `Hooks` | ✅ `conftest.py` session fixtures | ✅ `conftest.py` session + function fixtures | ✅ `conftest.py` session + function fixtures | — |
-| **Retry on failure** | ✅ `[Retry]` · `retries: 2` in CI | ✅ `RetryAnalyzer` + `AnnotationTransformer` | ✅ `RetryAnalyzer` + `AnnotationTransformer` | — | — | — | — |
-| **Cross-browser** | ✅ Chromium · Firefox · WebKit | ✅ Chrome · Firefox · Edge | ✅ Chrome · Firefox · Edge | — | — | — | — |
-| **BDD / Gherkin** | — | — | ✅ 6 feature files · 19+ scenarios | — | — | — | — |
-| **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline | ✅ `golden_dataset.json` · `@pytest.mark.parametrize` | ✅ `conversations.json` · `@pytest.mark.parametrize` | ✅ `agent_scenarios.json` · `@pytest.mark.parametrize` | ✅ pre-request scripts · collection variables |
-| **REST API testing** | ✅ `HttpClient` | ✅ RestAssured | ✅ RestAssured | — | — | — | ✅ Newman CLI · 10 requests · 4 test groups |
-| **Mocking & Service Virtualization** | ✅ 4 patterns — block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | — | — | — | — |
-| **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`) — DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages | — | — | — | ✅ JUnit XML · htmlextra HTML report |
-| **AI/ML Self-Healing Locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 | — | — | — | — |
-| **LLM Evaluation (RAG pipeline)** | — | — | — | ✅ Answer Relevancy · Faithfulness · Hallucination · Safety · JSON Schema | — | — | — |
-| **LLM Evaluation (Conversational)** | — | — | — | — | ✅ Turn Relevancy · Knowledge Retention · Role Adherence · Graceful Handling | — | — |
-| **LLM Evaluation (Agentic / tool-use)** | — | — | — | — | — | ✅ Tool Correctness · Task Completion | — |
-| **Function-calling agent** | — | — | — | — | — | ✅ Multi-step tool orchestration · deterministic tool implementations | — |
-| **JSON schema validation** | — | — | — | ✅ `JsonCorrectnessMetric` · Pydantic `BaseModel` schemas | — | — | — |
-| **Cost & latency tracking** | — | — | — | ✅ per-call tokens · `latency_ms` → DataDog | ✅ per-turn tokens · `latency_ms` → DataDog | ✅ per-step tokens · `latency_ms` → DataDog | — |
-| **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS | — | — | — | — |
-| **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — | — | — | — |
-| **Database validation** | — | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — | — | — | — |
-| **Security testing (OWASP)** | ✅ 4 test cases | ✅ 4 test cases | ✅ 3 BDD scenarios | — | — | — | — |
-| **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — | — | — | — |
-| **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — | — | — |
-| **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — | — | — | — |
-| **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility (JUnit XML) |
-| **GitHub Actions CI** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Agentic AI Development** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Capability | playwright-dotnet | selenium-java | cucumber | ai-eval | conv-eval | agent-eval | postman | job-agent |
+|---|---|---|---|---|---|---|---|---|
+| **Page Object Model** | ✅ C# + TypeScript | ✅ Java | ✅ Java | — | — | — | — | — |
+| **Parallel execution** | ✅ `[Parallelizable]` · `fullyParallel` | ✅ `ThreadLocal` · `parallel="tests"` | ✅ `ThreadLocal` · `@DataProvider(parallel=true)` | — | — | — | — | — |
+| **Fixtures / base classes** | ✅ `AuthenticatedTest` · `test.extend<>` | ✅ `BaseTest` | ✅ Cucumber `Hooks` | ✅ `conftest.py` session fixtures | ✅ `conftest.py` session + function fixtures | ✅ `conftest.py` session + function fixtures | — | — |
+| **Retry on failure** | ✅ `[Retry]` · `retries: 2` in CI | ✅ `RetryAnalyzer` + `AnnotationTransformer` | ✅ `RetryAnalyzer` + `AnnotationTransformer` | — | — | — | — | — |
+| **Cross-browser** | ✅ Chromium · Firefox · WebKit | ✅ Chrome · Firefox · Edge | ✅ Chrome · Firefox · Edge | — | — | — | — | — |
+| **BDD / Gherkin** | — | — | ✅ 6 feature files · 19+ scenarios | — | — | — | — | — |
+| **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline | ✅ `golden_dataset.json` · `@pytest.mark.parametrize` | ✅ `conversations.json` · `@pytest.mark.parametrize` | ✅ `agent_scenarios.json` · `@pytest.mark.parametrize` | ✅ pre-request scripts · collection variables | — |
+| **REST API testing** | ✅ `HttpClient` | ✅ RestAssured | ✅ RestAssured | — | — | — | ✅ Newman CLI · 10 requests · 4 test groups | — |
+| **Mocking & Service Virtualization** | ✅ 4 patterns — block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | — | — | — | — | — |
+| **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`) — DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages | — | — | — | ✅ JUnit XML · htmlextra HTML report | — |
+| **AI/ML Self-Healing Locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 | — | — | — | — | — |
+| **LLM Evaluation (RAG pipeline)** | — | — | — | ✅ Answer Relevancy · Faithfulness · Hallucination · Safety · JSON Schema | — | — | — | — |
+| **LLM Evaluation (Conversational)** | — | — | — | — | ✅ Turn Relevancy · Knowledge Retention · Role Adherence · Graceful Handling | — | — | — |
+| **LLM Evaluation (Agentic / tool-use)** | — | — | — | — | — | ✅ Tool Correctness · Task Completion | — | — |
+| **Function-calling agent** | — | — | — | — | — | ✅ Multi-step tool orchestration · deterministic tool implementations | — | — |
+| **Agentic tool-use loop** | — | — | — | — | — | — | — | ✅ Claude claude-sonnet-4-6 · 5 tools · max 30 iterations · Tavily web search |
+| **Automated job search** | — | — | — | — | — | — | — | ✅ 5 role queries · score_job_fit · draft_cover_letter · save_results |
+| **JSON schema validation** | — | — | — | ✅ `JsonCorrectnessMetric` · Pydantic `BaseModel` schemas | — | — | — | — |
+| **Cost & latency tracking** | — | — | — | ✅ per-call tokens · `latency_ms` → DataDog | ✅ per-turn tokens · `latency_ms` → DataDog | ✅ per-step tokens · `latency_ms` → DataDog | — | ✅ `latency_ms` · run counts → DataDog |
+| **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS | — | — | — | — | — |
+| **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — | — | — | — | — |
+| **Database validation** | — | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — | — | — | — | — |
+| **Security testing (OWASP)** | ✅ 4 test cases | ✅ 4 test cases | ✅ 3 BDD scenarios | — | — | — | — | — |
+| **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — | — | — | — | — |
+| **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — | — | — | — |
+| **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — | — | — | — | — |
+| **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility (JUnit XML) | ✅ Custom metrics · run counts · latency |
+| **GitHub Actions CI** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ nightly 09:00 UTC |
+| **Agentic AI Development** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -212,6 +216,29 @@ npm run test:verbose
 npm run test:html
 ```
 
+### job-agent
+
+**Prerequisites:** [Python 3.11+](https://python.org) · Anthropic API key · Tavily API key in `job-agent/.env`
+
+```bash
+# From the repo root
+make job-agent
+
+# Or manually
+cd job-agent
+pip install -r requirements.txt
+
+# Copy and fill in your profile
+cp profile/profile.example.md profile/profile.md
+
+# Run full job search (all 5 role queries)
+python run.py
+
+# Narrow to a specific role
+python run.py --role "SDET"
+python run.py --role "QA Lead"
+```
+
 ---
 
 ## Repo Structure
@@ -227,6 +254,7 @@ qa-automation-portfolio/
 │       ├── selenium-java.yml       # triggers on: paths selenium-java/**
 │       ├── cucumber.yml            # triggers on: paths cucumber/**
 │       ├── postman-newman.yml      # triggers on: paths postman/**
+│       ├── job-agent.yml           # nightly 09:00 UTC · workflow_dispatch (role_filter input)
 │       └── k8s.yml                 # workflow_dispatch only — Kind cluster + grid smoke tests
 ├── ai-eval/                            # Python · Pytest · DeepEval · OpenAI · ChromaDB
 │   ├── rag/                            # RAG pipeline: document, embedder, retriever
@@ -267,6 +295,12 @@ qa-automation-portfolio/
 │   ├── environments/                  # jsonplaceholder.postman_environment.json
 │   ├── results/                       # JUnit XML · HTML report (git-ignored)
 │   └── package.json                   # Newman + htmlextra reporter
+├── job-agent/                          # Python · Anthropic Claude · Tavily
+│   ├── agent/                          # job_hunter.py (agentic loop) · tools.py (5 tool defs)
+│   ├── profile/                        # profile.example.md (template) · profile.md (git-ignored)
+│   ├── utils/                          # datadog_reporter.py
+│   ├── output/                         # jobs_YYYY-MM-DD.md · cover_letters/ (git-ignored)
+│   └── run.py                          # CLI entry: python run.py [--role SDET]
 ├── k8s/                            # Kubernetes manifests (mirrors docker-compose.yaml)
 │   ├── namespace.yaml              # selenium-grid namespace
 │   ├── configmap.yaml              # Healenium DB credentials
@@ -292,11 +326,12 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `conv-eval.yml` | push · PR · nightly 06:00 UTC | pytest marker filter (smoke · regression · safety · retention) |
 | `agent-eval.yml` | push · PR · nightly 07:00 UTC | pytest marker filter (smoke · regression) |
 | `postman-newman.yml` | push · PR · nightly 08:00 UTC | folder filter (Smoke · Users · Posts · Integration Flow) |
+| `job-agent.yml` | nightly 09:00 UTC · `workflow_dispatch` | role_filter keyword (e.g. SDET · QA Lead) |
 | `k8s.yml` | `workflow_dispatch` only | framework (selenium-java · cucumber) |
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
 
-> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, and `agent-eval.yml`. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it.
+> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, and `agent-eval.yml`. `ANTHROPIC_API_KEY` and `TAVILY_API_KEY` are required for `job-agent.yml`. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it.
 
 ### DataDog Observability
 
@@ -313,7 +348,8 @@ Two DataDog features run across all frameworks:
 | `ai-eval` | `llm.eval.answer_relevancy` · `llm.eval.faithfulness` · `llm.eval.hallucination` · `llm.eval.safety` · `llm.eval.json_correctness` |
 | `conv-eval` | `llm.conv.turn_relevancy` · `llm.conv.knowledge_retention` · `llm.conv.role_adherence` · `llm.conv.graceful_handling` |
 | `agent-eval` | `llm.agent.tool_correctness` · `llm.agent.task_completion` |
-| all three | `llm.api.latency_ms` · `llm.api.prompt_tokens` · `llm.api.completion_tokens` · `llm.api.total_tokens` |
+| `job-agent` | `llm.job_agent.jobs_found` · `llm.job_agent.jobs_scored` · `llm.job_agent.cover_letters_drafted` · `llm.job_agent.duration_ms` |
+| all four + job-agent | `llm.api.latency_ms` |
 
 All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues, while the CI stays green.
 
