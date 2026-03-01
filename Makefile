@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber ai-eval postman clean
+.PHONY: help all playwright selenium cucumber ai-eval postman job-agent clean
 
 # Print help when `make` is called with no target
 help:
@@ -27,6 +27,7 @@ help:
 	@echo "  QA Automation Portfolio — available targets"
 	@echo "  ───────────────────────────────────────────"
 	@echo "  make all          Run all five frameworks sequentially"
+	@echo "  make job-agent    Run Claude-powered job search agent"
 	@echo "  make playwright   Run playwright-dotnet suite (C# + TypeScript)"
 	@echo "  make selenium     Run selenium-java suite (headless Chrome)"
 	@echo "  make cucumber     Run cucumber suite (headless Chrome)"
@@ -40,6 +41,7 @@ help:
 	@echo "    cucumber   — Java 17 · Maven 3.9+"
 	@echo "    ai-eval    — Python 3.11+ · OPENAI_API_KEY in ai-eval/.env"
 	@echo "    postman    — Node.js 20+"
+	@echo "    job-agent  — Python 3.11+ · ANTHROPIC_API_KEY · TAVILY_API_KEY in job-agent/.env"
 	@echo ""
 
 # ── Full portfolio ─────────────────────────────────────────────────────────────
@@ -89,6 +91,14 @@ postman:
 	cd postman && npm install && npm test
 	@echo ""
 	@echo ">>> [postman] Done."
+	@echo ""
+
+job-agent:
+	@echo ""
+	@echo ">>> [job-agent] Running job search..."
+	cd job-agent && pip install -r requirements.txt -q && python run.py
+	@echo ""
+	@echo ">>> [job-agent] Done. Results in job-agent/output/"
 	@echo ""
 
 # ── Clean ─────────────────────────────────────────────────────────────────────

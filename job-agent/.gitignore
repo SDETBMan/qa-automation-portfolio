@@ -1,0 +1,20 @@
+# Environment
+.env
+
+# Candidate profile (personal data — never commit)
+profile/profile.md
+
+# Generated output
+output/jobs_*.md
+output/cover_letters/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/

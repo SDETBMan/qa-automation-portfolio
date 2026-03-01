@@ -1,0 +1,47 @@
+name: Job Agent
+
+on:
+  schedule:
+    - cron: '0 9 * * *'   # nightly 09:00 UTC
+  workflow_dispatch:
+    inputs:
+      role_filter:
+        description: 'Optional role keyword to narrow search (e.g. SDET, QA Lead)'
+        required: false
+        default: ''
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: job-agent
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: job-agent/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run job search agent
+        run: python run.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TAVILY_API_KEY:    ${{ secrets.TAVILY_API_KEY }}
+          DD_API_KEY:        ${{ secrets.DD_API_KEY }}
+          ROLE_FILTER:       ${{ github.event.inputs.role_filter }}
+
+      - name: Upload results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: job-agent-results-${{ github.run_number }}
+          path: job-agent/output/
+          retention-days: 7
