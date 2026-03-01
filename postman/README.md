@@ -6,7 +6,7 @@
 ![Postman](https://img.shields.io/badge/Tool-Postman-orange)
 ![Newman](https://img.shields.io/badge/CLI-Newman-blue)
 
-A production-grade API test suite built with **Postman Collection v2.1** and executed headlessly via **Newman CLI**. Demonstrates Senior SDET proficiency across four testing layers: smoke, functional, write-operation, and integration, targeting the [JSONPlaceholder](https://jsonplaceholder.typicode.com) REST API.
+A production-grade API test suite built with **Postman Collection v2.1** and executed headlessly via **Newman CLI**, covering four testing layers (smoke, functional, write-operation, and integration) against the [JSONPlaceholder](https://jsonplaceholder.typicode.com) REST API.
 
 ## Key Features
 
@@ -33,7 +33,7 @@ A production-grade API test suite built with **Postman Collection v2.1** and exe
 
 | Folder | Requests | What is tested |
 |---|---|---|
-| **Smoke** | 2 | `GET /users/1` and `GET /posts/1` — status 200, response time < 3 s, Content-Type header, required fields present |
+| **Smoke** | 2 | `GET /users/1` and `GET /posts/1` → status 200, response time < 3 s, Content-Type header, required fields present |
 | **Users** | 3 | List all users (array length, field schema), single user (data integrity, nested address/company objects), non-existent user (404 + empty body) |
 | **Posts** | 3 | List all posts (array length, field schema), create post with dynamic payload (201, echo validation), delete post (200, empty body) |
 | **Integration Flow** | 2 | Capture `userId` from `GET /users/1` → filter `GET /posts?userId=` and assert every returned post belongs to that user |
@@ -48,7 +48,7 @@ A production-grade API test suite built with **Postman Collection v2.1** and exe
 # Install Newman and reporters
 npm install
 
-# Run full collection (all 4 folders) — JUnit XML output
+# Run full collection (all 4 folders), outputs JUnit XML
 npm test
 
 # Smoke folder only (fast connectivity check)
@@ -102,6 +102,6 @@ postman/
 
 | Variable | Default | Description |
 |---|---|---|
-| `baseUrl` | `https://jsonplaceholder.typicode.com` | API base URL — override with `-e` to target staging |
+| `baseUrl` | `https://jsonplaceholder.typicode.com` | API base URL; use `-e` to target staging |
 | `defaultUserId` | `1` | User ID used in single-resource and data-integrity tests |
 | `defaultPostId` | `1` | Post ID used in the DELETE test |

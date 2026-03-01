@@ -41,8 +41,8 @@ A monorepo housing eight independent, production-grade test automation framework
 | **BDD / Gherkin** | — | — | ✅ 6 feature files · 19+ scenarios | — | — | — | — | — |
 | **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline | ✅ `golden_dataset.json` · `@pytest.mark.parametrize` | ✅ `conversations.json` · `@pytest.mark.parametrize` | ✅ `agent_scenarios.json` · `@pytest.mark.parametrize` | ✅ pre-request scripts · collection variables | — |
 | **REST API testing** | ✅ `HttpClient` | ✅ RestAssured | ✅ RestAssured | — | — | — | ✅ Newman CLI · 10 requests · 4 test groups | — |
-| **Mocking & Service Virtualization** | ✅ 4 patterns — block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | — | — | — | — | — |
-| **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`) — DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages | — | — | — | ✅ JUnit XML · htmlextra HTML report | — |
+| **Mocking & Service Virtualization** | ✅ 4 patterns: block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | — | — | — | — | — |
+| **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`): DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages | — | — | — | ✅ JUnit XML · htmlextra HTML report | — |
 | **AI/ML Self-Healing Locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 | — | — | — | — | — |
 | **LLM Evaluation (RAG pipeline)** | — | — | — | ✅ Answer Relevancy · Faithfulness · Hallucination · Safety · JSON Schema | — | — | — | — |
 | **LLM Evaluation (Conversational)** | — | — | — | — | ✅ Turn Relevancy · Knowledge Retention · Role Adherence · Graceful Handling | — | — | — |
@@ -97,13 +97,13 @@ pytest -m safety -v
 cd conv-eval
 pip install -r requirements.txt
 
-# Smoke tests only (fast) — turn relevancy + role adherence across normal scenarios
+# Smoke tests only (fast): turn relevancy + role adherence across normal scenarios
 pytest -m smoke -v
 
-# Retention tests — knowledge retention across implicit reference and correction scenarios
+# Retention tests: knowledge retention across implicit reference and correction scenarios
 pytest -m retention -v
 
-# Safety tests — graceful handling of out-of-scope queries and prompt injection
+# Safety tests: graceful handling of out-of-scope queries and prompt injection
 pytest -m safety -v
 
 # Full suite
@@ -118,10 +118,10 @@ pytest -v
 cd agent-eval
 pip install -r requirements.txt
 
-# Smoke tests only (fast) — tool correctness + task completion across single-tool scenarios
+# Smoke tests only (fast): tool correctness + task completion across single-tool scenarios
 pytest -m smoke -v
 
-# Full suite — includes multi-tool orchestration scenarios
+# Full suite (includes multi-tool orchestration scenarios)
 pytest -v
 ```
 
@@ -132,7 +132,7 @@ pytest -v
 ```bash
 cd playwright-dotnet
 
-# One command — installs all deps, browsers, runs C# and TypeScript suites
+# One command: installs all deps, browsers, runs C# and TypeScript suites
 bash run-all.sh
 
 # Or with make
@@ -255,7 +255,7 @@ qa-automation-portfolio/
 │       ├── cucumber.yml            # triggers on: paths cucumber/**
 │       ├── postman-newman.yml      # triggers on: paths postman/**
 │       ├── job-agent.yml           # nightly 09:00 UTC · workflow_dispatch (role_filter input)
-│       └── k8s.yml                 # workflow_dispatch only — Kind cluster + grid smoke tests
+│       └── k8s.yml                 # workflow_dispatch only: Kind cluster + grid smoke tests
 ├── ai-eval/                            # Python · Pytest · DeepEval · OpenAI · ChromaDB
 │   ├── rag/                            # RAG pipeline: document, embedder, retriever
 │   ├── datasets/golden_dataset.json    # Ground truth Q&A pairs (SauceDemo FAQ)
@@ -291,7 +291,7 @@ qa-automation-portfolio/
 │   ├── src/test/resources/features/  # login · dashboard · inventory · cart · api · security
 │   └── docker-compose.yaml
 ├── postman/                            # Postman Collection v2.1 · Newman · Node.js 20
-│   ├── collections/                   # jsonplaceholder.postman_collection.json — 10 requests, 4 folders
+│   ├── collections/                   # jsonplaceholder.postman_collection.json: 10 requests, 4 folders
 │   ├── environments/                  # jsonplaceholder.postman_environment.json
 │   ├── results/                       # JUnit XML · HTML report (git-ignored)
 │   └── package.json                   # Newman + htmlextra reporter
@@ -427,7 +427,7 @@ k8s/
 ├── configmap.yaml                  # Healenium DB credentials
 ├── selenium-grid/
 │   ├── hub-deployment.yaml         # selenium/hub:4.16.1
-│   ├── hub-service.yaml            # ClusterIP — ports 4444, 4442, 4443
+│   ├── hub-service.yaml            # ClusterIP: ports 4444, 4442, 4443
 │   ├── chrome-deployment.yaml      # selenium/node-chrome:4.16.1
 │   ├── firefox-deployment.yaml     # selenium/node-firefox:4.16.1
 │   └── edge-deployment.yaml        # selenium/node-edge:4.16.1

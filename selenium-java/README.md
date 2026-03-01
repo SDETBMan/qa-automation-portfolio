@@ -69,7 +69,7 @@ This framework requires specific environment variables for security, particularl
 | `OPENAI_API_KEY` | **Required** for `AiHelper` to generate test data. | `sk-proj-123...` |
 | `BROWSERSTACK_USERNAME` | Required if running on Cloud Grid. | `BS_User_123` |
 | `BROWSERSTACK_ACCESS_KEY` | Required if running on Cloud Grid. | `BS_Key_ABC` |
-| `SLACK_WEBHOOK_URL` | Optional — enables Slack notifications on suite completion. | `https://hooks.slack.com/...` |
+| `SLACK_WEBHOOK_URL` | Optional; enables Slack notifications on suite completion. | `https://hooks.slack.com/...` |
 | `HEADLESS` | Toggles browser UI (CI default: true). | `true` |
 | `HUB_URL` | Selenium Grid URL (Docker). | `http://localhost:4444/wd/hub` |
 | `APPIUM_URL` | URL for Mobile Driver (Local). | `http://127.0.0.1:4723` |
@@ -145,10 +145,10 @@ Generate & View Report:
 
 ## Mobile Testing (Appium)
 
-The mobile and web tests share the **same page object classes**. Each page detects the active driver at runtime and initialises the correct locator strategy — no duplication, no separate mobile-only test hierarchy.
+The mobile and web tests share the **same page object classes**. Each page detects the active driver at runtime and initialises the correct locator strategy with no duplication and no separate mobile-only test hierarchy.
 
 ```java
-// Example: LoginPage.java — runtime locator selection
+// Example: LoginPage.java - runtime locator selection
 boolean isNativeMobile = (driver instanceof AndroidDriver) || (driver instanceof IOSDriver);
 if (isNativeMobile) {
     usernameField = AppiumBy.accessibilityId("test-Username");  // native app
@@ -162,10 +162,10 @@ if (isNativeMobile) {
 | Component | File | Purpose |
 |:---|:---|:---|
 | Mobile driver setup | `src/main/java/.../driver/DriverFactory.java` | Creates `AndroidDriver` / `IOSDriver` with `UiAutomator2Options` / `XCUITestOptions` capabilities |
-| Thread-safe driver | `src/main/java/.../driver/DriverManager.java` | `ThreadLocal` isolation — mobile and web tests run in parallel without contention |
-| Polymorphic page objects | `src/main/java/.../pages/LoginPage.java` `CartPage.java` `DashboardPage.java` | Dual locator sets per class — `AppiumBy.accessibilityId()` for native, `By.*` for web |
+| Thread-safe driver | `src/main/java/.../driver/DriverManager.java` | `ThreadLocal` isolation; mobile and web tests run in parallel without contention |
+| Polymorphic page objects | `src/main/java/.../pages/LoginPage.java` `CartPage.java` `DashboardPage.java` | Dual locator sets per class: `AppiumBy.accessibilityId()` for native, `By.*` for web |
 | Mobile test suite | `testng_mobile.xml` | TestNG suite: Android (Pixel 8 / UiAutomator2) + iOS (iPhone 15 / XCUITest), `thread-count="1"` |
-| App binaries | `src/test/resources/apps/` | `.apk` (Android) · `.ipa` (iOS real device) · `.app` (iOS Simulator) — bundled in-repo, no download required |
+| App binaries | `src/test/resources/apps/` | `.apk` (Android) · `.ipa` (iOS real device) · `.app` (iOS Simulator), bundled in-repo with no download required |
 | Device config | `src/test/resources/config.properties` | `appium_url`, `android_device_name`, `ios_device_name`, `ios_version` |
 
 **Run the mobile suite:**
@@ -243,10 +243,10 @@ SeleniumPOMFramework
 
 | Test | OWASP category |
 |---|---|
-| `testSqlInjectionIsRejected` | A03 Injection — injects `' OR '1'='1' --`; asserts error shown and message contains no `sql`/`exception` leakage |
-| `testXssInjectionIsHandledSafely` | A03 Injection — injects `<script>document.title='xss'</script>`; asserts error shown and page title unchanged |
-| `testRepeatedFailedLoginAttempts` | A07 Auth Failures — 5 bad logins then valid login; asserts valid login still succeeds |
-| `testSecurityResponseHeaders` | A05 Security Misconfiguration — RestAssured GET to saucedemo.com; `SoftAssert` checks `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy` |
+| `testSqlInjectionIsRejected` | A03 Injection: injects `' OR '1'='1' --`; asserts error shown and message contains no `sql`/`exception` leakage |
+| `testXssInjectionIsHandledSafely` | A03 Injection: injects `<script>document.title='xss'</script>`; asserts error shown and page title unchanged |
+| `testRepeatedFailedLoginAttempts` | A07 Auth Failures: 5 bad logins then valid login; asserts valid login still succeeds |
+| `testSecurityResponseHeaders` | A05 Security Misconfiguration: RestAssured GET to saucedemo.com; `SoftAssert` checks `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy` |
 
 Run security tests only:
 ```bash

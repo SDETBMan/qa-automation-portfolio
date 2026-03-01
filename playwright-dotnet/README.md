@@ -14,24 +14,24 @@ A professional Playwright + .NET 8 + NUnit test automation framework targeting [
 
 ## Features
 
-- **Page Object Model** — clean separation of page logic from test logic
-- **Playwright built-in auto-wait** — no `WebDriverWait` / `ExpectedConditions` boilerplate
-- **Full parallel execution** — `[Parallelizable(ParallelScope.Self)]` with isolated `IPage` per test
-- **Cross-browser** — Chromium, Firefox, WebKit via `.runsettings` files (C#) and `projects` config (TypeScript)
-- **Trace Viewer** — `Context.Tracing` captures screenshots + DOM snapshots on failure; viewable via `playwright show-trace`
-- **Network interception** — `RouteAsync` patterns: block assets, mock responses, inject headers, simulate failures
-- **Fixtures (C#)** — `AuthenticatedTest` base class pre-logs in via NUnit `[SetUp]` chain; zero login boilerplate in tests
-- **Fixtures (TypeScript)** — `test.extend<AppFixtures>` with `authenticatedPage` fixture; setup/teardown via `use()` callback
-- **TypeScript project** — full Playwright TypeScript suite in `tests/playwright-ts/` with strict mode, page objects, and fixtures
-- **Data-driven tests** — `[TestCaseSource]` for persona-based login scenarios
-- **AI-assisted test data** — OpenAI integration via `AiHelper`
-- **REST API tests** — `HttpClient` + `System.Text.Json` (mirrors REST Assured)
-- **Database utilities** — `MySqlConnector` async ADO.NET helpers
-- **Slack notifications** — post suite results to a webhook
-- **BrowserStack upload** — app binary upload for mobile (Phase 2)
-- **Allure reporting** — rich HTML reports with screenshots and traces on failure
-- **GitHub Actions CI** — nightly regression pipeline with C# + TypeScript artifact upload
-- **NUnit `[Retry]`** — built-in retry replaces Java's `AnnotationTransformer` + `RetryAnalyzer`
+- **Page Object Model**: clean separation of page logic from test logic
+- **Playwright built-in auto-wait**: no `WebDriverWait` / `ExpectedConditions` boilerplate
+- **Full parallel execution**: `[Parallelizable(ParallelScope.Self)]` with isolated `IPage` per test
+- **Cross-browser**: Chromium, Firefox, WebKit via `.runsettings` files (C#) and `projects` config (TypeScript)
+- **Trace Viewer**: `Context.Tracing` captures screenshots + DOM snapshots on failure; viewable via `playwright show-trace`
+- **Network interception**: `RouteAsync` patterns: block assets, mock responses, inject headers, simulate failures
+- **Fixtures (C#)**: `AuthenticatedTest` base class pre-logs in via NUnit `[SetUp]` chain; zero login boilerplate in tests
+- **Fixtures (TypeScript)**: `test.extend<AppFixtures>` with `authenticatedPage` fixture; setup/teardown via `use()` callback
+- **TypeScript project**: full Playwright TypeScript suite in `tests/playwright-ts/` with strict mode, page objects, and fixtures
+- **Data-driven tests**: `[TestCaseSource]` for persona-based login scenarios
+- **AI-assisted test data**: OpenAI integration via `AiHelper`
+- **REST API tests**: `HttpClient` + `System.Text.Json` (mirrors REST Assured)
+- **Database utilities**: `MySqlConnector` async ADO.NET helpers
+- **Slack notifications**: post suite results to a webhook
+- **BrowserStack upload**: app binary upload for mobile (Phase 2)
+- **Allure reporting**: rich HTML reports with screenshots and traces on failure
+- **GitHub Actions CI**: nightly regression pipeline with C# + TypeScript artifact upload
+- **NUnit `[Retry]`**: built-in retry replaces Java's `AnnotationTransformer` + `RetryAnalyzer`
 
 ---
 
@@ -136,8 +136,8 @@ make all
 #### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8) (`dotnet --version` ≥ 8.0)
-- [Node.js 20 LTS](https://nodejs.org) (`node --version` ≥ 20) — for TypeScript suite
-- PowerShell (`pwsh`) — for Playwright browser install (C# only)
+- [Node.js 20 LTS](https://nodejs.org) (`node --version` ≥ 20) for the TypeScript suite
+- PowerShell (`pwsh`) for Playwright browser install (C# only)
 
 ### 1. Clone and restore
 
@@ -348,7 +348,7 @@ strategy and avoids disk waste on clean runs.
 - **TypeScript:** `trace: 'retain-on-failure'` in `playwright.config.ts`.
 
 ### Fixtures: C# vs TypeScript
-The fixture pattern is implemented identically in both languages — the idiom just differs:
+The fixture pattern is implemented identically in both languages, though the idiom differs:
 
 | Concept | C# | TypeScript |
 |---|---|---|
@@ -365,10 +365,10 @@ The fixture pattern is implemented identically in both languages — the idiom j
 
 | Test | OWASP category |
 |---|---|
-| `SqlInjectionIsRejected` | A03 Injection — injects `' OR '1'='1' --`; asserts error visible and message contains no `sql`/`exception` leakage |
-| `XssInjectionIsHandledSafely` | A03 Injection — injects `<script>document.title='xss'</script>`; asserts `Page.TitleAsync()` is not `"xss"` |
-| `RepeatedFailedLoginAttemptsHandledGracefully` | A07 Auth Failures — 5 bad logins then valid login; asserts URL contains `inventory` |
-| `SecurityResponseHeadersPresent` | A05 Security Misconfiguration — `HttpClient.GetAsync` to saucedemo.com; `Assert.Multiple` (soft) checks `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy` |
+| `SqlInjectionIsRejected` | A03 Injection: injects `' OR '1'='1' --`; asserts error visible and message contains no `sql`/`exception` leakage |
+| `XssInjectionIsHandledSafely` | A03 Injection: injects `<script>document.title='xss'</script>`; asserts `Page.TitleAsync()` is not `"xss"` |
+| `RepeatedFailedLoginAttemptsHandledGracefully` | A07 Auth Failures: 5 bad logins then valid login; asserts URL contains `inventory` |
+| `SecurityResponseHeadersPresent` | A05 Security Misconfiguration: `HttpClient.GetAsync` to saucedemo.com; `Assert.Multiple` (soft) checks `X-Frame-Options`, `X-Content-Type-Options`, `Content-Security-Policy` |
 
 Run security tests only:
 ```bash
@@ -384,4 +384,4 @@ The CI pipeline also runs an **OWASP ZAP Baseline Scan** after every test run (`
 1. Fork the repo and create a feature branch.
 2. Follow existing naming conventions (one test per method, `[Category]` on every test).
 3. Run `dotnet test --filter "Category=unit"` before pushing.
-4. Open a PR — the CI pipeline runs automatically.
+4. Open a PR; the CI pipeline runs automatically.

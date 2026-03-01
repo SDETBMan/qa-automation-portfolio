@@ -13,15 +13,15 @@ A production-grade, thread-safe BDD testing framework built from scratch to demo
 
 * **Hybrid BDD Architecture:** Clear separation of concerns using Feature files, Step Definitions, and Page Object Model (POM).
 * **Parallel Execution:** Implemented `ThreadLocal<WebDriver>` to ensure thread safety, allowing multiple scenarios to run simultaneously.
-* **Self-Healing Tests:** Integrated **Healenium** to automatically recover from broken locators — no manual maintenance when the UI shifts.
+* **Self-Healing Tests:** Integrated **Healenium** to automatically recover from broken locators with no manual maintenance when the UI shifts.
 * **Multi-Platform Driver:** Single `DriverManager` supports Local, Selenium Grid, BrowserStack, Android (Appium), and iOS (Appium) with a single `-Dtarget=` flag.
-* **Containerized Infrastructure:** `Dockerfile` and `docker-compose.yaml` orchestrate the full stack — Selenium Grid (Chrome/Firefox/Edge nodes), Healenium backend, and PostgreSQL.
-* **Retry Analyzer:** `AnnotationTransformer` globally applies `RetryAnalyzer` to every scenario — flaky network tests auto-retry without any per-test annotation.
+* **Containerized Infrastructure:** `Dockerfile` and `docker-compose.yaml` orchestrate the full stack: Selenium Grid (Chrome/Firefox/Edge nodes), Healenium backend, and PostgreSQL.
+* **Retry Analyzer:** `AnnotationTransformer` globally applies `RetryAnalyzer` to every scenario; flaky network tests auto-retry without any per-test annotation.
 * **Dual Reporting:** **Allure** (interactive dashboard, GitHub Pages deployment) and **Extent Reports** (Spark HTML) generated on every run.
 * **API Testing Layer:** **RestAssured** step definitions and feature files validate backend endpoints alongside UI tests.
 * **Database Validation:** `DatabaseUtils` enables frontend-to-backend data integrity checks via JDBC.
 * **Slack Notifications:** `TestListener` dispatches suite summaries to a Slack channel via webhook on every execution.
-* **Performance Testing:** **JMeter** load test included — triggered optionally from the CI/CD pipeline.
+* **Performance Testing:** **JMeter** load test included, triggered optionally from the CI/CD pipeline.
 * **CI/CD Integration:** **GitHub Actions** pipeline with dispatch inputs for execution mode, browser, and JMeter toggle. Allure report auto-deployed to GitHub Pages.
 
 ## Tech Stack
