@@ -38,10 +38,10 @@ jobs:
         run: |
           if [ -n "${{ github.event.inputs.marker }}" ]; then
             pytest -m "${{ github.event.inputs.marker }}" -v --junit-xml=junit-report.xml \
-              --reruns 3 --reruns-delay 60
+              --reruns 5 --reruns-delay 60
           else
             pytest -m smoke -v --junit-xml=junit-report.xml \
-              --reruns 3 --reruns-delay 60
+              --reruns 5 --reruns-delay 60
           fi
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
