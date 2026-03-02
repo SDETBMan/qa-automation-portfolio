@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Write candidate profile
+        run: echo "${{ secrets.CANDIDATE_PROFILE }}" > profile/profile.md
+
       - name: Run job search agent
         run: python run.py
         env:
