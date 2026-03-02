@@ -1,0 +1,168 @@
+{
+  "title": "Agent Eval: AI Agent Tool-Use Evaluation",
+  "description": "Test suite results and LLM API usage for agent-eval (framework:agent-eval)",
+  "layout_type": "ordered",
+  "template_variables": [
+    { "name": "env", "prefix": "env", "available_values": ["ci"], "default": "ci" }
+  ],
+  "widgets": [
+    {
+      "definition": {
+        "type": "note",
+        "content": "## Agent Eval: AI Agent Tool-Use Evaluation\nDeepEval agent metrics — tool correctness, task completion, reasoning  |  `framework:agent-eval`",
+        "background_color": "vivid_yellow",
+        "font_size": "14",
+        "text_align": "center",
+        "vertical_align": "center",
+        "show_tick": false
+      },
+      "layout": { "x": 0, "y": 0, "width": 12, "height": 1 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Tests Passed",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": true,
+        "precision": 0,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.passed{framework:agent-eval}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1" }]
+          }
+        ]
+      },
+      "layout": { "x": 0, "y": 1, "width": 3, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Tests Failed",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": true,
+        "precision": 0,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.failed{framework:agent-eval}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1" }]
+          }
+        ]
+      },
+      "layout": { "x": 3, "y": 1, "width": 3, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Tests Skipped",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": true,
+        "precision": 0,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.skipped{framework:agent-eval}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1" }]
+          }
+        ]
+      },
+      "layout": { "x": 6, "y": 1, "width": 3, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Suite Duration (ms)",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": true,
+        "precision": 0,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:test.suite.duration_ms{framework:agent-eval}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1" }]
+          }
+        ]
+      },
+      "layout": { "x": 9, "y": 1, "width": 3, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "timeseries",
+        "title": "Test Suite Results Over Time",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": true,
+        "requests": [
+          {
+            "response_format": "timeseries",
+            "queries": [
+              { "name": "passed", "data_source": "metrics", "query": "sum:test.suite.passed{framework:agent-eval}" },
+              { "name": "failed", "data_source": "metrics", "query": "sum:test.suite.failed{framework:agent-eval}" },
+              { "name": "skipped", "data_source": "metrics", "query": "sum:test.suite.skipped{framework:agent-eval}" }
+            ],
+            "formulas": [
+              { "alias": "Passed", "formula": "passed" },
+              { "alias": "Failed", "formula": "failed" },
+              { "alias": "Skipped", "formula": "skipped" }
+            ],
+            "display_type": "bars",
+            "style": { "palette": "dog_classic", "line_type": "solid", "line_width": "normal" }
+          }
+        ],
+        "yaxis": { "include_zero": true }
+      },
+      "layout": { "x": 0, "y": 3, "width": 6, "height": 3 }
+    },
+    {
+      "definition": {
+        "type": "timeseries",
+        "title": "LLM API Latency (ms)",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": false,
+        "requests": [
+          {
+            "response_format": "timeseries",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:llm.api.latency_ms{framework:agent-eval}" }],
+            "formulas": [{ "formula": "q1" }],
+            "display_type": "line",
+            "style": { "palette": "cool", "line_type": "solid", "line_width": "normal" }
+          }
+        ],
+        "yaxis": { "include_zero": true }
+      },
+      "layout": { "x": 6, "y": 3, "width": 6, "height": 3 }
+    },
+    {
+      "definition": {
+        "type": "timeseries",
+        "title": "Token Usage per Run",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": true,
+        "requests": [
+          {
+            "response_format": "timeseries",
+            "queries": [
+              { "name": "prompt", "data_source": "metrics", "query": "sum:llm.api.prompt_tokens{framework:agent-eval}" },
+              { "name": "completion", "data_source": "metrics", "query": "sum:llm.api.completion_tokens{framework:agent-eval}" }
+            ],
+            "formulas": [
+              { "alias": "Prompt Tokens", "formula": "prompt" },
+              { "alias": "Completion Tokens", "formula": "completion" }
+            ],
+            "display_type": "bars",
+            "style": { "palette": "dog_classic", "line_type": "solid", "line_width": "normal" }
+          }
+        ],
+        "yaxis": { "include_zero": true }
+      },
+      "layout": { "x": 0, "y": 6, "width": 12, "height": 3 }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "title": "Cucumber: BDD Feature Tests",
+  "description": "Test suite results for cucumber (framework:cucumber)",
+  "layout_type": "ordered",
+  "template_variables": [
+    { "name": "env", "prefix": "env", "available_values": ["ci"], "default": "ci" }
+  ],
+  "widgets": [
+    {
+      "definition": {
+        "type": "note",
+        "content": "## Cucumber: BDD Feature Tests\nJava · Cucumber · Selenium WebDriver  |  Headless Chrome  |  `framework:cucumber`",
+        "background_color": "vivid_pink",
+        "font_size": "14",
+        "text_align": "center",
+        "vertical_align": "center",
+        "show_tick": false
+      },
+      "layout": { "x": 0, "y": 0, "width": 12, "height": 1 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Tests Passed",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": true,
+        "precision": 0,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.passed{framework:cucumber}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1" }]
+          }
+        ]
+      },
+      "layout": { "x": 0, "y": 1, "width": 4, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Tests Failed",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": true,
+        "precision": 0,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.failed{framework:cucumber}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1" }]
+          }
+        ]
+      },
+      "layout": { "x": 4, "y": 1, "width": 4, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Tests Skipped",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": true,
+        "precision": 0,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.skipped{framework:cucumber}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1" }]
+          }
+        ]
+      },
+      "layout": { "x": 8, "y": 1, "width": 4, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "timeseries",
+        "title": "Test Suite Results Over Time",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": true,
+        "requests": [
+          {
+            "response_format": "timeseries",
+            "queries": [
+              { "name": "passed", "data_source": "metrics", "query": "sum:test.suite.passed{framework:cucumber}" },
+              { "name": "failed", "data_source": "metrics", "query": "sum:test.suite.failed{framework:cucumber}" },
+              { "name": "skipped", "data_source": "metrics", "query": "sum:test.suite.skipped{framework:cucumber}" }
+            ],
+            "formulas": [
+              { "alias": "Passed", "formula": "passed" },
+              { "alias": "Failed", "formula": "failed" },
+              { "alias": "Skipped", "formula": "skipped" }
+            ],
+            "display_type": "bars",
+            "style": { "palette": "dog_classic", "line_type": "solid", "line_width": "normal" }
+          }
+        ],
+        "yaxis": { "include_zero": true }
+      },
+      "layout": { "x": 0, "y": 3, "width": 8, "height": 3 }
+    },
+    {
+      "definition": {
+        "type": "timeseries",
+        "title": "Suite Duration (ms)",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": false,
+        "requests": [
+          {
+            "response_format": "timeseries",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:test.suite.duration_ms{framework:cucumber}" }],
+            "formulas": [{ "formula": "q1" }],
+            "display_type": "bars",
+            "style": { "palette": "purple", "line_type": "solid", "line_width": "normal" }
+          }
+        ],
+        "yaxis": { "include_zero": true }
+      },
+      "layout": { "x": 8, "y": 3, "width": 4, "height": 3 }
+    }
+  ]
+}
