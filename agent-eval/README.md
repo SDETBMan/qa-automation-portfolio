@@ -2,13 +2,13 @@
 
 # agent-eval
 
-A production-grade **agentic AI evaluation framework** built with **DeepEval + Pytest**, testing an OpenAI function-calling agent (`SwagAgent`) that orchestrates multiple tools to answer Swag Labs customer support queries. Demonstrates how to evaluate AI quality at the agentic level — shifting from "did it say the right thing" to "did it call the right tools and complete the task."
+A production-grade **agentic AI evaluation framework** built with **DeepEval + Pytest**, testing an OpenAI function-calling agent (`SwagAgent`) that orchestrates multiple tools to answer Swag Labs customer support queries. Demonstrates how to evaluate AI quality at the agentic level, shifting from "did it say the right thing" to "did it call the right tools and complete the task."
 
 ## Key Features
 
 * **Two DeepEval agentic metrics:** `ToolCorrectnessMetric` (did the agent invoke the correct tools with correct arguments?) and `TaskCompletionMetric` (did the agent fully satisfy the user's request?).
-* **Function-calling agent under test:** `SwagAgent` runs a multi-step tool-use loop — the model decides which tools to call and with what arguments, executes them, observes results, and synthesizes a grounded final response. The loop is capped at 6 iterations as a runaway guard.
-* **Four deterministic tools:** `lookup_product`, `check_return_eligibility`, `calculate_shipping_cost`, and `get_account_status` — backed by in-memory Swag Labs data. The agent's tool-selection decisions are evaluated; the tools themselves always return correct, known data.
+* **Function-calling agent under test:** `SwagAgent` runs a multi-step tool-use loop. The model decides which tools to call and with what arguments, executes them, observes results, and synthesizes a grounded final response. The loop is capped at 6 iterations as a runaway guard.
+* **Four deterministic tools:** `lookup_product`, `check_return_eligibility`, `calculate_shipping_cost`, and `get_account_status` are backed by in-memory Swag Labs data. The agent's tool-selection decisions are evaluated; the tools themselves always return correct, known data.
 * **Scenario dataset:** `datasets/agent_scenarios.json` contains 7 scenarios covering single-tool queries (product lookup, shipping, account status) and multi-tool orchestration (return eligibility requiring both product and policy data). Each scenario carries `smoke` or `regression` tags.
 * **Pytest markers:** `smoke` (single-tool, push-safe) and `regression` (full suite including multi-tool orchestration, nightly).
 * **DataDog observability:** Suite-level metrics plus per-step `llm.agent.*` scores and per-API-call latency/token usage (every step in the agent loop) sent after each test teardown. Skips gracefully without `DD_API_KEY`.
