@@ -6,7 +6,7 @@ A production-grade **LLM evaluation framework** built with **DeepEval + Pytest**
 
 ## Key Features
 
-* **Five DeepEval metrics:** `AnswerRelevancyMetric`, `FaithfulnessMetric`, `HallucinationMetric`, `GEval` (safety), and `JsonCorrectnessMetric` — each with a configurable threshold and GPT-4o-mini as the LLM judge.
+* **Five DeepEval metrics:** `AnswerRelevancyMetric`, `FaithfulnessMetric`, `HallucinationMetric`, `GEval` (safety), and `JsonCorrectnessMetric`: each with a configurable threshold and GPT-4o-mini as the LLM judge.
 * **Full RAG pipeline under test:** ChromaDB (in-memory, ephemeral) + OpenAI `text-embedding-3-small` for semantic retrieval; GPT-4o-mini for answer generation. The entire pipeline is exercised end-to-end on every eval run.
 * **Golden dataset:** `datasets/golden_dataset.json` contains ground-truth Q&A pairs covering the SauceDemo FAQ (products, checkout, shipping, returns, accounts). Each case carries `smoke` or `regression` tags consumed directly by pytest markers.
 * **Pytest markers:** `smoke` (fast, push-safe) and `regression` (full suite, nightly). Filter with `-m smoke` or `-m regression`.
