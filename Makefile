@@ -19,29 +19,32 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber ai-eval postman job-agent clean
+.PHONY: help all playwright selenium cucumber ai-eval postman job-agent fastapi-service fastapi-service-test clean
 
 # Print help when `make` is called with no target
 help:
 	@echo ""
 	@echo "  QA Automation Portfolio — available targets"
 	@echo "  ───────────────────────────────────────────"
-	@echo "  make all          Run all five frameworks sequentially"
-	@echo "  make job-agent    Run Claude-powered job search agent"
-	@echo "  make playwright   Run playwright-dotnet suite (C# + TypeScript)"
-	@echo "  make selenium     Run selenium-java suite (headless Chrome)"
-	@echo "  make cucumber     Run cucumber suite (headless Chrome)"
-	@echo "  make ai-eval      Run AI evaluation suite (Python + DeepEval)"
-	@echo "  make postman      Run Postman/Newman API test suite"
-	@echo "  make clean        Remove build artefacts from all frameworks"
+	@echo "  make all                  Run all five frameworks sequentially"
+	@echo "  make job-agent            Run Claude-powered job search agent"
+	@echo "  make playwright           Run playwright-dotnet suite (C# + TypeScript)"
+	@echo "  make selenium             Run selenium-java suite (headless Chrome)"
+	@echo "  make cucumber             Run cucumber suite (headless Chrome)"
+	@echo "  make ai-eval              Run AI evaluation suite (Python + DeepEval)"
+	@echo "  make postman              Run Postman/Newman API test suite"
+	@echo "  make fastapi-service      Start FastAPI server on :8001"
+	@echo "  make fastapi-service-test Run FastAPI pytest suite"
+	@echo "  make clean                Remove build artefacts from all frameworks"
 	@echo ""
 	@echo "  Prerequisites:"
-	@echo "    playwright — .NET 8 SDK · Node.js 20+"
-	@echo "    selenium   — Java 17 · Maven 3.9+"
-	@echo "    cucumber   — Java 17 · Maven 3.9+"
-	@echo "    ai-eval    — Python 3.11+ · OPENAI_API_KEY in ai-eval/.env"
-	@echo "    postman    — Node.js 20+"
-	@echo "    job-agent  — Python 3.11+ · ANTHROPIC_API_KEY · TAVILY_API_KEY in job-agent/.env"
+	@echo "    playwright       — .NET 8 SDK · Node.js 20+"
+	@echo "    selenium         — Java 17 · Maven 3.9+"
+	@echo "    cucumber         — Java 17 · Maven 3.9+"
+	@echo "    ai-eval          — Python 3.11+ · OPENAI_API_KEY in ai-eval/.env"
+	@echo "    postman          — Node.js 20+"
+	@echo "    job-agent        — Python 3.11+ · ANTHROPIC_API_KEY · TAVILY_API_KEY in job-agent/.env"
+	@echo "    fastapi-service  — Python 3.11+"
 	@echo ""
 
 # ── Full portfolio ─────────────────────────────────────────────────────────────
@@ -99,6 +102,20 @@ job-agent:
 	cd job-agent && pip install -r requirements.txt -q && python run.py
 	@echo ""
 	@echo ">>> [job-agent] Done. Results in job-agent/output/"
+	@echo ""
+
+fastapi-service:
+	@echo ""
+	@echo ">>> [fastapi-service] Starting API server..."
+	cd fastapi-service && pip install -r requirements.txt -q && \
+		uvicorn app.main:app --reload --port 8001
+	@echo ""
+
+fastapi-service-test:
+	@echo ""
+	@echo ">>> [fastapi-service] Running tests..."
+	cd fastapi-service && pip install -r requirements.txt -q && \
+		pytest tests/ -v --cov=app --cov-report=term-missing
 	@echo ""
 
 # ── Clean ─────────────────────────────────────────────────────────────────────

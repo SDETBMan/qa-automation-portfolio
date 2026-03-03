@@ -1,0 +1,59 @@
+name: FastAPI Service
+
+on:
+  schedule:
+    - cron: '0 10 * * *'   # nightly 10:00 UTC
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fastapi-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: fastapi-service/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v \
+            --junit-xml=junit-report.xml \
+            --cov=app \
+            --cov-report=xml
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+
+      # ── DataDog CI Visibility ─────────────────────────────────────────────
+      - name: Upload test results to Datadog CI Visibility
+        if: always()
+        continue-on-error: true
+        run: |
+          curl -fsSL "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" \
+            --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
+          datadog-ci junit upload --service qa-automation-portfolio \
+            --tags framework:fastapi-service \
+            junit-report.xml
+        env:
+          DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
+          DATADOG_SITE: datadoghq.com
+
+      - name: Upload test artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fastapi-service-results
+          path: |
+            fastapi-service/junit-report.xml
+            fastapi-service/coverage.xml
+          retention-days: 30
