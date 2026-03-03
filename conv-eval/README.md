@@ -2,12 +2,12 @@
 
 # conv-eval
 
-A production-grade **conversational AI evaluation framework** built with **DeepEval + Pytest**, testing a stateful multi-turn chatbot (`SwagSupportBot`) that simulates a Swag Labs customer support agent. Demonstrates how to evaluate AI quality across a full conversation — not just single-turn answers — covering turn relevancy, knowledge retention, role adherence, and graceful handling of out-of-scope requests.
+A production-grade **conversational AI evaluation framework** built with **DeepEval + Pytest**, testing a stateful multi-turn chatbot (`SwagSupportBot`) that simulates a Swag Labs customer support agent. Demonstrates how to evaluate AI quality across a full conversation, not just single-turn answers. Covering: turn relevancy, knowledge retention, role adherence, and graceful handling of out-of-scope requests.
 
 ## Key Features
 
-* **Four DeepEval conversational metrics:** `ConversationRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, and `ConversationalGEval` (graceful handling) — each evaluating the full conversation history rather than a single exchange.
-* **Stateful chatbot under test:** `SwagSupportBot` accumulates the full message history across turns so the model resolves pronouns, follows topic switches, and acknowledges corrections — exactly like a real support bot. Each test gets a fresh bot instance via a function-scoped fixture.
+* **Four DeepEval conversational metrics:** `ConversationRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, and `ConversationalGEval` (graceful handling). Each evaluating the full conversation history rather than a single exchange.
+* **Stateful chatbot under test:** `SwagSupportBot` accumulates the full message history across turns so the model resolves pronouns, follows topic switches, and acknowledges corrections, exactly like a real support bot. Each test gets a fresh bot instance via a function-scoped fixture.
 * **Conversation dataset:** `datasets/conversations.json` contains 7 multi-turn scenarios covering normal support queries, implicit reference resolution, context corrections, off-domain deflection, and adversarial prompt injection. Each scenario carries `smoke`, `regression`, `safety`, or `retention` tags.
 * **Pytest markers:** `smoke` (push-safe), `regression` (nightly), `safety`, and `retention`. Filter with `-m smoke`, `-m retention`, etc.
 * **DataDog observability:** Suite-level metrics plus per-turn `llm.conv.*` scores and per-API-call latency/token usage sent after every test teardown. Skips gracefully without `DD_API_KEY`.
