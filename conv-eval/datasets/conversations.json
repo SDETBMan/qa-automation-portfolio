@@ -6,7 +6,7 @@
     "turns": [
       {"role": "user", "content": "I want to return my Sauce Labs Backpack."},
       {"role": "user", "content": "I bought it two weeks ago. Am I still within the return window?"},
-      {"role": "user", "content": "I think I lost the receipt. Can I still return it?"}
+      {"role": "user", "content": "I have the order confirmation email — does that count as a receipt?"}
     ]
   },
   {
