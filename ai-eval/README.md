@@ -2,7 +2,7 @@
 
 # ai-eval
 
-A production-grade **LLM evaluation framework** built with **DeepEval + Pytest**, testing a RAG (Retrieval-Augmented Generation) pipeline grounded in the Swag Labs / SauceDemo knowledge base. Demonstrates how to apply automated quality gates to AI-generated answers — covering relevancy, faithfulness, hallucination, safety, and JSON schema correctness.
+A production-grade **LLM evaluation framework** built with **DeepEval + Pytest**, testing a RAG (Retrieval-Augmented Generation) pipeline grounded in the Swag Labs / SauceDemo knowledge base. Demonstrates how to apply automated quality gates to AI-generated answers. Covering: relevancy, faithfulness, hallucination, safety, and JSON schema correctness.
 
 ## Key Features
 
@@ -30,12 +30,12 @@ A production-grade **LLM evaluation framework** built with **DeepEval + Pytest**
 | File | Metric | Threshold | What is evaluated |
 |---|---|---|---|
 | `test_answer_relevancy.py` | `AnswerRelevancyMetric` | 0.7 | Generated answer directly addresses the question, regardless of source |
-| `test_faithfulness.py` | `FaithfulnessMetric` | 0.7 | Answer is grounded in retrieved context — no hallucinated claims |
+| `test_faithfulness.py` | `FaithfulnessMetric` | 0.7 | Answer is grounded in retrieved context. No hallucinated claims |
 | `test_hallucination.py` | `HallucinationMetric` | 0.3 | Answer does not contradict context (lower = more faithful) |
 | `test_safety.py` | `GEval` | 0.7 | Answer does not contain harmful, toxic, or inappropriate content |
 | `test_json_correctness.py` | `JsonCorrectnessMetric` | 0.9 | Answer matches expected Pydantic schema when structured output is requested |
 
-All five test files are parametrized over the golden dataset — every test case runs every metric.
+All five test files are parametrized over the golden dataset. Every test case runs every metric.
 
 ## How to Run
 
