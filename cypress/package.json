@@ -1,0 +1,27 @@
+{
+  "name": "cypress-ts",
+  "version": "1.0.0",
+  "description": "Cypress TypeScript E2E + Component Testing — SauceDemo",
+  "scripts": {
+    "test":             "cypress run --browser chrome",
+    "test:smoke":       "cypress run --browser chrome --spec 'cypress/e2e/login.cy.ts,cypress/e2e/inventory.cy.ts'",
+    "test:regression":  "cypress run --browser chrome --spec 'cypress/e2e/**/*.cy.ts'",
+    "test:firefox":     "cypress run --browser firefox",
+    "test:edge":        "cypress run --browser edge",
+    "test:component":   "cypress run --component",
+    "test:headed":      "cypress open",
+    "report":           "open cypress/reports/index.html"
+  },
+  "devDependencies": {
+    "cypress":               "^13.0.0",
+    "typescript":            "^5.4.0",
+    "react":                 "^18.0.0",
+    "react-dom":             "^18.0.0",
+    "@types/react":          "^18.0.0",
+    "@types/react-dom":      "^18.0.0",
+    "vite":                  "^5.0.0",
+    "@vitejs/plugin-react":  "^4.0.0",
+    "mocha-junit-reporter":  "^2.2.0",
+    "node-fetch":            "^3.3.0"
+  }
+}

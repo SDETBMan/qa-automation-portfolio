@@ -1,0 +1,108 @@
+name: cypress CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['cypress/**']
+  pull_request:
+    branches: [main]
+    paths: ['cypress/**']
+  schedule:
+    - cron: '0 5 * * *'    # nightly 05:00 UTC
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: 'Browser'
+        required: false
+        default: 'chrome'
+        type: choice
+        options: [chrome, firefox, edge, electron]
+      test_type:
+        description: 'Test type'
+        required: false
+        default: 'e2e'
+        type: choice
+        options: [e2e, component, all]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cypress
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: cypress/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── E2E tests ───────────────────────────────────────────────────────────
+      - name: Run E2E tests
+        if: github.event.inputs.test_type != 'component'
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: cypress
+          browser: ${{ github.event.inputs.browser || 'chrome' }}
+          install: false
+        env:
+          BASE_URL:   'https://www.saucedemo.com'
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      # ── Component tests ─────────────────────────────────────────────────────
+      - name: Run component tests
+        if: github.event.inputs.test_type == 'component' || github.event.inputs.test_type == 'all'
+        run: npm run test:component
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      # ── OWASP ZAP Baseline Scan ─────────────────────────────────────────────
+      - name: OWASP ZAP Baseline Scan
+        if: always()
+        uses: zaproxy/action-baseline@v0.12.0
+        continue-on-error: true
+        with:
+          target: 'https://www.saucedemo.com'
+          allow_issue_writing: false
+          cmd_options: '-I'
+
+      # ── DataDog CI Visibility ───────────────────────────────────────────────
+      - name: Upload test results to Datadog CI Visibility
+        if: always()
+        continue-on-error: true
+        run: |
+          curl -fsSL "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" \
+            --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
+          datadog-ci junit upload --service qa-automation-portfolio \
+            --tags framework:cypress \
+            test-results/*.xml
+        env:
+          DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
+          DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      # ── Artifacts ───────────────────────────────────────────────────────────
+      - name: Upload videos and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-recordings
+          path: |
+            cypress/cypress/videos/
+            cypress/cypress/screenshots/
+          retention-days: 7
+
+      - name: Upload JUnit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-test-results
+          path: cypress/test-results/
+          retention-days: 30

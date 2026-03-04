@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber ai-eval postman job-agent fastapi-service fastapi-service-test clean
+.PHONY: help all playwright selenium cucumber ai-eval postman job-agent fastapi-service fastapi-service-test cypress-test cypress-open clean
 
 # Print help when `make` is called with no target
 help:
@@ -27,6 +27,8 @@ help:
 	@echo "  QA Automation Portfolio — available targets"
 	@echo "  ───────────────────────────────────────────"
 	@echo "  make all                  Run all five frameworks sequentially"
+	@echo "  make cypress-test         Run Cypress E2E suite (headless Chrome)"
+	@echo "  make cypress-open         Open Cypress interactive Test Runner"
 	@echo "  make job-agent            Run Claude-powered job search agent"
 	@echo "  make playwright           Run playwright-dotnet suite (C# + TypeScript)"
 	@echo "  make selenium             Run selenium-java suite (headless Chrome)"
@@ -45,6 +47,7 @@ help:
 	@echo "    postman          — Node.js 20+"
 	@echo "    job-agent        — Python 3.11+ · ANTHROPIC_API_KEY · TAVILY_API_KEY in job-agent/.env"
 	@echo "    fastapi-service  — Python 3.11+"
+	@echo "    cypress          — Node.js 20+"
 	@echo ""
 
 # ── Full portfolio ─────────────────────────────────────────────────────────────
@@ -116,6 +119,18 @@ fastapi-service-test:
 	@echo ">>> [fastapi-service] Running tests..."
 	cd fastapi-service && pip install -r requirements.txt -q && \
 		pytest tests/ -v --cov=app --cov-report=term-missing
+	@echo ""
+
+cypress-test:
+	@echo ""
+	@echo ">>> [cypress] Running Cypress tests..."
+	cd cypress && npm ci --quiet && npm test
+	@echo ""
+
+cypress-open:
+	@echo ""
+	@echo ">>> [cypress] Opening Cypress Test Runner..."
+	cd cypress && npm ci --quiet && npx cypress open
 	@echo ""
 
 # ── Clean ─────────────────────────────────────────────────────────────────────

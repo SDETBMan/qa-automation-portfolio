@@ -1,0 +1,48 @@
+{
+  "products": [
+    {
+      "name": "Sauce Labs Backpack",
+      "price": "$29.99",
+      "id": "sauce-labs-backpack"
+    },
+    {
+      "name": "Sauce Labs Bike Light",
+      "price": "$9.99",
+      "id": "sauce-labs-bike-light"
+    },
+    {
+      "name": "Sauce Labs Bolt T-Shirt",
+      "price": "$15.99",
+      "id": "sauce-labs-bolt-t-shirt"
+    },
+    {
+      "name": "Sauce Labs Fleece Jacket",
+      "price": "$49.99",
+      "id": "sauce-labs-fleece-jacket"
+    },
+    {
+      "name": "Sauce Labs Onesie",
+      "price": "$7.99",
+      "id": "sauce-labs-onesie"
+    },
+    {
+      "name": "Test.allTheThings() T-Shirt (Red)",
+      "price": "$15.99",
+      "id": "test.allthethings()-t-shirt-(red)"
+    }
+  ],
+  "stubbedProducts": [
+    {
+      "id": 1,
+      "name": "Cypress Test Widget",
+      "price": 9.99,
+      "description": "A widget created by cy.intercept()"
+    },
+    {
+      "id": 2,
+      "name": "Mock Data Gadget",
+      "price": 19.99,
+      "description": "Demonstrates network stubbing"
+    }
+  ]
+}

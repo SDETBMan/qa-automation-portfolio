@@ -3,6 +3,7 @@
 [![playwright-dotnet CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright-dotnet.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright-dotnet.yml)
 [![selenium-java CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/selenium-java.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/selenium-java.yml)
 [![cucumber CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml)
+[![cypress CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cypress.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cypress.yml)
 [![ai-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml)
 [![conv-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/conv-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/conv-eval.yml)
 [![agent-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/agent-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/agent-eval.yml)
@@ -10,7 +11,7 @@
 [![postman-newman CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/postman-newman.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/postman-newman.yml)
 [![job-agent CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/job-agent.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/job-agent.yml)
 
-A monorepo housing eight independent, production-grade test automation frameworks, each showcasing a distinct testing approach used by senior SDETs in the industry.
+A monorepo housing nine independent, production-grade test automation frameworks, each showcasing a distinct testing approach used by senior SDETs in the industry.
 
 ---
 
@@ -26,42 +27,47 @@ A monorepo housing eight independent, production-grade test automation framework
 | [`cucumber`](./cucumber/) | Java | Cucumber 7 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
 | [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
 | [`job-agent`](./job-agent/) | Python | Anthropic Claude · Tavily · Python 3.11 | [→](./job-agent/README.md) |
+| [`cypress`](./cypress/) | TypeScript | Cypress 13 · React 18 · Vite · Node.js 20 | [→](./cypress/README.md) |
 
 ---
 
 ## Feature Coverage
 
-| Capability | playwright-dotnet | selenium-java | cucumber | ai-eval | conv-eval | agent-eval | postman | job-agent |
-|---|---|---|---|---|---|---|---|---|
-| **Page Object Model** | ✅ C# + TypeScript | ✅ Java | ✅ Java | — | — | — | — | — |
-| **Parallel execution** | ✅ `[Parallelizable]` · `fullyParallel` | ✅ `ThreadLocal` · `parallel="tests"` | ✅ `ThreadLocal` · `@DataProvider(parallel=true)` | — | — | — | — | — |
-| **Fixtures / base classes** | ✅ `AuthenticatedTest` · `test.extend<>` | ✅ `BaseTest` | ✅ Cucumber `Hooks` | ✅ `conftest.py` session fixtures | ✅ `conftest.py` session + function fixtures | ✅ `conftest.py` session + function fixtures | — | — |
-| **Retry on failure** | ✅ `[Retry]` · `retries: 2` in CI | ✅ `RetryAnalyzer` + `AnnotationTransformer` | ✅ `RetryAnalyzer` + `AnnotationTransformer` | — | — | — | — | — |
-| **Cross-browser** | ✅ Chromium · Firefox · WebKit | ✅ Chrome · Firefox · Edge | ✅ Chrome · Firefox · Edge | — | — | — | — | — |
-| **BDD / Gherkin** | — | — | ✅ 6 feature files · 19+ scenarios | — | — | — | — | — |
-| **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline | ✅ `golden_dataset.json` · `@pytest.mark.parametrize` | ✅ `conversations.json` · `@pytest.mark.parametrize` | ✅ `agent_scenarios.json` · `@pytest.mark.parametrize` | ✅ pre-request scripts · collection variables | — |
-| **REST API testing** | ✅ `HttpClient` | ✅ RestAssured | ✅ RestAssured | — | — | — | ✅ Newman CLI · 10 requests · 4 test groups | — |
-| **Mocking & Service Virtualization** | ✅ 4 patterns: block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | — | — | — | — | — |
-| **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`): DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages | — | — | — | ✅ JUnit XML · htmlextra HTML report | — |
-| **AI/ML Self-Healing Locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 | — | — | — | — | — |
-| **LLM Evaluation (RAG pipeline)** | — | — | — | ✅ Answer Relevancy · Faithfulness · Hallucination · Safety · JSON Schema | — | — | — | — |
-| **LLM Evaluation (Conversational)** | — | — | — | — | ✅ Turn Relevancy · Knowledge Retention · Role Adherence · Graceful Handling | — | — | — |
-| **LLM Evaluation (Agentic / tool-use)** | — | — | — | — | — | ✅ Tool Correctness · Task Completion | — | — |
-| **Function-calling agent** | — | — | — | — | — | ✅ Multi-step tool orchestration · deterministic tool implementations | — | — |
-| **Agentic tool-use loop** | — | — | — | — | — | — | — | ✅ Claude claude-sonnet-4-6 · 5 tools · max 30 iterations · Tavily web search |
-| **Automated job search** | — | — | — | — | — | — | — | ✅ 5 role queries · score_job_fit · draft_cover_letter · save_results |
-| **JSON schema validation** | — | — | — | ✅ `JsonCorrectnessMetric` · Pydantic `BaseModel` schemas | — | — | — | — |
-| **Cost & latency tracking** | — | — | — | ✅ per-call tokens · `latency_ms` → DataDog | ✅ per-turn tokens · `latency_ms` → DataDog | ✅ per-step tokens · `latency_ms` → DataDog | — | ✅ `latency_ms` · run counts → DataDog |
-| **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS | — | — | — | — | — |
-| **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — | — | — | — | — |
-| **Database validation** | — | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — | — | — | — | — |
-| **Security testing (OWASP)** | ✅ 4 test cases | ✅ 4 test cases | ✅ 3 BDD scenarios | — | — | — | — | — |
-| **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — | — | — | — | — |
-| **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — | — | — | — |
-| **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — | — | — | — | — |
-| **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility (JUnit XML) | ✅ Custom metrics · run counts · latency |
-| **GitHub Actions CI** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ nightly 09:00 UTC |
-| **Agentic AI Development** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Capability | playwright-dotnet | selenium-java | cucumber | cypress | ai-eval | conv-eval | agent-eval | postman | job-agent |
+|---|---|---|---|---|---|---|---|---|---|
+| **Page Object Model** | ✅ C# + TypeScript | ✅ Java | ✅ Java | ✅ TypeScript | — | — | — | — | — |
+| **Custom commands** | — | — | — | ✅ `cy.login()` · `cy.addToCart()` · `cy.clearCart()` | — | — | — | — | — |
+| **Network interception** | ✅ `page.route()` mock/stub | — | — | ✅ `cy.intercept()` spy + stub + failure sim | — | — | — | — | — |
+| **Component testing** | — | — | — | ✅ React `ProductCard` via Cypress component runner | — | — | — | — | — |
+| **Parallel execution** | ✅ `[Parallelizable]` · `fullyParallel` | ✅ `ThreadLocal` · `parallel="tests"` | ✅ `ThreadLocal` · `@DataProvider(parallel=true)` | ✅ `--parallel` (Cypress Cloud) | — | — | — | — | — |
+| **Fixtures / base classes** | ✅ `AuthenticatedTest` · `test.extend<>` | ✅ `BaseTest` | ✅ Cucumber `Hooks` | ✅ `BasePage` abstract class · JSON fixtures | ✅ `conftest.py` session fixtures | ✅ `conftest.py` session + function fixtures | ✅ `conftest.py` session + function fixtures | — | — |
+| **Retry on failure** | ✅ `[Retry]` · `retries: 2` in CI | ✅ `RetryAnalyzer` + `AnnotationTransformer` | ✅ `RetryAnalyzer` + `AnnotationTransformer` | ✅ `retries: { runMode: 2 }` | — | — | — | — | — |
+| **Cross-browser** | ✅ Chromium · Firefox · WebKit | ✅ Chrome · Firefox · Edge | ✅ Chrome · Firefox · Edge | ✅ Chrome · Firefox · Edge · Electron | — | — | — | — | — |
+| **Screenshot/video on failure** | ✅ Trace Viewer | — | — | ✅ `screenshotOnRunFailure` · `video: true` | — | — | — | — | — |
+| **BDD / Gherkin** | — | — | ✅ 6 feature files · 19+ scenarios | — | — | — | — | — | — |
+| **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline | ✅ `cy.fixture()` JSON datasets | ✅ `golden_dataset.json` · `@pytest.mark.parametrize` | ✅ `conversations.json` · `@pytest.mark.parametrize` | ✅ `agent_scenarios.json` · `@pytest.mark.parametrize` | ✅ pre-request scripts · collection variables | — |
+| **REST API testing** | ✅ `HttpClient` | ✅ RestAssured | ✅ RestAssured | — | — | — | — | ✅ Newman CLI · 10 requests · 4 test groups | — |
+| **Mocking & Service Virtualization** | ✅ 4 patterns: block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | ✅ `cy.intercept()` response stub + failure sim | — | — | — | — | — |
+| **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`): DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages | ✅ JUnit XML · videos · screenshots | — | — | — | ✅ JUnit XML · htmlextra HTML report | — |
+| **AI/ML Self-Healing Locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 | — | — | — | — | — | — |
+| **LLM Evaluation (RAG pipeline)** | — | — | — | — | ✅ Answer Relevancy · Faithfulness · Hallucination · Safety · JSON Schema | — | — | — | — |
+| **LLM Evaluation (Conversational)** | — | — | — | — | — | ✅ Turn Relevancy · Knowledge Retention · Role Adherence · Graceful Handling | — | — | — |
+| **LLM Evaluation (Agentic / tool-use)** | — | — | — | — | — | — | ✅ Tool Correctness · Task Completion | — | — |
+| **Function-calling agent** | — | — | — | — | — | — | ✅ Multi-step tool orchestration · deterministic tool implementations | — | — |
+| **Agentic tool-use loop** | — | — | — | — | — | — | — | — | ✅ Claude claude-sonnet-4-6 · 5 tools · max 30 iterations · Tavily web search |
+| **Automated job search** | — | — | — | — | — | — | — | — | ✅ 5 role queries · score_job_fit · draft_cover_letter · save_results |
+| **JSON schema validation** | — | — | — | — | ✅ `JsonCorrectnessMetric` · Pydantic `BaseModel` schemas | — | — | — | — |
+| **Cost & latency tracking** | — | — | — | — | ✅ per-call tokens · `latency_ms` → DataDog | ✅ per-turn tokens · `latency_ms` → DataDog | ✅ per-step tokens · `latency_ms` → DataDog | — | ✅ `latency_ms` · run counts → DataDog |
+| **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS | — | — | — | — | — | — |
+| **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — | — | — | — | — | — |
+| **Database validation** | — | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — | — | — | — | — | — |
+| **Security testing (OWASP)** | ✅ 4 test cases | ✅ 4 test cases | ✅ 3 BDD scenarios | — | — | — | — | — | — |
+| **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — | — | — | — | — |
+| **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — | — | — | — | — |
+| **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — | — | — | — | — | — |
+| **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom GAUGE metrics | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility (JUnit XML) | ✅ Custom metrics · run counts · latency |
+| **GitHub Actions CI** | ✅ | ✅ | ✅ | ✅ nightly 05:00 UTC | ✅ | ✅ | ✅ | ✅ | ✅ nightly 09:00 UTC |
+| **Agentic AI Development** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -123,6 +129,28 @@ pytest -m smoke -v
 
 # Full suite (includes multi-tool orchestration scenarios)
 pytest -v
+```
+
+### cypress (TypeScript E2E + Component)
+
+**Prerequisites:** [Node.js 20 LTS](https://nodejs.org)
+
+```bash
+# From the repo root
+make cypress-test
+
+# Or manually
+cd cypress
+npm install
+
+# All E2E tests (headless Chrome)
+npm test
+
+# React component tests only
+npm run test:component
+
+# Interactive Cypress Test Runner
+npm run test:headed
 ```
 
 ### playwright-dotnet (C# + TypeScript)
@@ -253,6 +281,7 @@ qa-automation-portfolio/
 │       ├── playwright-dotnet.yml   # triggers on: paths playwright-dotnet/**
 │       ├── selenium-java.yml       # triggers on: paths selenium-java/**
 │       ├── cucumber.yml            # triggers on: paths cucumber/**
+│       ├── cypress.yml             # triggers on: paths cypress/** · nightly 05:00 UTC
 │       ├── postman-newman.yml      # triggers on: paths postman/**
 │       ├── job-agent.yml           # nightly 09:00 UTC · workflow_dispatch (role_filter input)
 │       └── k8s.yml                 # workflow_dispatch only: Kind cluster + grid smoke tests
@@ -290,6 +319,16 @@ qa-automation-portfolio/
 │   ├── src/test/java/              # Step definitions, runners, page objects
 │   ├── src/test/resources/features/  # login · dashboard · inventory · cart · api · security
 │   └── docker-compose.yaml
+├── cypress/                            # Cypress 13 · TypeScript · React 18 · Vite · Node.js 20
+│   ├── cypress/
+│   │   ├── component/                  # ProductCard.cy.tsx — React component tests
+│   │   ├── e2e/                        # login · inventory · checkout · network (cy.intercept)
+│   │   ├── fixtures/                   # users.json · products.json
+│   │   ├── pages/                      # BasePage · LoginPage · InventoryPage · CartPage · CheckoutPage
+│   │   └── support/                    # commands.ts (cy.login · cy.addToCart · cy.clearCart) · e2e.ts
+│   ├── src/components/ProductCard.tsx  # React component under test
+│   ├── utils/datadog_reporter.ts       # GAUGE metrics reporter
+│   └── cypress.config.ts
 ├── postman/                            # Postman Collection v2.1 · Newman · Node.js 20
 │   ├── collections/                   # jsonplaceholder.postman_collection.json: 10 requests, 4 folders
 │   ├── environments/                  # jsonplaceholder.postman_environment.json
@@ -322,6 +361,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `playwright-dotnet.yml` | push · PR · nightly 02:00 UTC | execution mode · browser · JMeter toggle |
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | execution mode · browser · JMeter toggle |
+| `cypress.yml` | push · PR · nightly 05:00 UTC | browser (chrome · firefox · edge · electron) · test type (e2e · component · all) |
 | `ai-eval.yml` | push · PR · nightly 05:00 UTC | pytest marker filter (smoke · regression · safety) |
 | `conv-eval.yml` | push · PR · nightly 06:00 UTC | pytest marker filter (smoke · regression · safety · retention) |
 | `agent-eval.yml` | push · PR · nightly 07:00 UTC | pytest marker filter (smoke · regression) |
