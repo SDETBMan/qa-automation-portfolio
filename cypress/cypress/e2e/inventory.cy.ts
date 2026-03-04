@@ -4,11 +4,25 @@ import { CartPage } from '../pages/CartPage';
 const inventoryPage = new InventoryPage();
 const cartPage = new CartPage();
 
-describe('Inventory', () => {
-  beforeEach(() => {
+/**
+ * testIsolation: false — Cypress does NOT clear cookies/localStorage/sessionStorage
+ * between tests in this suite. A single login in `before()` covers all six tests,
+ * avoiding repeated cy.visit('/') calls that trigger SauceDemo rate-limiting in CI.
+ *
+ * beforeEach calls cy.clearCart() which navigates to the cart, removes any leftover
+ * items from the previous test, then clicks "Continue Shopping" to land back on
+ * /inventory.html — giving every test a clean starting state.
+ */
+describe('Inventory', { testIsolation: false }, () => {
+  before(() => {
     cy.fixture('users').then((users) => {
       cy.login(users.standard.username, users.standard.password);
     });
+  });
+
+  beforeEach(() => {
+    // Remove any items left in the cart by the previous test and return to inventory.
+    cy.clearCart();
   });
 
   // ── Smoke ──────────────────────────────────────────────────────────────────

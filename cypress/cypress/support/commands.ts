@@ -24,24 +24,13 @@ declare global {
 }
 
 Cypress.Commands.add('login', (username: string, password: string) => {
-  // cy.session() caches the authenticated browser state (cookies + localStorage)
-  // after the first login. Subsequent calls restore that state without hitting
-  // the login page again — avoiding CI rate-limiting from saucedemo.com.
-  cy.session(
-    [username, password],
-    () => {
-      cy.visit('/');
-      cy.get('#user-name').type(username);
-      cy.get('#password').type(password);
-      cy.get('#login-button').click();
-      cy.url().should('include', '/inventory.html');
-    },
-  );
-  // After session setup or restore, visit '/'. SauceDemo's React app reads
-  // the restored localStorage auth state and client-side navigates to
-  // /inventory.html automatically. Visiting '/inventory.html' directly
-  // returns 404 — the server only knows '/'.
+  // SauceDemo auth is in-memory React state only — cy.session() cannot capture
+  // it because nothing meaningful is written to cookies or localStorage.
+  // A direct login is the only reliable approach.
   cy.visit('/');
+  cy.get('#user-name').type(username);
+  cy.get('#password').type(password);
+  cy.get('#login-button').click();
   cy.url().should('include', '/inventory.html');
 });
 
@@ -60,5 +49,7 @@ Cypress.Commands.add('clearCart', () => {
       });
     }
   });
-  cy.visit('/inventory.html');
+  // SauceDemo's server only serves '/'; '/inventory.html' returns 404.
+  // Use the "Continue Shopping" button for client-side navigation back to inventory.
+  cy.get('[data-test="continue-shopping"]').click();
 });

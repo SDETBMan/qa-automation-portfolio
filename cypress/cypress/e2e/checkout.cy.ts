@@ -6,11 +6,27 @@ const inventoryPage = new InventoryPage();
 const cartPage = new CartPage();
 const checkoutPage = new CheckoutPage();
 
-describe('Checkout', () => {
-  beforeEach(() => {
+/**
+ * testIsolation: false — browser state is NOT cleared between tests.
+ * A single login in `before()` covers all four tests, avoiding repeated
+ * cy.visit('/') calls that trigger SauceDemo rate-limiting in CI.
+ *
+ * beforeEach uses cy.clearCart() as a universal reset: it navigates to the
+ * cart from wherever the previous test left off (checkout-complete, checkout
+ * step one, or the cart itself), removes any remaining items, then clicks
+ * "Continue Shopping" to land on /inventory.html. It then adds a product and
+ * navigates to the cart so every test starts on /cart.html with one item.
+ */
+describe('Checkout', { testIsolation: false }, () => {
+  before(() => {
     cy.fixture('users').then((users) => {
       cy.login(users.standard.username, users.standard.password);
     });
+  });
+
+  beforeEach(() => {
+    // Reset to inventory with an empty cart, then set up one item in the cart.
+    cy.clearCart();
     cy.fixture('products').then((data) => {
       inventoryPage.addItemToCart(data.products[0].name);
       inventoryPage.goToCart();
