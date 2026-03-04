@@ -10,8 +10,9 @@
  *   1. GET /                    — initial HTML page
  *   2. GET /static/js/...       — JavaScript bundles (on every page load)
  *   3. GET /static/media/...    — product images (when inventory renders)
- *   4. GET /static/css/...      — CSS stylesheets (on every page load)
+ *   4. GET /static/js/...       — JS bundles (response modifier demo)
  *
+ * Note: SauceDemo uses CSS-in-JS — no .css files are requested over the network.
  * These four patterns drive the four cy.intercept() scenarios below.
  */
 
@@ -58,16 +59,26 @@ describe('Network — cy.intercept() showcase', () => {
     });
   });
 
-  // ── @regression: spy on CSS and assert content-type header ────────────────
+  // ── @regression: modify response headers via cy.intercept() ─────────────
 
-  it('@regression intercepts CSS assets and asserts content-type header', () => {
-    cy.intercept('GET', '**/*.css').as('cssAsset');
+  it('@regression modifies a JS bundle response to inject a custom header', () => {
+    // Demonstrates cy.intercept() as a response modifier: intercept the first
+    // JS chunk, add a custom header in the reply, then assert it's present.
+    // SauceDemo uses CSS-in-JS so no .css files are requested; JS bundles
+    // are always fetched on every page load and are the reliable intercept target.
+    cy.intercept('GET', '**/*.js', (req) => {
+      req.reply((res) => {
+        res.headers['x-cypress-intercepted'] = 'true';
+      });
+    }).as('jsWithHeader');
+
     cy.visit('/');
-    cy.wait('@cssAsset').then((interception) => {
+
+    cy.wait('@jsWithHeader').then((interception) => {
       expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
-      const contentType =
-        interception.response?.headers?.['content-type'] ?? '';
-      expect(contentType).to.include('css');
+      expect(interception.response?.headers?.['x-cypress-intercepted']).to.eq(
+        'true',
+      );
     });
   });
 });

@@ -37,8 +37,12 @@ Cypress.Commands.add('login', (username: string, password: string) => {
       cy.url().should('include', '/inventory.html');
     },
   );
-  // After session setup or restore, navigate to the inventory start page.
-  cy.visit('/inventory.html');
+  // After session setup or restore, visit '/'. SauceDemo's React app reads
+  // the restored localStorage auth state and client-side navigates to
+  // /inventory.html automatically. Visiting '/inventory.html' directly
+  // returns 404 — the server only knows '/'.
+  cy.visit('/');
+  cy.url().should('include', '/inventory.html');
 });
 
 Cypress.Commands.add('addToCart', (productName: string) => {
