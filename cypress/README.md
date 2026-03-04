@@ -5,7 +5,7 @@
 Cypress 13 · TypeScript 5 · React 18 · Vite · Node.js 20
 
 End-to-end tests against [SauceDemo](https://www.saucedemo.com/) plus isolated
-React component tests — all in TypeScript.
+React component tests, all in TypeScript.
 
 ---
 
@@ -13,9 +13,9 @@ React component tests — all in TypeScript.
 
 | Feature | Detail |
 |---|---|
-| **`cy.intercept()`** | Network spy/stub in `network.cy.ts` — Cypress's most-asked-about interview topic |
+| **`cy.intercept()`** | Network spy/stub in `network.cy.ts`: Cypress's most-asked-about interview topic |
 | **Component testing** | Mounts `ProductCard` React component in isolation via the Cypress component runner |
-| **Custom commands** | `cy.login()`, `cy.addToCart()`, `cy.clearCart()` — typed via `Chainable` declaration |
+| **Custom commands** | `cy.login()`, `cy.addToCart()`, `cy.clearCart()`: typed via `Chainable` declaration |
 | **Page Object Model** | Abstract `BasePage` + 4 concrete pages |
 | **DataDog GAUGE metrics** | TypeScript port of the Python reporter; posts 4 metrics after every run |
 | **JUnit XML** | `mocha-junit-reporter` for DataDog CI Visibility upload |
