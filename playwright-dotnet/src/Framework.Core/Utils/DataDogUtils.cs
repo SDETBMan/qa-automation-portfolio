@@ -28,7 +28,12 @@ namespace Framework.Core.Utils;
 public static class DataDogUtils
 {
     private static readonly HttpClient _http = new();
-    private const string ApiUrl = "https://api.datadoghq.com/api/v2/series";
+    private static string ApiUrl {
+        get {
+            string site = Environment.GetEnvironmentVariable("DD_SITE") ?? "datadoghq.com";
+            return $"https://api.{site}/api/v2/series";
+        }
+    }
 
     /// <summary>
     /// Posts four suite-level metrics to DataDog after the test run completes.

@@ -32,7 +32,11 @@ import java.util.Map;
  */
 public class DataDogUtils {
 
-    private static final String DD_API_URL = "https://api.datadoghq.com/api/v2/series";
+    private static String ddApiUrl() {
+        String site = System.getenv("DD_SITE");
+        if (site == null || site.isBlank()) site = "datadoghq.com";
+        return "https://api." + site + "/api/v2/series";
+    }
 
     /**
      * Posts four suite-level metrics to DataDog after a test run completes.
@@ -79,7 +83,7 @@ public class DataDogUtils {
                     .contentType(ContentType.JSON)
                     .header("DD-API-KEY", apiKey)
                     .body(jsonPayload)
-                    .post(DD_API_URL)
+                    .post(ddApiUrl())
                     .getStatusCode();
 
             if (status == 202) {

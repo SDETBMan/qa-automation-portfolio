@@ -50,6 +50,7 @@ jobs:
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       DD_API_KEY:        ${{ secrets.DD_API_KEY }}
+      DD_SITE:           ${{ vars.DD_SITE || 'datadoghq.com' }}
 
     steps:
       - name: Checkout code
@@ -122,7 +123,7 @@ jobs:
             target/surefire-reports/*.xml
         env:
           DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
-          DATADOG_SITE: datadoghq.com
+          DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
 
       # ── Artifacts & Reporting ────────────────────────────────────────────
       - name: Upload Allure results

@@ -55,6 +55,7 @@ jobs:
         env:
           PLAYWRIGHT_HEADLESS: true
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
 
       # ── DataDog CI Visibility ────────────────────────────────────────────
       - name: Upload test results to Datadog CI Visibility
@@ -68,7 +69,7 @@ jobs:
             TestResults/*.trx
         env:
           DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
-          DATADOG_SITE: datadoghq.com
+          DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
 
       - name: OWASP ZAP Baseline Scan
         if: always()
