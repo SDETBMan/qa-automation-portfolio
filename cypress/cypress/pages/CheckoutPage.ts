@@ -18,9 +18,10 @@ export class CheckoutPage extends BasePage {
   }
 
   fillInfo(firstName: string, lastName: string, postalCode: string): void {
-    this.type(SELECTORS.firstName, firstName);
-    this.type(SELECTORS.lastName, lastName);
-    this.type(SELECTORS.postalCode, postalCode);
+    // cy.type() throws on empty strings — skip fields intentionally left blank.
+    if (firstName) this.type(SELECTORS.firstName, firstName);
+    if (lastName) this.type(SELECTORS.lastName, lastName);
+    if (postalCode) this.type(SELECTORS.postalCode, postalCode);
   }
 
   continueToStepTwo(): void {
