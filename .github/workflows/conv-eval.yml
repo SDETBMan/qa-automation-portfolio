@@ -46,6 +46,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DD_API_KEY:     ${{ secrets.DD_API_KEY }}
+          DD_SITE:        ${{ vars.DD_SITE || 'datadoghq.com' }}
           DEEPEVAL_DISABLE_TIMEOUTS: "true"
 
       # ── DataDog CI Visibility ────────────────────────────────────────────
@@ -60,7 +61,7 @@ jobs:
             junit-report.xml
         env:
           DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
-          DATADOG_SITE: datadoghq.com
+          DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
 
       - name: Upload evaluation results
         if: always()

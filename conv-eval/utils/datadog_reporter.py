@@ -32,7 +32,6 @@ import time
 
 import requests
 
-_DD_API_URL  = "https://api.datadoghq.com/api/v2/series"
 _COMMON_TAGS = ["service:qa-automation-portfolio", "env:ci"]
 
 
@@ -58,9 +57,12 @@ def _post(series: list[dict]) -> None:
         print("[WARN] DD_API_KEY not set. Skipping DataDog metrics.")
         return
 
+    site = os.getenv("DD_SITE", "datadoghq.com")
+    url  = f"https://api.{site}/api/v2/series"
+
     try:
         resp = requests.post(
-            _DD_API_URL,
+            url,
             headers={"DD-API-KEY": api_key, "Content-Type": "application/json"},
             json={"series": series},
             timeout=10,

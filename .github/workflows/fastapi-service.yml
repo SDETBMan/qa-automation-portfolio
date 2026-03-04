@@ -33,6 +33,7 @@ jobs:
             --cov-report=xml
         env:
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
 
       # ── DataDog CI Visibility ─────────────────────────────────────────────
       - name: Upload test results to Datadog CI Visibility
@@ -46,7 +47,7 @@ jobs:
             junit-report.xml
         env:
           DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
-          DATADOG_SITE: datadoghq.com
+          DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
 
       - name: Upload test artefacts
         if: always()

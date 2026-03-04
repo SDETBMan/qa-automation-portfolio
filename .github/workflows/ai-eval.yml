@@ -46,6 +46,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DD_API_KEY:     ${{ secrets.DD_API_KEY }}
+          DD_SITE:        ${{ vars.DD_SITE || 'datadoghq.com' }}
           # Disables DeepEval's internal 88.5s per-attempt timeout so slow OpenAI
           # API responses don't cause false CI failures. The GitHub Actions job
           # timeout (6 hours default) acts as the outer safety net instead.
@@ -63,7 +64,7 @@ jobs:
             junit-report.xml
         env:
           DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
-          DATADOG_SITE: datadoghq.com
+          DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
 
       - name: Upload evaluation results
         if: always()
