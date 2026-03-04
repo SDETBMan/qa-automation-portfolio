@@ -24,11 +24,21 @@ declare global {
 }
 
 Cypress.Commands.add('login', (username: string, password: string) => {
-  cy.visit('/');
-  cy.get('#user-name').type(username);
-  cy.get('#password').type(password);
-  cy.get('#login-button').click();
-  cy.url().should('include', '/inventory.html');
+  // cy.session() caches the authenticated browser state (cookies + localStorage)
+  // after the first login. Subsequent calls restore that state without hitting
+  // the login page again — avoiding CI rate-limiting from saucedemo.com.
+  cy.session(
+    [username, password],
+    () => {
+      cy.visit('/');
+      cy.get('#user-name').type(username);
+      cy.get('#password').type(password);
+      cy.get('#login-button').click();
+      cy.url().should('include', '/inventory.html');
+    },
+  );
+  // After session setup or restore, navigate to the inventory start page.
+  cy.visit('/inventory.html');
 });
 
 Cypress.Commands.add('addToCart', (productName: string) => {

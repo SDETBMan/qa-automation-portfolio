@@ -1,20 +1,24 @@
 /**
  * network.cy.ts — cy.intercept() showcase
  *
- * Demonstrates the three most common cy.intercept() patterns:
- *   1. Spy on real network traffic
- *   2. Stub a response with custom data
- *   3. Simulate an API failure / error state
+ * SauceDemo is a React SPA. All post-login navigation (e.g., to /inventory.html)
+ * is handled client-side by React Router — the browser never issues a new HTTP
+ * GET for those URLs. Likewise, the login form is handled by JavaScript, not an
+ * HTML form POST. Intercepting those routes will therefore never fire.
  *
- * SauceDemo is a static site rendered server-side, so there are no
- * XHR/fetch calls during normal navigation. We therefore intercept
- * the HTML page load itself (route aliasing) and the login POST.
+ * Real HTTP requests the browser DOES make:
+ *   1. GET /                    — initial HTML page
+ *   2. GET /static/js/...       — JavaScript bundles (on every page load)
+ *   3. GET /static/media/...    — product images (when inventory renders)
+ *   4. GET /static/css/...      — CSS stylesheets (on every page load)
+ *
+ * These four patterns drive the four cy.intercept() scenarios below.
  */
 
 describe('Network — cy.intercept() showcase', () => {
-  // ── @regression: spy on page load ─────────────────────────────────────────
+  // ── @regression: spy on initial HTML request ───────────────────────────────
 
-  it('@regression spies on document request during page load', () => {
+  it('@regression spies on initial page request and asserts 200', () => {
     cy.intercept('GET', '/').as('homePage');
     cy.visit('/');
     cy.wait('@homePage').then((interception) => {
@@ -22,70 +26,48 @@ describe('Network — cy.intercept() showcase', () => {
     });
   });
 
-  // ── @regression: stub inventory HTML to inject custom content ─────────────
+  // ── @regression: spy on JavaScript bundle requests ────────────────────────
 
-  it('@regression stubs inventory page to inject custom product heading', () => {
-    cy.intercept('GET', '/inventory.html', (req) => {
-      req.reply((res) => {
-        // Replace the page title in the HTML body to prove the stub ran
-        res.body = (res.body as string).replace(
-          'Swag Labs',
-          'Cypress Stub — Swag Labs',
-        );
-      });
-    }).as('stubbedInventory');
-
-    cy.fixture('users').then((users) => {
-      cy.visit('/');
-      cy.get('#user-name').type(users.standard.username);
-      cy.get('#password').type(users.standard.password);
-      cy.get('#login-button').click();
-    });
-
-    cy.wait('@stubbedInventory');
-    cy.title().should('contain', 'Cypress Stub — Swag Labs');
-  });
-
-  // ── @regression: intercept login POST and assert request body ─────────────
-
-  it('@regression intercepts login form POST and asserts request', () => {
-    cy.intercept('POST', '/').as('loginPost');
-
-    cy.fixture('users').then((users) => {
-      cy.visit('/');
-      cy.get('#user-name').type(users.standard.username);
-      cy.get('#password').type(users.standard.password);
-      cy.get('#login-button').click();
-    });
-
-    // SauceDemo submits as form-encoded POST; wait and inspect
-    cy.wait('@loginPost').then((interception) => {
-      // The form body is URL-encoded; confirm it contains the username field
-      const body = interception.request.body as string;
-      expect(body).to.include('user-name');
+  it('@regression spies on JavaScript bundle requests during page load', () => {
+    cy.intercept('GET', '**/*.js').as('jsBundle');
+    cy.visit('/');
+    // At least one JS chunk must load; status is 200 (or 304 from cache)
+    cy.wait('@jsBundle').then((interception) => {
+      expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
     });
   });
 
-  // ── @regression: simulate API failure → graceful error handling ───────────
+  // ── @regression: stub product images with 404 ─────────────────────────────
 
-  it('@regression simulates 500 error on inventory page and stays on app', () => {
-    cy.intercept('GET', '/inventory.html', {
-      statusCode: 500,
-      body: '<html><body><h1>Internal Server Error</h1></body></html>',
-    }).as('inventoryError');
+  it('@regression stubs product images on inventory page with 404', () => {
+    // Set up stub BEFORE login so it fires when inventory renders images
+    cy.intercept('GET', '**/static/media/**', {
+      statusCode: 404,
+      body: '',
+    }).as('blockedImages');
 
     cy.fixture('users').then((users) => {
-      cy.visit('/');
-      cy.get('#user-name').type(users.standard.username);
-      cy.get('#password').type(users.standard.password);
-      cy.get('#login-button').click();
+      // cy.login() uses cy.session() — only one real login per run.
+      // After session restore it navigates to /inventory.html, which
+      // triggers the <img> requests that our stub intercepts.
+      cy.login(users.standard.username, users.standard.password);
     });
 
-    cy.wait('@inventoryError').then((interception) => {
-      expect(interception.response?.statusCode).to.eq(500);
+    cy.wait('@blockedImages').then((interception) => {
+      expect(interception.response?.statusCode).to.eq(404);
     });
+  });
 
-    // App is still in a rendered state (not a hard crash) — body exists
-    cy.get('body').should('exist');
+  // ── @regression: spy on CSS and assert content-type header ────────────────
+
+  it('@regression intercepts CSS assets and asserts content-type header', () => {
+    cy.intercept('GET', '**/*.css').as('cssAsset');
+    cy.visit('/');
+    cy.wait('@cssAsset').then((interception) => {
+      expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
+      const contentType =
+        interception.response?.headers?.['content-type'] ?? '';
+      expect(contentType).to.include('css');
+    });
   });
 });
