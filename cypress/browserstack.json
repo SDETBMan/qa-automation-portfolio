@@ -1,0 +1,30 @@
+{
+  "auth": {
+    "username": "BROWSERSTACK_USERNAME",
+    "access_key": "BROWSERSTACK_ACCESS_KEY"
+  },
+  "browsers": [
+    { "browser": "chrome",  "os": "Windows 10",    "versions": ["latest"] },
+    { "browser": "firefox", "os": "Windows 10",    "versions": ["latest"] },
+    { "browser": "safari",  "os": "OS X Monterey", "versions": ["latest"] }
+  ],
+  "run_settings": {
+    "cypress_config_file": "./cypress.config.ts",
+    "project_name":        "qa-automation-portfolio",
+    "build_name":          "Cypress E2E — BrowserStack",
+    "parallels":            3,
+    "npm_dependencies": {
+      "cypress":                        "^13.0.0",
+      "@shelex/cypress-allure-plugin":  "^2.40.2",
+      "cypress-axe":                    "^1.5.0",
+      "axe-core":                       "^4.9.0",
+      "@cypress-audit/lighthouse":      "^1.4.0",
+      "mocha-junit-reporter":           "^2.2.0",
+      "node-fetch":                     "^3.3.0"
+    },
+    "exclude": []
+  },
+  "connection_settings": {
+    "local": false
+  }
+}

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Postman/Newman API test suite — runs headlessly in CI via Newman CLI",
   "scripts": {
-    "test": "newman run collections/jsonplaceholder.postman_collection.json -e environments/jsonplaceholder.postman_environment.json --reporters cli,junit --reporter-junit-export results/newman-results.xml",
+    "test": "node run.js",
     "test:smoke": "newman run collections/jsonplaceholder.postman_collection.json -e environments/jsonplaceholder.postman_environment.json --folder Smoke --reporters cli",
     "test:verbose": "newman run collections/jsonplaceholder.postman_collection.json -e environments/jsonplaceholder.postman_environment.json --reporters cli --verbose",
     "test:html": "newman run collections/jsonplaceholder.postman_collection.json -e environments/jsonplaceholder.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export results/newman-report.html"

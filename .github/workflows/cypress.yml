@@ -23,6 +23,15 @@ on:
         default: 'e2e'
         type: choice
         options: [e2e, component, all]
+      execution_mode:
+        description: 'Execution environment'
+        required: false
+        default: 'local'
+        type: choice
+        options: [local, browserstack]
+
+permissions:
+  contents: write
 
 jobs:
   test:
@@ -43,18 +52,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # ── E2E tests ───────────────────────────────────────────────────────────
+      # ── E2E tests (local / schedule / push / PR) ─────────────────────────────
       - name: Run E2E tests
-        if: github.event.inputs.test_type != 'component'
+        if: >
+          github.event.inputs.test_type != 'component' &&
+          (github.event_name != 'workflow_dispatch' || inputs.execution_mode != 'browserstack')
         uses: cypress-io/github-action@v6
         with:
           working-directory: cypress
           browser: ${{ github.event.inputs.browser || 'chrome' }}
           install: false
+          env: 'allure=true'
         env:
           BASE_URL:   'https://www.saucedemo.com'
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
           DD_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      # ── E2E tests (BrowserStack cloud) ───────────────────────────────────────
+      - name: Run E2E tests (BrowserStack)
+        if: github.event_name == 'workflow_dispatch' && inputs.execution_mode == 'browserstack'
+        run: npx browserstack-cypress run --sync
+        env:
+          BROWSERSTACK_USERNAME:    ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY:  ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+          BASE_URL:                 'https://www.saucedemo.com'
 
       # ── Component tests ─────────────────────────────────────────────────────
       - name: Run component tests
@@ -89,6 +110,14 @@ jobs:
           DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
 
       # ── Artifacts ───────────────────────────────────────────────────────────
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-allure-results
+          path: cypress/allure-results/
+          retention-days: 7
+
       - name: Upload videos and screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -106,3 +135,21 @@ jobs:
           name: cypress-test-results
           path: cypress/test-results/
           retention-days: 30
+
+      # ── Allure GitHub Pages ─────────────────────────────────────────────────
+      - name: Build Allure Report
+        if: always()
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: cypress/allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+
+      - name: Deploy Allure Report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history

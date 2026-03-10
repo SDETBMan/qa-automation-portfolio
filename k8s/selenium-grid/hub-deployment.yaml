@@ -20,3 +20,10 @@ spec:
             - containerPort: 4444
             - containerPort: 4442
             - containerPort: 4443
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

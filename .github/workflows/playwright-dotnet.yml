@@ -50,6 +50,7 @@ jobs:
           --configuration Release
           --no-build
           --logger "trx"
+          --logger "junit;LogFileName=junit-results.xml"
           --logger "console;verbosity=normal"
           --results-directory TestResults
         env:
@@ -66,14 +67,20 @@ jobs:
             --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
           datadog-ci junit upload --service qa-automation-portfolio \
             --tags framework:playwright-dotnet \
-            TestResults/*.trx
+            TestResults/**/junit-results.xml
         env:
           DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
           DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
 
+      - name: Prepare workspace for ZAP
+        if: always()
+        # The ZAP container runs as a non-root user (zap/UID 1000) and needs write
+        # access to the workspace directory to generate its zap.yaml plan file.
+        run: chmod a+w ${{ github.workspace }}
+
       - name: OWASP ZAP Baseline Scan
         if: always()
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.14.0
         continue-on-error: true
         with:
           target: 'https://www.saucedemo.com'

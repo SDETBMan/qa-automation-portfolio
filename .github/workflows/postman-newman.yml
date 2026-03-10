@@ -60,7 +60,7 @@ jobs:
             results/newman-results.xml
         env:
           DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
-          DATADOG_SITE: datadoghq.com
+          DATADOG_SITE: ${{ vars.DD_SITE || 'datadoghq.com' }}
 
       - name: Upload Newman JUnit results
         if: always()

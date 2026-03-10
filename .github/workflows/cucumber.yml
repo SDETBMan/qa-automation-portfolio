@@ -120,7 +120,7 @@ jobs:
             --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
           datadog-ci junit upload --service qa-automation-portfolio \
             --tags framework:cucumber \
-            target/surefire-reports/*.xml
+            target/surefire-reports/TEST-*.xml
         env:
           DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
           DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}

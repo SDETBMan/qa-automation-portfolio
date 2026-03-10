@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber ai-eval postman job-agent fastapi-service fastapi-service-test cypress-test cypress-open clean
+.PHONY: help all playwright selenium cucumber ai-eval postman job-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status clean
 
 # Print help when `make` is called with no target
 help:
@@ -37,6 +37,9 @@ help:
 	@echo "  make postman              Run Postman/Newman API test suite"
 	@echo "  make fastapi-service      Start FastAPI server on :8001"
 	@echo "  make fastapi-service-test Run FastAPI pytest suite"
+	@echo "  make k8s-apply            Deploy Selenium Grid + Healenium to Kubernetes"
+	@echo "  make k8s-delete           Tear down the selenium-grid namespace"
+	@echo "  make k8s-status           Show pod status in the selenium-grid namespace"
 	@echo "  make clean                Remove build artefacts from all frameworks"
 	@echo ""
 	@echo "  Prerequisites:"
@@ -48,6 +51,7 @@ help:
 	@echo "    job-agent        — Python 3.11+ · ANTHROPIC_API_KEY · TAVILY_API_KEY in job-agent/.env"
 	@echo "    fastapi-service  — Python 3.11+"
 	@echo "    cypress          — Node.js 20+"
+	@echo "    k8s              — kubectl · running cluster or Kind (kind.sigs.k8s.io)"
 	@echo ""
 
 # ── Full portfolio ─────────────────────────────────────────────────────────────
@@ -131,6 +135,34 @@ cypress-open:
 	@echo ""
 	@echo ">>> [cypress] Opening Cypress Test Runner..."
 	cd cypress && npm ci --quiet && npx cypress open
+	@echo ""
+
+# ── Kubernetes ────────────────────────────────────────────────────────────────
+
+k8s-apply:
+	@echo ""
+	@echo ">>> [k8s] Applying manifests to cluster..."
+	kubectl apply -f k8s/namespace.yaml
+	kubectl apply -f k8s/configmap.yaml
+	kubectl apply -f k8s/selenium-grid/
+	kubectl apply -f k8s/healenium/
+	@echo ""
+	@echo ">>> [k8s] Manifests applied. Run 'make k8s-status' to check readiness."
+	@echo ""
+
+k8s-delete:
+	@echo ""
+	@echo ">>> [k8s] Deleting selenium-grid namespace..."
+	kubectl delete namespace selenium-grid --ignore-not-found
+	@echo ""
+	@echo ">>> [k8s] Namespace deleted."
+	@echo ""
+
+k8s-status:
+	@echo ""
+	@echo ">>> [k8s] Pod status in selenium-grid namespace:"
+	@echo ""
+	kubectl get pods -n selenium-grid
 	@echo ""
 
 # ── Clean ─────────────────────────────────────────────────────────────────────

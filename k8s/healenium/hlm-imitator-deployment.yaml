@@ -18,3 +18,10 @@ spec:
           image: healenium/hlm-selector-imitator:1.0.2
           ports:
             - containerPort: 8000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
