@@ -33,7 +33,9 @@ cypress/
 │   │   ├── login.cy.ts              # @smoke + @regression
 │   │   ├── inventory.cy.ts          # @smoke + @regression
 │   │   ├── checkout.cy.ts           # @regression
-│   │   └── network.cy.ts            # cy.intercept() — @regression
+│   │   ├── network.cy.ts            # cy.intercept() — @regression
+│   │   ├── accessibility.cy.ts      # WCAG 2.1 AA — @smoke + @regression + @known-defect
+│   │   └── performance.cy.ts        # Lighthouse budgets — @regression (Chrome only)
 │   ├── fixtures/
 │   │   ├── users.json               # Credentials: standard, locked, problem, invalid
 │   │   └── products.json            # SauceDemo product names, prices, stub data
@@ -104,6 +106,8 @@ make cypress-open    # interactive runner
 | `inventory.cy.ts` | 6 | `@smoke` `@regression` |
 | `checkout.cy.ts` | 4 | `@regression` |
 | `network.cy.ts` | 4 | `@regression` |
+| `accessibility.cy.ts` | 5 | `@smoke` `@regression` `@known-defect` |
+| `performance.cy.ts` | 1 | `@regression` (Chrome only) |
 
 ### Component (`cypress/component/`)
 
@@ -111,7 +115,7 @@ make cypress-open    # interactive runner
 |---|---|
 | `ProductCard.cy.tsx` | 4 |
 
-**Total: 19 E2E + 4 component = 23 tests**
+**Total: 25 E2E + 4 component = 29 tests**
 
 ---
 
@@ -168,3 +172,53 @@ After every run the `after:run` hook fires `sendTestMetrics()`, posting:
 | `test.suite.duration_ms` | `framework:cypress` |
 
 JUnit XML files in `test-results/` are uploaded to DataDog CI Visibility by the CI workflow.
+
+---
+
+## CI design decisions
+
+These are adaptations to the constraints of testing against an external demo
+site — not patterns you would follow in a real production suite where you
+control the environment.
+
+### Root cause: saucedemo.com rate limiting
+
+saucedemo.com is a free, unsupported demo site with no SLA. In CI its CDN
+throttles repeated asset downloads from the same runner IP. After the first
+page load, subsequent `cy.visit('/')` calls cause JS bundle requests to hang
+indefinitely — the browser never fires the `load` event and Cypress times out.
+
+This would never happen against a real SUT running on a local dev server or a
+dedicated staging environment.
+
+### Fix applied to most specs: `testIsolation: false`
+
+By default (`testIsolation: true`) Cypress clears browser state — including
+the in-memory asset cache — between each test. This forces every test to
+re-download all JS bundles from the CDN, hitting the rate limit.
+
+Setting `testIsolation: false` preserves the browser cache across tests within
+a spec. After the first `cy.visit('/')` warms the cache, subsequent page loads
+return HTTP 304 responses from the local cache instantly, and the `load` event
+fires in milliseconds. Most specs adopt this pattern with a single `cy.visit()`
+in a `before` hook and SPA navigation (form interactions, button clicks) for
+subsequent tests.
+
+Side effects of `testIsolation: false`:
+- Tests are order-dependent within a spec (intentional — they model a user journey)
+- `retries` is set to `0` per spec to prevent a failed mid-journey test from
+  retrying with inconsistent browser state
+
+### Exception: `performance.cy.ts` uses `testIsolation: true`
+
+`@cypress-audit/lighthouse` connects to Chrome via the DevTools Protocol (CDP)
+and throws an error if it detects more than one page-type target open at the
+same origin. When `testIsolation: false` is active, Cypress gives the AUT its
+own top-level Chrome target (separate from the test runner), causing Lighthouse
+to see two targets at `saucedemo.com` and fail.
+
+`testIsolation: true` keeps the AUT in an iframe within a single top-level
+target, so Lighthouse only ever sees one. Rate limiting is avoided by running
+all three page audits as checkpoints in a single test — one `cy.visit('/')`,
+then SPA navigation — rather than separate tests that each require a fresh
+page load.
