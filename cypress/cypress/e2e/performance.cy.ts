@@ -10,10 +10,13 @@
  * Thresholds are set conservatively for SauceDemo — a demo app not optimised
  * for production performance. Raise them when testing a real production SUT.
  *
- * testIsolation is disabled so all tests share a single browser session and
- * navigate through the login → inventory → checkout journey with only one
- * cy.visit('/') call, avoiding saucedemo.com rate limiting on JS bundle
- * downloads in CI.
+ * testIsolation is disabled so tests 2 and 3 can navigate via form interactions
+ * rather than cy.visit('/'), keeping the total page load count to one and
+ * avoiding saucedemo.com rate limiting in CI.
+ *
+ * cy.visit('/') stays in the test 1 body rather than a before hook — Lighthouse
+ * uses Chrome DevTools Protocol and throws "multiple tabs" if it detects an
+ * active CDP session to the same origin before the test starts.
  */
 
 const BUDGETS = {
@@ -29,14 +32,16 @@ describe('Performance Audits — Lighthouse', { testIsolation: false, retries: 0
     if (Cypress.browser.name !== 'chrome' && Cypress.browser.name !== 'chromium') {
       this.skip();
     }
-    cy.visit('/');
   });
 
   it('@regression — login page meets performance budget', () => {
+    cy.visit('/');
     cy.lighthouse(BUDGETS);
   });
 
   it('@regression — inventory page meets performance budget', () => {
+    // Browser is still on the login page (testIsolation: false).
+    // Log in via form — no cy.visit() needed.
     cy.get('#user-name').type('standard_user');
     cy.get('#password').type('secret_sauce');
     cy.get('#login-button').click();
