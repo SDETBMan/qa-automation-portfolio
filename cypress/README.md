@@ -178,7 +178,7 @@ JUnit XML files in `test-results/` are uploaded to DataDog CI Visibility by the 
 ## CI design decisions
 
 These are adaptations to the constraints of testing against an external demo
-site — not patterns you would follow in a real production suite where you
+site, not patterns you would follow in a real production suite where you
 control the environment.
 
 ### Root cause: saucedemo.com rate limiting
@@ -186,15 +186,15 @@ control the environment.
 saucedemo.com is a free, unsupported demo site with no SLA. In CI its CDN
 throttles repeated asset downloads from the same runner IP. After the first
 page load, subsequent `cy.visit('/')` calls cause JS bundle requests to hang
-indefinitely — the browser never fires the `load` event and Cypress times out.
+indefinitely. The browser never fires the `load` event and Cypress times out.
 
 This would never happen against a real SUT running on a local dev server or a
 dedicated staging environment.
 
 ### Fix applied to most specs: `testIsolation: false`
 
-By default (`testIsolation: true`) Cypress clears browser state — including
-the in-memory asset cache — between each test. This forces every test to
+By default (`testIsolation: true`) Cypress clears browser state, including
+the in-memory asset cache, between each test. This forces every test to
 re-download all JS bundles from the CDN, hitting the rate limit.
 
 Setting `testIsolation: false` preserves the browser cache across tests within
@@ -217,7 +217,7 @@ error. This is an irreconcilable conflict between two constraints:
 - **saucedemo.com requires `testIsolation: false`** to preserve the browser
   cache. With `testIsolation: true`, Cypress resets Chrome's connection state
   between tests, causing saucedemo.com's CDN to hang every `cy.visit('/')`
-  indefinitely — even the very first request of the entire run.
+  indefinitely, even the very first request of the entire run.
 
 - **Lighthouse requires `testIsolation: true`** (or at least a single top-level
   Chrome target). When `testIsolation: false` is active, Cypress opens the AUT
@@ -226,5 +226,5 @@ error. This is an irreconcilable conflict between two constraints:
 
 These two requirements cannot be satisfied simultaneously when testing against
 an external site we do not control. Against a local dev server or dedicated
-staging environment — standard in any real QA setup — both would be satisfied
+staging environment, standard in any real QA setup, both would be satisfied
 and the Lighthouse tests would pass without modification.
