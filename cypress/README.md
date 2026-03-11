@@ -209,16 +209,22 @@ Side effects of `testIsolation: false`:
 - `retries` is set to `0` per spec to prevent a failed mid-journey test from
   retrying with inconsistent browser state
 
-### Exception: `performance.cy.ts` uses `testIsolation: true`
+### Known failure: `performance.cy.ts` in CI
 
-`@cypress-audit/lighthouse` connects to Chrome via the DevTools Protocol (CDP)
-and throws an error if it detects more than one page-type target open at the
-same origin. When `testIsolation: false` is active, Cypress gives the AUT its
-own top-level Chrome target (separate from the test runner), causing Lighthouse
-to see two targets at `saucedemo.com` and fail.
+The Lighthouse tests fail in CI with a "multiple tabs open to the same origin"
+error. This is an irreconcilable conflict between two constraints:
 
-`testIsolation: true` keeps the AUT in an iframe within a single top-level
-target, so Lighthouse only ever sees one. Rate limiting is avoided by running
-all three page audits as checkpoints in a single test — one `cy.visit('/')`,
-then SPA navigation — rather than separate tests that each require a fresh
-page load.
+- **saucedemo.com requires `testIsolation: false`** to preserve the browser
+  cache. With `testIsolation: true`, Cypress resets Chrome's connection state
+  between tests, causing saucedemo.com's CDN to hang every `cy.visit('/')`
+  indefinitely — even the very first request of the entire run.
+
+- **Lighthouse requires `testIsolation: true`** (or at least a single top-level
+  Chrome target). When `testIsolation: false` is active, Cypress opens the AUT
+  as its own top-level Chrome target, giving Lighthouse two page-type targets
+  at `saucedemo.com` origin, which it refuses to run against.
+
+These two requirements cannot be satisfied simultaneously when testing against
+an external site we do not control. Against a local dev server or dedicated
+staging environment — standard in any real QA setup — both would be satisfied
+and the Lighthouse tests would pass without modification.

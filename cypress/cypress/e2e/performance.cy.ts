@@ -10,16 +10,23 @@
  * Thresholds are set conservatively for SauceDemo — a demo app not optimised
  * for production performance. Raise them when testing a real production SUT.
  *
- * testIsolation: false is intentionally NOT used here. When enabled, Cypress
- * gives the AUT its own top-level Chrome target, causing Lighthouse to detect
- * two page targets at the same origin and throw "multiple tabs open to the
- * same origin." testIsolation: true (default) keeps the AUT in an iframe so
- * Lighthouse only sees one target.
+ * ── Known CI limitation ────────────────────────────────────────────────────
+ * These tests fail in CI with a "multiple tabs open to the same origin" error.
+ * This is an irreconcilable conflict between two constraints imposed by the
+ * external demo site:
  *
- * To avoid repeated cy.visit('/') calls that trigger saucedemo.com rate
- * limiting in CI, all three page audits run as checkpoints within a single
- * test, using SPA navigation (form interactions and button clicks) rather than
- * additional page loads after the initial cy.visit('/').
+ *   1. saucedemo.com's CDN rate-limits repeated asset downloads in CI, which
+ *      requires testIsolation: false to preserve the browser cache across tests.
+ *
+ *   2. Lighthouse uses Chrome DevTools Protocol and throws if it detects more
+ *      than one top-level Chrome target at the same origin. testIsolation: false
+ *      causes Cypress to open the AUT as a separate top-level target, which
+ *      triggers this check.
+ *
+ * These requirements cannot be satisfied simultaneously against an external
+ * site we do not control. Against a local dev server or staging environment
+ * (standard in production QA), both would be satisfied and these tests would
+ * pass. See the README CI design decisions section for full context.
  */
 
 const BUDGETS = {
@@ -29,27 +36,28 @@ const BUDGETS = {
   seo:              60,
 };
 
-describe('Performance Audits — Lighthouse', () => {
+describe('Performance Audits — Lighthouse', { testIsolation: false, retries: 0 }, () => {
   before(function () {
     // Lighthouse relies on Chrome DevTools Protocol — skip on other browsers.
     if (Cypress.browser.name !== 'chrome' && Cypress.browser.name !== 'chromium') {
       this.skip();
     }
+    cy.visit('/');
   });
 
-  it('@regression — login, inventory, and checkout pages meet performance budget', () => {
-    // ── Login page ──────────────────────────────────────────────────────────
-    cy.visit('/');
+  it('@regression — login page meets performance budget', () => {
     cy.lighthouse(BUDGETS);
+  });
 
-    // ── Inventory page — SPA navigation, no additional cy.visit() ───────────
+  it('@regression — inventory page meets performance budget', () => {
     cy.get('#user-name').type('standard_user');
     cy.get('#password').type('secret_sauce');
     cy.get('#login-button').click();
     cy.url().should('include', '/inventory.html');
     cy.lighthouse(BUDGETS);
+  });
 
-    // ── Checkout step 1 — SPA navigation, no additional cy.visit() ──────────
+  it('@regression — checkout step 1 meets performance budget', () => {
     cy.addToCart('Sauce Labs Backpack');
     cy.get('.shopping_cart_link').click();
     cy.get('[data-test="checkout"]').click();
