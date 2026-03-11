@@ -10,13 +10,16 @@
  * Thresholds are set conservatively for SauceDemo — a demo app not optimised
  * for production performance. Raise them when testing a real production SUT.
  *
- * testIsolation is disabled so tests 2 and 3 can navigate via form interactions
- * rather than cy.visit('/'), keeping the total page load count to one and
- * avoiding saucedemo.com rate limiting in CI.
+ * testIsolation: false is intentionally NOT used here. When enabled, Cypress
+ * gives the AUT its own top-level Chrome target, causing Lighthouse to detect
+ * two page targets at the same origin and throw "multiple tabs open to the
+ * same origin." testIsolation: true (default) keeps the AUT in an iframe so
+ * Lighthouse only sees one target.
  *
- * cy.visit('/') stays in the test 1 body rather than a before hook — Lighthouse
- * uses Chrome DevTools Protocol and throws "multiple tabs" if it detects an
- * active CDP session to the same origin before the test starts.
+ * To avoid repeated cy.visit('/') calls that trigger saucedemo.com rate
+ * limiting in CI, all three page audits run as checkpoints within a single
+ * test, using SPA navigation (form interactions and button clicks) rather than
+ * additional page loads after the initial cy.visit('/').
  */
 
 const BUDGETS = {
@@ -26,7 +29,7 @@ const BUDGETS = {
   seo:              60,
 };
 
-describe('Performance Audits — Lighthouse', { testIsolation: false, retries: 0 }, () => {
+describe('Performance Audits — Lighthouse', () => {
   before(function () {
     // Lighthouse relies on Chrome DevTools Protocol — skip on other browsers.
     if (Cypress.browser.name !== 'chrome' && Cypress.browser.name !== 'chromium') {
@@ -34,22 +37,19 @@ describe('Performance Audits — Lighthouse', { testIsolation: false, retries: 0
     }
   });
 
-  it('@regression — login page meets performance budget', () => {
+  it('@regression — login, inventory, and checkout pages meet performance budget', () => {
+    // ── Login page ──────────────────────────────────────────────────────────
     cy.visit('/');
     cy.lighthouse(BUDGETS);
-  });
 
-  it('@regression — inventory page meets performance budget', () => {
-    // Browser is still on the login page (testIsolation: false).
-    // Log in via form — no cy.visit() needed.
+    // ── Inventory page — SPA navigation, no additional cy.visit() ───────────
     cy.get('#user-name').type('standard_user');
     cy.get('#password').type('secret_sauce');
     cy.get('#login-button').click();
     cy.url().should('include', '/inventory.html');
     cy.lighthouse(BUDGETS);
-  });
 
-  it('@regression — checkout step 1 meets performance budget', () => {
+    // ── Checkout step 1 — SPA navigation, no additional cy.visit() ──────────
     cy.addToCart('Sauce Labs Backpack');
     cy.get('.shopping_cart_link').click();
     cy.get('[data-test="checkout"]').click();
