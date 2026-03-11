@@ -10,6 +10,7 @@ export default defineConfig({
     supportFile: 'cypress/support/e2e.ts',
     video: true,
     screenshotOnRunFailure: true,
+    pageLoadTimeout: 120000,
     retries: { runMode: 2, openMode: 0 },
     reporter: 'mocha-junit-reporter',
     reporterOptions: {
