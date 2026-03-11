@@ -8,15 +8,22 @@
  * Minor/moderate issues are intentionally excluded — the goal is to catch
  * blockers (keyboard traps, missing labels, broken ARIA) not cosmetic issues.
  *
- * testIsolation is disabled so all four tests share a single browser session
- * and navigate through the login → inventory → cart → checkout journey with
- * only one cy.visit('/') call. Repeated visits to saucedemo.com in CI caused
+ * testIsolation is disabled so all tests share a single browser session and
+ * navigate through the login → inventory → cart → checkout journey with only
+ * one cy.visit('/') call. Repeated visits to saucedemo.com in CI caused
  * consistent page-load hangs due to rate limiting on the demo site's assets.
  */
 
 const A11Y_OPTIONS: Parameters<typeof cy.checkA11y>[1] = {
   runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] },
   includedImpacts: ['critical', 'serious'],
+};
+
+// The inventory page sort <select> has no accessible label (axe rule: select-name).
+// Excluded from the main audit and documented as a known saucedemo.com defect below.
+const INVENTORY_A11Y_OPTIONS: Parameters<typeof cy.checkA11y>[1] = {
+  ...A11Y_OPTIONS,
+  rules: { 'select-name': { enabled: false } },
 };
 
 describe('Accessibility Audits', { testIsolation: false, retries: 0 }, () => {
@@ -35,7 +42,22 @@ describe('Accessibility Audits', { testIsolation: false, retries: 0 }, () => {
     cy.get('#login-button').click();
     cy.url().should('include', '/inventory.html');
     cy.injectAxe();
-    cy.checkA11y(undefined, A11Y_OPTIONS);
+    cy.checkA11y(undefined, INVENTORY_A11Y_OPTIONS);
+  });
+
+  it('@known-defect — inventory sort dropdown is missing an accessible label', () => {
+    // saucedemo.com defect: the product sort <select> has no associated <label>
+    // or aria-label, making it unidentifiable to screen readers (axe: select-name).
+    // Passes when the violation is present, confirming the defect is still tracked.
+    cy.checkA11y(
+      undefined,
+      { runOnly: { type: 'rule', values: ['select-name'] } },
+      (violations) => {
+        expect(violations).to.have.length(1);
+        expect(violations[0].id).to.equal('select-name');
+      },
+      true,
+    );
   });
 
   it('@regression — cart page has no critical a11y violations', () => {
