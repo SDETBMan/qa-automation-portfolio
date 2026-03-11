@@ -9,35 +9,42 @@
  *
  * Thresholds are set conservatively for SauceDemo — a demo app not optimised
  * for production performance. Raise them when testing a real production SUT.
+ *
+ * testIsolation is disabled so all tests share a single browser session and
+ * navigate through the login → inventory → checkout journey with only one
+ * cy.visit('/') call, avoiding saucedemo.com rate limiting on JS bundle
+ * downloads in CI.
  */
 
 const BUDGETS = {
-  performance:     50,
-  accessibility:   60,
+  performance:      50,
+  accessibility:    60,
   'best-practices': 75,
-  seo:             60,
+  seo:              60,
 };
 
-describe('Performance Audits — Lighthouse', () => {
+describe('Performance Audits — Lighthouse', { testIsolation: false, retries: 0 }, () => {
   before(function () {
-    // Lighthouse relies on Chrome DevTools Protocol — skip on other browsers
+    // Lighthouse relies on Chrome DevTools Protocol — skip on other browsers.
     if (Cypress.browser.name !== 'chrome' && Cypress.browser.name !== 'chromium') {
       this.skip();
     }
+    cy.visit('/');
   });
 
   it('@regression — login page meets performance budget', () => {
-    cy.visit('/');
     cy.lighthouse(BUDGETS);
   });
 
   it('@regression — inventory page meets performance budget', () => {
-    cy.login('standard_user', 'secret_sauce');
+    cy.get('#user-name').type('standard_user');
+    cy.get('#password').type('secret_sauce');
+    cy.get('#login-button').click();
+    cy.url().should('include', '/inventory.html');
     cy.lighthouse(BUDGETS);
   });
 
   it('@regression — checkout step 1 meets performance budget', () => {
-    cy.login('standard_user', 'secret_sauce');
     cy.addToCart('Sauce Labs Backpack');
     cy.get('.shopping_cart_link').click();
     cy.get('[data-test="checkout"]').click();
