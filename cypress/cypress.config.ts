@@ -6,7 +6,18 @@ import { sendTestMetrics } from './utils/datadog_reporter';
 export default defineConfig({
   e2e: {
     baseUrl: process.env['BASE_URL'] ?? 'https://www.saucedemo.com',
-    specPattern: 'cypress/e2e/**/*.cy.ts',
+    // performance.cy.ts runs first — Lighthouse requires testIsolation: true,
+    // which means it cannot share the warm browser cache that other specs rely
+    // on. Running it first ensures the CDN is fresh and cy.visit('/') succeeds
+    // before the other specs have a chance to trigger saucedemo.com rate limiting.
+    specPattern: [
+      'cypress/e2e/performance.cy.ts',
+      'cypress/e2e/accessibility.cy.ts',
+      'cypress/e2e/checkout.cy.ts',
+      'cypress/e2e/inventory.cy.ts',
+      'cypress/e2e/login.cy.ts',
+      'cypress/e2e/network.cy.ts',
+    ],
     supportFile: 'cypress/support/e2e.ts',
     video: true,
     screenshotOnRunFailure: true,
