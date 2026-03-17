@@ -205,7 +205,7 @@ class JobHunter:
         for iteration in range(_MAX_ITER):
             resp = self.client.messages.create(
                 model=_MODEL,
-                max_tokens=4096,
+                max_tokens=16384,
                 temperature=_TEMP,
                 system=system,
                 tools=TOOL_DEFINITIONS,
@@ -227,6 +227,19 @@ class JobHunter:
                 elapsed = time.time() - start
                 print(f"[job-agent] Completed in {elapsed:.1f}s after {iteration + 1} iterations.")
                 return final
+
+            if stop_reason == "max_tokens":
+                # Response was truncated — nudge Claude to finish with save_results.
+                print(f"[job-agent] Hit max_tokens at iter={iteration + 1}. Nudging to save and stop.")
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "Your last response was cut off. Please call save_results() now "
+                        "with whatever scored jobs and cover letters you have so far, "
+                        "then give me a short summary. Do not call any other tools."
+                    ),
+                })
+                continue
 
             if stop_reason != "tool_use":
                 print(f"[job-agent] Unexpected stop_reason={stop_reason}. Exiting loop.")
