@@ -48,7 +48,7 @@ def search_jobs(query: str) -> list[dict]:
         "query": query,
         "search_depth": "basic",
         "include_answer": False,
-        "max_results": 8,
+        "max_results": 5,
     }
     resp = requests.post(f"{_TAVILY_BASE}/search", json=payload, timeout=30)
     resp.raise_for_status()
@@ -78,7 +78,7 @@ def fetch_job_posting(url: str) -> str:
     data = resp.json()
     results = data.get("results", [])
     if results:
-        return results[0].get("raw_content", "")[:4000]
+        return results[0].get("raw_content", "")[:2000]
     return ""
 
 

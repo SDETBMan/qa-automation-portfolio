@@ -174,13 +174,35 @@ class JobHunter:
                 "Return ONLY the cover letter as polished markdown (no extra commentary)."
             )
 
-        resp = self.client.messages.create(
+        resp = self._create_with_retry(
             model=_MODEL,
             max_tokens=1024,
             temperature=_TEMP,
             messages=[{"role": "user", "content": prompt}],
         )
         return resp.content[0].text
+
+    # ── Rate-limit-safe API wrapper ────────────────────────────────────────────
+
+    def _create_with_retry(self, **kwargs) -> anthropic.types.Message:
+        """
+        Wrap messages.create with automatic retry on rate-limit errors.
+        Waits 60 seconds between attempts (the TPM window resets in 1 minute).
+        """
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                return self.client.messages.create(**kwargs)
+            except anthropic.RateLimitError as exc:
+                if attempt == max_retries - 1:
+                    raise
+                wait = 60
+                print(
+                    f"[job-agent] Rate limit hit (attempt {attempt + 1}/{max_retries}). "
+                    f"Waiting {wait}s before retry..."
+                )
+                time.sleep(wait)
+        raise RuntimeError("Unreachable")  # satisfies type checkers
 
     # ── Main agentic loop ──────────────────────────────────────────────────────
 
@@ -203,7 +225,7 @@ class JobHunter:
         start = time.time()
 
         for iteration in range(_MAX_ITER):
-            resp = self.client.messages.create(
+            resp = self._create_with_retry(
                 model=_MODEL,
                 max_tokens=16384,
                 temperature=_TEMP,
