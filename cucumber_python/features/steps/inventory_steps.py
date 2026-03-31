@@ -39,7 +39,7 @@ def step_add_multiple_products(context: Context) -> None:
           | Sauce Labs Bike Light |
     """
     for row in context.table:
-        _inventory(context).add_product(row[0])
+        _inventory(context).add_product(row["product"])
 
 
 @when('I remove "{product}" from the cart')

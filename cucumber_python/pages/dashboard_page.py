@@ -30,4 +30,9 @@ class DashboardPage(BasePage):
 
     def open_menu_and_logout(self) -> None:
         self.click(self._BURGER_MENU)
-        self.click(self._LOGOUT_LINK)
+        # SauceDemo's burger menu uses a CSS slide-in animation.  The logout
+        # link is technically in the DOM and "enabled" before the animation
+        # completes, so element_to_be_clickable fires while the element is still
+        # off-screen.  javascript_click bypasses coordinate-based dispatch and
+        # fires the click event directly on the element.
+        self.javascript_click(self._LOGOUT_LINK)

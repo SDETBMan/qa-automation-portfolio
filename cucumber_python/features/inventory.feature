@@ -14,6 +14,7 @@ Feature: Inventory Page Functionality
 
   Scenario: Add multiple items to the cart
     When I add the following items to the cart:
+      | product                 |
       | Sauce Labs Backpack     |
       | Sauce Labs Bike Light   |
       | Sauce Labs Bolt T-Shirt |

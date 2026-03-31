@@ -14,6 +14,7 @@ Feature: Shopping Cart Functionality
 
   Scenario: Cart persists multiple items
     When I add the following items to the cart:
+      | product               |
       | Sauce Labs Backpack   |
       | Sauce Labs Bike Light |
     And I go to the shopping cart
