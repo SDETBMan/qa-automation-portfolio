@@ -1,0 +1,191 @@
+name: cucumber-python CI
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'cucumber_python/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'cucumber_python/**' ]
+  schedule:
+    - cron: '0 5 * * *'       # Nightly 05:00 UTC (offset from Java cucumber at 04:00)
+  workflow_dispatch:
+    inputs:
+      execution_mode:
+        description: 'Execution Environment'
+        required: true
+        default: 'local'
+        type: choice
+        options:
+          - local
+          - grid
+          - browserstack
+      test_browser:
+        description: 'Browser (local/grid only)'
+        required: true
+        default: 'chrome'
+        type: choice
+        options:
+          - chrome
+          - firefox
+          - edge
+      test_tags:
+        description: 'Behave tag filter (e.g. @smoke)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: cucumber_python
+
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      DD_API_KEY:        ${{ secrets.DD_API_KEY }}
+      DD_SITE:           ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: cucumber_python/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── Web Tests: Headless Chrome (auto-runs on push/PR/schedule) ───────
+      - name: Run Behave Tests (Headless - CI)
+        if: github.event_name != 'workflow_dispatch' || inputs.execution_mode == 'local'
+        run: |
+          TAG_ARG=""
+          if [ -n "${{ github.event.inputs.test_tags }}" ]; then
+            TAG_ARG="--tags=${{ github.event.inputs.test_tags }}"
+          fi
+          HEADLESS=true BROWSER=${{ github.event.inputs.test_browser || 'chrome' }} \
+            behave $TAG_ARG \
+              --format allure_behave.formatter:AllureFormatter \
+              --outfile reports/allure-results \
+              --format pretty \
+              --junit --junit-directory reports/junit \
+              --no-capture
+
+      # ── Web Tests: Selenium Grid ─────────────────────────────────────────
+      - name: Start Selenium Grid
+        if: github.event_name == 'workflow_dispatch' && inputs.execution_mode == 'grid'
+        run: docker compose up -d selenium-hub chrome firefox edge
+
+      - name: Wait for Grid to be ready
+        if: github.event_name == 'workflow_dispatch' && inputs.execution_mode == 'grid'
+        run: |
+          for i in {1..30}; do
+            curl -s http://localhost:4444/wd/hub/status | grep -q '"ready":true' && break
+            echo "Waiting for Selenium Grid..." && sleep 3
+          done
+
+      - name: Run Behave Tests (Grid)
+        if: github.event_name == 'workflow_dispatch' && inputs.execution_mode == 'grid'
+        run: |
+          TARGET=grid \
+          BROWSER=${{ inputs.test_browser }} \
+          GRID_URL=http://localhost:4444/wd/hub \
+          HEADLESS=true \
+            behave \
+              --format allure_behave.formatter:AllureFormatter \
+              --outfile reports/allure-results \
+              --format pretty \
+              --junit --junit-directory reports/junit \
+              --no-capture
+
+      # ── Cloud: BrowserStack ──────────────────────────────────────────────
+      - name: Run Behave Tests (BrowserStack)
+        if: github.event_name == 'workflow_dispatch' && inputs.execution_mode == 'browserstack'
+        run: |
+          TARGET=browserstack \
+          BS_USER=${{ secrets.BS_USER }} \
+          BS_KEY=${{ secrets.BS_KEY }} \
+            behave \
+              --format allure_behave.formatter:AllureFormatter \
+              --outfile reports/allure-results \
+              --format pretty \
+              --junit --junit-directory reports/junit \
+              --no-capture
+
+      # ── Security: OWASP ZAP Baseline Scan ───────────────────────────────
+      - name: OWASP ZAP Baseline Scan
+        if: always()
+        uses: zaproxy/action-baseline@v0.12.0
+        continue-on-error: true
+        with:
+          target: 'https://www.saucedemo.com'
+          allow_issue_writing: false
+          cmd_options: '-I'
+
+      # ── DataDog CI Visibility ────────────────────────────────────────────
+      - name: Upload test results to Datadog CI Visibility
+        if: always()
+        continue-on-error: true
+        run: |
+          curl -fsSL "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" \
+            --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
+          datadog-ci junit upload --service qa-automation-portfolio \
+            --tags framework:cucumber-python \
+            reports/junit/*.xml
+        env:
+          DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
+          DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      # ── Artifacts & Reporting ────────────────────────────────────────────
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-python-allure-results
+          path: cucumber_python/reports/allure-results/
+          retention-days: 7
+
+      - name: Build Allure Report
+        if: always()
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: cucumber_python/reports/allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+
+      - name: Deploy Allure Report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+
+      # ── Notifications ────────────────────────────────────────────────────
+      - name: Send Email Notification on Failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "Test Notification Failure: ${{ github.repository }}"
+          to: brian.padgett11@outlook.com
+          from: ${{ secrets.EMAIL_USERNAME }}
+          body: |
+            Build Status: ${{ job.status }}
+
+            Commit: ${{ github.sha }}
+            View logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

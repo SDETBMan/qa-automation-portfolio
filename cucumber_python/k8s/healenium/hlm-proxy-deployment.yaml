@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hlm-proxy
+  namespace: selenium-grid
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hlm-proxy
+  template:
+    metadata:
+      labels:
+        app: hlm-proxy
+    spec:
+      containers:
+        - name: hlm-proxy
+          image: healenium/hlm-proxy:3.4.8
+          envFrom:
+            - configMapRef:
+                name: healenium-config
+          ports:
+            - containerPort: 8085

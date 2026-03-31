@@ -1,0 +1,156 @@
+name: Coding Agent — Demo Suite
+
+# ──────────────────────────────────────────────────────────────────────────────
+# PURPOSE: Validate that the coding-agent framework itself is well-formed and
+#          that Demo 2 (the stateless HTTP validation script) runs cleanly.
+#
+# Demos 1, 3, and 4 require a full Selenium + Behave environment or live git
+# remotes, so they are gated behind a manual workflow_dispatch trigger.
+#
+# Design decisions:
+#   - Demo 2 runs on every push to coding-agent/** — it calls the Anthropic API
+#     to write and verify a pure-stdlib script; no browser or Selenium needed.
+#   - ANTHROPIC_API_KEY is stored as a GitHub Actions secret.
+#   - The lint step catches import errors before any API calls are made.
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'coding-agent/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'coding-agent/**' ]
+  workflow_dispatch:
+    inputs:
+      demo:
+        description: 'Demo number to run (1-4, or "all")'
+        required: true
+        default: '2'
+
+jobs:
+  # ── 1. Lint & import validation ─────────────────────────────────────────────
+  lint:
+    name: Lint (ruff + import check)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    defaults:
+      run:
+        working-directory: coding-agent
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: coding-agent/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt ruff
+
+      - name: Ruff lint
+        run: ruff check . --select E,F,W --ignore E501
+
+      - name: Import smoke test
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from shared.client import get_client, get_repo_root
+          from shared.printer import divider, print_message
+          from tools.file_tools import read_file, write_file, list_files
+          from tools.bash_tools import run_bash
+          from tools.git_tools import git_status, git_log, git_create_branch, git_add_and_commit, git_push
+          from tools.github_tools import gh_create_pr, gh_list_pr_comments
+          print('All imports OK')
+          "
+
+  # ── 2. Demo 2 — code execution feedback loop ────────────────────────────────
+  demo2:
+    name: Demo 2 — Code Execution Feedback Loop
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 10
+
+    # Only run on push/PR if we have the secret; always run on workflow_dispatch
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name != 'workflow_dispatch' && vars.RUN_AGENT_DEMOS == 'true')
+
+    defaults:
+      run:
+        working-directory: coding-agent
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: coding-agent/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Demo 2
+        run: python run_demo.py --demo 2
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REPO_ROOT: ${{ github.workspace }}
+
+      - name: Upload output artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo2-output-${{ github.run_id }}
+          path: coding-agent/output/validate_saucedemo.py
+          retention-days: 7
+
+  # ── 3. Manual full-suite run (workflow_dispatch only) ────────────────────────
+  demo-manual:
+    name: Demo ${{ github.event.inputs.demo }} (manual)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: coding-agent
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: coding-agent/requirements.txt
+
+      - name: Install Behave (needed for Demo 1, 4 validation)
+        run: |
+          pip install -r requirements.txt
+          pip install behave selenium
+
+      - name: Run selected demo
+        run: |
+          DEMO="${{ github.event.inputs.demo }}"
+          if [ "$DEMO" = "all" ]; then
+            python run_demo.py --all
+          else
+            python run_demo.py --demo "$DEMO"
+          fi
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REPO_ROOT:         ${{ github.workspace }}
+
+      - name: Upload all outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-outputs-${{ github.run_id }}
+          path: coding-agent/output/
+          retention-days: 14

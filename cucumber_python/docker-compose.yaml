@@ -1,0 +1,113 @@
+version: '3'
+services:
+
+  # ============================================================
+  # 1. TEST RUNNER  (the Python/Behave framework)
+  # ============================================================
+  test-runner:
+    build: .
+    container_name: cucumber-python-test-runner
+    depends_on:
+      - selenium-hub
+      - hlm-proxy
+    environment:
+      - TARGET=grid
+      - GRID_URL=http://selenium-hub:4444/wd/hub
+      - HEADLESS=true
+      - HEALENIUM_ENABLED=true
+      - HEALENIUM_PROXY=http://hlm-proxy:8085
+    volumes:
+      - ./reports:/app/reports
+
+  # ============================================================
+  # 2. SELENIUM GRID  (cross-browser execution infrastructure)
+  # ============================================================
+  selenium-hub:
+    image: selenium/hub:4.16.1
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+      - "4442:4442"
+      - "4443:4443"
+
+  chrome:
+    image: selenium/node-chrome:4.16.1
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  firefox:
+    image: selenium/node-firefox:4.16.1
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  edge:
+    image: selenium/node-edge:4.16.1
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  # ============================================================
+  # 3. HEALENIUM  (self-healing locators via Selenium Grid proxy)
+  #
+  # Python does not have a native SelfHealingDriver SDK wrapper.
+  # Instead, Healenium exposes an HTTP proxy (hlm-proxy:8085) that
+  # sits in front of Selenium Grid. The framework routes its Remote
+  # WebDriver through this proxy — Healenium intercepts element
+  # lookups, applies self-healing, and forwards to the real Grid.
+  # ============================================================
+  postgres-db:
+    image: postgres:12-alpine
+    container_name: postgres-db
+    environment:
+      - POSTGRES_USER=healenium_user
+      - POSTGRES_PASSWORD=healenium_pass
+      - POSTGRES_DB=healenium_db
+    ports:
+      - "5432:5432"
+
+  hlm-backend:
+    image: healenium/hlm-backend:3.3.0
+    container_name: hlm-backend
+    ports:
+      - "7878:7878"
+    depends_on:
+      - postgres-db
+    environment:
+      - POSTGRES_HOST=postgres-db
+      - POSTGRES_DB=healenium_db
+      - POSTGRES_USER=healenium_user
+      - POSTGRES_PASSWORD=healenium_pass
+
+  hlm-proxy:
+    image: healenium/hlm-proxy:3.4.8
+    container_name: hlm-proxy
+    ports:
+      - "8085:8085"
+    depends_on:
+      - hlm-backend
+      - selenium-hub
+    environment:
+      - HLM_BACKEND_HOST=hlm-backend
+      - HLM_BACKEND_PORT=7878
+      - SE_HUB_HOST=selenium-hub
+      - SE_HUB_PORT=4444
+
+  hlm-selector-imitator:
+    image: healenium/hlm-selector-imitator:1.0.2
+    container_name: hlm-selector-imitator
+    ports:
+      - "8000:8000"

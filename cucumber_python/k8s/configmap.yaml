@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: healenium-config
+  namespace: selenium-grid
+data:
+  POSTGRES_HOST:     "postgres-db"
+  POSTGRES_DB:       "healenium_db"
+  POSTGRES_USER:     "healenium_user"
+  POSTGRES_PASSWORD: "healenium_pass"
+  HLM_BACKEND_HOST:  "hlm-backend"
+  HLM_BACKEND_PORT:  "7878"
+  SE_HUB_HOST:       "selenium-hub"
+  SE_HUB_PORT:       "4444"

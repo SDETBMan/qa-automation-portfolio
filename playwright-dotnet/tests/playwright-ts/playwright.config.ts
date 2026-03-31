@@ -45,5 +45,32 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
+
+    /**
+     * API project — GraphQL and REST API tests that do not require a browser.
+     *
+     * Runs graphql.spec.ts tests using Playwright's APIRequestContext (the `request`
+     * fixture) without launching a browser process. This is faster and appropriate
+     * for pure data layer tests. Tests that also use `page` (mock interception,
+     * operation auditing) still run correctly — Playwright spins up a browser
+     * only for those test functions.
+     *
+     * Target endpoint is controlled by GRAPHQL_URL env var:
+     *   Default: https://countries.trevorblades.com/ (public demo)
+     *   Production: https://api.instinct.vet/graphql (or equivalent)
+     */
+    {
+      name: 'api',
+      use: {
+        baseURL: process.env['GRAPHQL_URL'] ?? 'https://countries.trevorblades.com/',
+        extraHTTPHeaders: {
+          'Accept': 'application/json',
+          ...(process.env['API_TOKEN'] && {
+            'Authorization': `Bearer ${process.env['API_TOKEN']}`,
+          }),
+        },
+      },
+      testMatch: ['**/graphql.spec.ts'],
+    },
   ],
 });

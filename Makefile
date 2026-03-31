@@ -19,16 +19,18 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber ai-eval postman job-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status clean
+.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status clean
 
 # Print help when `make` is called with no target
 help:
 	@echo ""
 	@echo "  QA Automation Portfolio — available targets"
 	@echo "  ───────────────────────────────────────────"
-	@echo "  make all                  Run all five frameworks sequentially"
+	@echo "  make all                  Run all five frameworks sequentially
+  make cucumber-python      Run cucumber-python suite (Behave, headless Chrome)"
 	@echo "  make cypress-test         Run Cypress E2E suite (headless Chrome)"
 	@echo "  make cypress-open         Open Cypress interactive Test Runner"
+	@echo "  make coding-agent         Run coding-agent demo suite (requires ANTHROPIC_API_KEY)"
 	@echo "  make job-agent            Run Claude-powered job search agent"
 	@echo "  make playwright           Run playwright-dotnet suite (C# + TypeScript)"
 	@echo "  make selenium             Run selenium-java suite (headless Chrome)"
@@ -46,8 +48,10 @@ help:
 	@echo "    playwright       — .NET 8 SDK · Node.js 20+"
 	@echo "    selenium         — Java 17 · Maven 3.9+"
 	@echo "    cucumber         — Java 17 · Maven 3.9+"
+	@echo "    cucumber-python  — Python 3.11+ · Chrome/Chromium installed"
 	@echo "    ai-eval          — Python 3.11+ · OPENAI_API_KEY in ai-eval/.env"
 	@echo "    postman          — Node.js 20+"
+	@echo "    coding-agent     — Python 3.11+ · ANTHROPIC_API_KEY in coding-agent/.env"
 	@echo "    job-agent        — Python 3.11+ · ANTHROPIC_API_KEY · TAVILY_API_KEY in job-agent/.env"
 	@echo "    fastapi-service  — Python 3.11+"
 	@echo "    cypress          — Node.js 20+"
@@ -87,6 +91,15 @@ cucumber:
 	@echo ">>> [cucumber] Done."
 	@echo ""
 
+cucumber-python:
+	@echo ""
+	@echo ">>> [cucumber-python] Installing dependencies and running Behave suite..."
+	cd cucumber_python && pip install -r requirements.txt -q && \
+		HEADLESS=true behave --no-capture
+	@echo ""
+	@echo ">>> [cucumber-python] Done."
+	@echo ""
+
 ai-eval:
 	@echo ""
 	@echo ">>> [ai-eval] Installing dependencies and running DeepEval suite..."
@@ -101,6 +114,14 @@ postman:
 	cd postman && npm install && npm test
 	@echo ""
 	@echo ">>> [postman] Done."
+	@echo ""
+
+coding-agent:
+	@echo ""
+	@echo ">>> [coding-agent] Installing dependencies and running Demo 2 (feedback loop)..."
+	cd coding-agent && pip install -r requirements.txt -q && python run_demo.py --demo 2
+	@echo ""
+	@echo ">>> [coding-agent] Done. Output in coding-agent/output/"
 	@echo ""
 
 job-agent:
@@ -177,6 +198,13 @@ clean:
 	@echo ""
 	@echo ">>> Cleaning cucumber artefacts..."
 	cd cucumber && mvn clean
+	@echo ""
+	@echo ">>> Cleaning cucumber-python artefacts..."
+	rm -rf cucumber_python/reports cucumber_python/__pycache__ cucumber_python/**/__pycache__
+	@echo ""
+	@echo ">>> Cleaning coding-agent artefacts..."
+	rm -rf coding-agent/output/* coding-agent/__pycache__ coding-agent/**/__pycache__
+	touch coding-agent/output/.gitkeep
 	@echo ""
 	@echo ">>> Cleaning ai-eval artefacts..."
 	rm -rf ai-eval/.pytest_cache ai-eval/.deepeval ai-eval/__pycache__

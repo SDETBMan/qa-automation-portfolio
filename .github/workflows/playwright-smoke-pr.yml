@@ -1,0 +1,142 @@
+name: Playwright Smoke — PR Gate
+
+# ──────────────────────────────────────────────────────────────────────────────
+# PURPOSE: Fast confidence signal on every developer PR.
+#
+# Design constraints:
+#   - Runs ONLY on pull_request — push/nightly are handled by playwright-dotnet.yml
+#   - Hard 5-minute timeout enforced at the job level
+#   - Chromium only — cross-browser coverage lives in the nightly full suite
+#   - @smoke tags only — golden path flows, not regression depth
+#   - --retries=0 — fail-fast; retries here mask real flakiness from devs
+#   - cancel-in-progress — a new commit cancels the stale run immediately
+#
+# Status checks visible to devs in the PR:
+#   "Playwright Smoke — PR Gate / smoke (Chromium)"
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths: [ 'playwright-dotnet/**' ]
+
+# Cancel any in-progress smoke run for this PR branch the moment a new commit
+# is pushed. Devs get results for the latest code, not a stale commit.
+concurrency:
+  group: smoke-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: smoke (Chromium)
+    runs-on: ubuntu-latest
+
+    # Hard cap: if this job exceeds 5 minutes the suite has grown beyond its
+    # intended scope. The failure forces a deliberate conversation about what
+    # belongs in smoke vs. regression.
+    timeout-minutes: 5
+
+    defaults:
+      run:
+        working-directory: playwright-dotnet/tests/playwright-ts
+
+    steps:
+      # ── 1. Source ───────────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Node + npm cache ─────────────────────────────────────────────────
+      # cache: 'npm' + cache-dependency-path means the node_modules cache is
+      # invalidated only when package-lock.json changes — typically seconds to
+      # restore vs. 45+ seconds for a cold npm ci.
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: playwright-dotnet/tests/playwright-ts/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── 3. Playwright Chromium binary cache ─────────────────────────────────
+      # Only Chromium is cached — Firefox and WebKit are not used in smoke runs.
+      # Cache key is tied to package-lock.json so a Playwright version bump
+      # automatically busts the cache and installs the matching browser binary.
+      - name: Cache Playwright Chromium
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ hashFiles('playwright-dotnet/tests/playwright-ts/package-lock.json') }}
+          restore-keys: |
+            playwright-chromium-
+
+      # --with-deps installs OS-level system libraries required by Chromium.
+      # On cache hit the browser binary is already present; only system deps
+      # are installed (fast). On cache miss both browser + deps are downloaded.
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      # ── 4. Run smoke suite ──────────────────────────────────────────────────
+      # --grep @smoke        : only scenarios tagged @smoke
+      # --project=chromium   : single browser — speed over breadth
+      # --retries=0          : fail-fast — flakiness is visible immediately
+      # --reporter=github    : inline PR annotations on failing assertions
+      # --reporter=list      : clean per-test console output in CI logs
+      # --reporter=html      : full report written to playwright-report/ for artifact
+      - name: Run @smoke suite
+        run: >
+          npx playwright test
+          --grep "@smoke"
+          --project=chromium
+          --retries=0
+          --reporter=github,list,html
+        env:
+          CI: 'true'
+          BASE_URL:     ${{ vars.BASE_URL      || 'https://www.saucedemo.com' }}
+          GRAPHQL_URL:  ${{ vars.GRAPHQL_URL   || 'https://countries.trevorblades.com/' }}
+          APP_USERNAME: ${{ vars.APP_USERNAME  || 'standard_user' }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD || 'secret_sauce' }}
+
+      # ── 5. PR job summary ───────────────────────────────────────────────────
+      # Written to the PR Checks tab — visible without opening the full log.
+      - name: Write job summary
+        if: always()
+        run: |
+          STATUS_ICON=$( [ "${{ job.status }}" = "success" ] && echo "✅" || echo "❌" )
+          STATUS_TEXT=$( [ "${{ job.status }}" = "success" ] && echo "All smoke tests passed" || echo "Smoke tests failed — see annotations above" )
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## ${STATUS_ICON} Playwright Smoke Results
+
+          | | |
+          |---|---|
+          | **Status** | ${STATUS_TEXT} |
+          | **Suite** | \`@smoke\` |
+          | **Browser** | Chromium |
+          | **Retries** | 0 (fail-fast) |
+          | **Commit** | \`${{ github.sha }}\` |
+          | **PR** | #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }} |
+
+          > Full regression suite runs on merge to \`main\` via **playwright-dotnet CI**.
+          EOF
+
+      # ── 6. Upload report — failure only ─────────────────────────────────────
+      # Only uploaded when tests fail — keeps artifact storage clean on green runs.
+      # Trace files contain DOM snapshots, screenshots, and network calls from the
+      # exact moment of failure (configured via trace: 'retain-on-failure' in config).
+      - name: Upload HTML report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report-pr${{ github.event.pull_request.number }}-${{ github.run_id }}
+          path: playwright-dotnet/tests/playwright-ts/playwright-report/
+          retention-days: 3
+
+      - name: Upload traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-traces-pr${{ github.event.pull_request.number }}-${{ github.run_id }}
+          path: playwright-dotnet/tests/playwright-ts/test-results/
+          retention-days: 3

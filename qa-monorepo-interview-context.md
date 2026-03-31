@@ -24,7 +24,7 @@ letter review, or job-fit analysis.
 - **Languages:** Java (primary), Python, C#, TypeScript, JavaScript
 - **UI Automation:** Selenium WebDriver, Playwright (C# + TypeScript), Cucumber/BDD
 - **API Testing:** REST Assured, Postman/Newman, pytest
-- **AI / LLM Testing:** DeepEval, Anthropic Claude (tool-use, agentic loops), OpenAI function-calling, ChromaDB, RAG evaluation, conversation evaluation, agent evaluation
+- **AI / LLM Testing:** DeepEval, Anthropic Claude (tool-use, agentic loops, `@beta_tool` auto-schema, multi-agent orchestration), OpenAI function-calling, ChromaDB, RAG evaluation, conversation evaluation, agent evaluation
 - **CI/CD:** GitHub Actions, Jenkins, Docker, Kubernetes (k8s health checks)
 - **Monitoring / Observability:** DataDog (custom metrics via v2 API, CI Visibility, dashboard JSON, Allure reporting)
 - **Build tools:** Maven, pip, npm, .NET CLI
@@ -73,7 +73,7 @@ Bachelor of Science | Expected Completion: 2026
 ## Portfolio: qa-automation-portfolio (GitHub Monorepo)
 
 **Repo:** github.com/SDETBMan/qa-automation-portfolio
-**Structure:** 8 independent, production-grade frameworks in a single monorepo.
+**Structure:** 10 independent, production-grade frameworks in a single monorepo.
 Each framework has its own CI workflow, dependencies, and DataDog integration.
 All run nightly on GitHub Actions.
 
@@ -157,6 +157,26 @@ All run nightly on GitHub Actions.
 - Allure reporting + GitHub Pages deployment
 - Trace Viewer artifacts on failure (DOM snapshots, screenshots, network calls)
 - DataDog CI Visibility via TRX upload
+
+**GraphQL testing layer (TypeScript suite):**
+- `utils/graphqlClient.ts` — typed `GraphQLClient` class built on Playwright's built-in `APIRequestContext`; zero new npm dependencies; handles query/mutation, variables, operationName, auth headers
+- `graphqlClient` fixture in `fixtures.ts` — reads `GRAPHQL_URL` + `API_TOKEN` from env; auto-injects Bearer token; follows same setup/yield/teardown pattern as `authenticatedPage`
+- `api` project in `playwright.config.ts` — dedicated project for GraphQL/API tests; `testMatch` scoped to `graphql.spec.ts`
+- 5 test patterns in `tests/graphql.spec.ts`:
+  1. Direct query (happy path) — `data` and `errors` both asserted; documents HTTP 200 ≠ success
+  2. Query with variables — parameterized filtering, validates list contents and exclusions
+  3. Mock by `operationName` — `page.route()` + `page.evaluate()` intercepts fetch from browser context; veterinary mock data (Patient, VitalSigns); demonstrates how to test UI against controlled clinical data states
+  4. GraphQL error contract — verifies `errors[]` populated on invalid query; documents that HTTP status alone is insufficient assertion
+  5. Passive operation auditor — `page.on('request')` records every GraphQL operation fired during a flow; documents N+1 detection, mutation hygiene, and auth boundary patterns
+
+**PR smoke gate (`playwright-smoke-pr.yml`):**
+- Triggers exclusively on `pull_request` to `main` (push/nightly handled by `playwright-dotnet.yml`)
+- `timeout-minutes: 5` hard cap — fails the job if exceeded, forcing deliberate scope control
+- `concurrency: cancel-in-progress: true` — new commit immediately cancels stale run
+- Chromium only · `--grep @smoke` · `--retries=0` (fail-fast, no flakiness masking)
+- `--reporter=github` posts inline PR annotations on failing assertions
+- `$GITHUB_STEP_SUMMARY` writes pass/fail table to the PR Checks tab
+- Artifacts (HTML report + traces) uploaded only on failure — keeps storage clean on green runs
 
 ---
 
@@ -250,6 +270,86 @@ All run nightly on GitHub Actions.
 
 ---
 
+### Framework 9: `coding-agent` — AI Coding Agent Demo Suite
+**Stack:** Python 3.11 · Anthropic Claude (`claude-opus-4-6`) · `@beta_tool` decorator · `tool_runner` agentic loop
+**What it does:** Demonstrates four coding-agent capabilities — codebase rewriting, code execution feedback loops, git/PR automation, and multi-agent orchestration — all targeting the SauceDemo test suite in this monorepo.
+
+**Four demos:**
+
+1. **Codebase Reader & Rewriter (`demo1`)** — Explores `cucumber_python/steps/` and `pages/`, identifies Page Object architecture violations in `auth_steps.py` (inline Selenium, magic strings), produces a compliant rewrite at `output/auth_steps_rewritten.py`, and validates it with `python -m py_compile`. Iterates on any compile error.
+
+2. **Code Execution Feedback Loop (`demo2`)** — Writes `output/validate_saucedemo.py`, runs it via bash, reads stdout/stderr, and iterates until all assertions pass and exit code is 0. Uses only the Python standard library — the agent discovers this constraint and adapts. Demonstrates the write → run → observe → fix loop underpinning reliable AI-generated code.
+
+3. **Git & PR Automation (`demo3`)** — Reads feature files, identifies highest-value scenarios, adds `@performance` tags, creates branch `agent/add-performance-tags`, commits with a conventional commit message, dry-runs `git push`, and produces a full PR description (Summary + Motivation + Test Plan). No remote state modified in demo mode.
+
+4. **Multi-Agent: Planner → Executor → Validator (`demo4`)** — Three specialised agents with role-scoped tools collaborate to add a new Behave cart scenario end-to-end:
+   - **Planner**: `read_file` + `list_files` only — explores codebase, outputs structured JSON implementation plan
+   - **Executor**: `read_file` + `write_file` + `run_bash` — implements the plan, runs `py_compile` on modified files
+   - **Validator**: `run_bash` only — runs `behave --dry-run` + `grep`, issues `VERDICT: PASS | FAIL` with evidence
+   - Orchestrator passes each agent's output as the next agent's input — clean, auditable context handoff
+
+**Architecture:**
+- `@beta_tool` decorator — auto-generates JSON schemas from function signatures + Google-style docstrings; no manual schema maintenance
+- `client.beta.messages.tool_runner()` — SDK-managed agentic loop; each `BetaMessage` yielded for streaming display
+- `thinking: {"type": "adaptive"}` — Opus 4.6 dynamically scales reasoning budget; low for trivial tasks, high for multi-file analysis
+- Role-scoped tools in Demo 4 mirror real-world access control (Validator can't modify files it's verifying)
+- All agent-generated files written to `output/` (git-ignored); no production code modified during demos
+
+**Tool inventory (all `@beta_tool` decorated):**
+- `file_tools.py`: `read_file`, `write_file`, `list_files`
+- `bash_tools.py`: `run_bash` (stdout + stderr + exit code)
+- `git_tools.py`: `git_status`, `git_diff`, `git_create_branch`, `git_add_and_commit`, `git_push`
+- `github_tools.py`: `gh_create_pr`, `gh_list_pr_comments`, `gh_reply_to_pr`, `gh_pr_status`
+
+**CLI:** `python run_demo.py --demo {1-4}` or `--all`; `--quiet` for summary-only output
+
+**CI (`coding-agent.yml`):**
+- Lint + import smoke test on every push to `coding-agent/**` (no API calls)
+- Demo 2 runs on `workflow_dispatch` (requires `ANTHROPIC_API_KEY` secret); output uploaded as 7-day artifact
+- Manual dispatch runs any demo or `--all`
+
+---
+
+### Framework 10: `cucumber_python` — Python BDD Framework
+**Stack:** Python 3.11 · Behave (Python Cucumber) · Selenium 4 · requests · allure-behave
+**What it does:** Python/Behave BDD framework mirroring the Java Cucumber framework, rebuilt with four architectural strategies specifically designed to prevent framework collapse at 1,000+ test scale.
+
+**Four scaling strategies applied:**
+
+1. **Declarative Gherkin** — Steps describe business intent (`When I login with valid credentials`), not UI mechanics. The "How" lives in Page Objects and Tasks, not Gherkin. Eliminates the step-definition explosion that kills frameworks at scale.
+
+2. **Domain-Object Organization** — Step files organized by domain entity, not feature file: `auth_steps.py` (login/logout/session), `inventory_steps.py` (products/cart/checkout), `api_steps.py` (HTTP), `security_steps.py` (injection/XSS/headers), `common_steps.py` (shared). New engineers know exactly where to look.
+
+3. **Aggressive Parameterization** — Behave `{type}` expressions make one step handle all variants: `{count:d}` covers every badge count, `{product}` covers every item name, `{expected_status:d}` covers every HTTP status. Avoids N steps for N values.
+
+4. **Screenplay Pattern** — `utils/tasks.py` defines reusable `LoginTask` and `AddToCartTask` classes. Complex multi-step preconditions delegate to Tasks rather than duplicating step sequences. Separates Who (Actor), What (Task), How (Page Object Interaction). Prevents "God Object" page classes.
+
+**Key features:**
+- 6 feature files, 20+ scenarios: login, dashboard, inventory, cart, API, security
+- `features/environment.py` — Behave hooks replacing Hooks.java: `before_all`, `before_scenario`, `after_scenario` (screenshot on failure), `after_all` (DataDog metrics + Slack)
+- `pages/base_page.py` — shared wait/action wrappers (mirrors BasePage.java)
+- `utils/driver_manager.py` — `threading.local()` thread-safe factory (mirrors ThreadLocal<WebDriver>); supports local, grid, BrowserStack targets
+- `utils/config_reader.py` — priority: env vars > config.ini (mirrors ConfigReader.java)
+- `utils/datadog_utils.py` / `utils/slack_utils.py` — same graceful-skip pattern as Java counterparts
+- `utils/api_client.py` — thin `requests` wrapper for API test steps
+
+**Healenium integration (Python-specific approach):**
+Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hlm-proxy` image exposes a Selenium Grid-compatible HTTP proxy on port 8085. When `HEALENIUM_ENABLED=true`, `driver_manager.py` routes `RemoteWebDriver` through the proxy — Healenium intercepts element lookups and applies self-healing. Gracefully falls back to standard driver if proxy unreachable. Both `docker-compose.yaml` and `k8s/healenium/` include the `hlm-proxy` service.
+
+**Infrastructure:**
+- `Dockerfile` — multi-stage build (deps stage + runner stage with Chromium pre-installed)
+- `docker-compose.yaml` — full stack: Selenium Grid (hub + Chrome/Firefox/Edge) + Healenium (postgres + hlm-backend + hlm-proxy)
+- `k8s/` — 9 Kubernetes manifests: namespace, configmap, Grid hub/chrome/firefox, Healenium postgres/backend/proxy
+
+**CI (`cucumber-python.yml`):**
+- Triggers: push to `main` (path: `cucumber_python/**`), PR, nightly 05:00 UTC, `workflow_dispatch`
+- Dispatch inputs: `execution_mode` (local/grid/browserstack), `test_browser`, `test_tags`
+- Pipeline: Python 3.11 setup → install deps → run Behave → OWASP ZAP → DataDog CI Visibility → Allure → GitHub Pages → email on failure
+
+**DataDog metrics:** `test.suite.passed`, `test.suite.failed`, `test.suite.skipped`, `test.suite.duration_ms` tagged `framework:cucumber-python`
+
+---
+
 ## DataDog Observability (All Frameworks)
 
 **Two DataDog features run across all frameworks:**
@@ -269,8 +369,10 @@ All run nightly on GitHub Actions.
 | `agent-eval` | test suite + tokens + API latency |
 | `selenium-java` | test suite results + duration |
 | `cucumber` | test suite results + duration |
+| `cucumber-python` | test suite results + duration |
 | `playwright-dotnet` | test suite results + duration |
 | `job-agent` | jobs_found · jobs_scored · cover_letters_drafted · duration · latency |
+| `coding-agent` | (no DataDog integration — demo artefacts written to `output/`) |
 
 ---
 
@@ -280,19 +382,22 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 
 | Workflow | Trigger | Key dispatch inputs |
 |---|---|---|
+| `playwright-smoke-pr.yml` | PR only · 5-min hard cap | — (Chromium · @smoke · retries=0 always) |
 | `playwright-dotnet.yml` | push · PR · nightly 02:00 UTC | browser · execution mode · JMeter toggle |
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | browser · execution mode · JMeter toggle |
+| `cucumber-python.yml` | push · PR · nightly 05:00 UTC | execution_mode · browser · test_tags |
 | `ai-eval.yml` | push · PR · nightly 05:00 UTC | pytest marker (smoke · regression · safety) |
 | `conv-eval.yml` | push · PR · nightly 06:00 UTC | pytest marker (smoke · regression · safety · retention) |
 | `agent-eval.yml` | push · PR · nightly 07:00 UTC | pytest marker (smoke · regression) |
 | `postman-newman.yml` | push · PR · nightly 08:00 UTC | folder filter |
 | `job-agent.yml` | nightly 09:00 UTC · workflow_dispatch | role_filter keyword |
+| `coding-agent.yml` | push · PR · workflow_dispatch | demo number (1-4 or all) |
 | `k8s.yml` | workflow_dispatch only | framework (selenium-java · cucumber) |
 
 **Secrets required:**
 - `OPENAI_API_KEY` — ai-eval, conv-eval, agent-eval
-- `ANTHROPIC_API_KEY` — job-agent
+- `ANTHROPIC_API_KEY` — job-agent, coding-agent
 - `TAVILY_API_KEY` — job-agent
 - `CANDIDATE_PROFILE` — job-agent (injects git-ignored profile.md into CI runner)
 - `DD_API_KEY` — optional, all frameworks (graceful skip if absent)

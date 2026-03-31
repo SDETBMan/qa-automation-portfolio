@@ -6,7 +6,10 @@
     "test": "npx playwright test",
     "test:chromium": "npx playwright test --project=chromium",
     "test:smoke": "npx playwright test --grep \"@smoke\" --project=chromium",
+    "test:smoke:pr": "npx playwright test --grep \"@smoke\" --project=chromium --retries=0 --reporter=github,list,html",
     "test:headed": "npx playwright test --project=chromium --headed",
+    "test:graphql": "npx playwright test tests/graphql.spec.ts --project=api",
+    "test:graphql:live": "npx playwright test tests/graphql.spec.ts --project=api --grep \"@smoke|@regression\"",
     "report": "npx playwright show-report"
   },
   "devDependencies": {

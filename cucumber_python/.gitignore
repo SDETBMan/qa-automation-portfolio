@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Reports & build output
+reports/
+.allure/
+*.html
+
+# Secrets
+.env
+*.env
+
+# IDE
+.idea/
+.vscode/
+*.iml

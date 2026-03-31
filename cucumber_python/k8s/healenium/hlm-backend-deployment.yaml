@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hlm-backend
+  namespace: selenium-grid
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hlm-backend
+  template:
+    metadata:
+      labels:
+        app: hlm-backend
+    spec:
+      containers:
+        - name: hlm-backend
+          image: healenium/hlm-backend:3.3.0
+          envFrom:
+            - configMapRef:
+                name: healenium-config
+          ports:
+            - containerPort: 7878
