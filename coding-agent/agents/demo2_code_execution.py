@@ -29,8 +29,6 @@ NOTE ON DEPENDENCIES:
   constraint from the environment and adapts.
 """
 
-from pathlib import Path
-
 from shared.client import MODEL, get_client, get_repo_root
 from shared.printer import divider, print_message, print_section
 from tools.bash_tools import run_bash

@@ -5,7 +5,6 @@ can reason about the repository state before acting.
 """
 
 import subprocess
-from pathlib import Path
 
 from anthropic import beta_tool
 

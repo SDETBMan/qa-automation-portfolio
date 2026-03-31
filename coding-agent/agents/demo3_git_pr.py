@@ -28,8 +28,6 @@ NOTE ON git push / gh pr create:
   the intent without side effects.
 """
 
-from pathlib import Path
-
 from shared.client import MODEL, get_client, get_repo_root
 from shared.printer import divider, print_message, print_section
 from tools.file_tools import list_files, read_file, write_file

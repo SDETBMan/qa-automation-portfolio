@@ -46,8 +46,6 @@ WHY THIS MATTERS FOR ECI:
   planning, implementation, and verification are separate guardrailed stages.
 """
 
-import json
-
 from shared.client import MODEL, get_client, get_repo_root
 from shared.printer import divider, print_message, print_section
 from tools.bash_tools import run_bash
