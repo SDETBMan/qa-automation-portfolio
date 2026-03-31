@@ -62,7 +62,9 @@ def step_proceed_checkout(context: Context) -> None:
 @then("the cart badge should show {count:d}")
 def step_assert_badge_count(context: Context, count: int) -> None:
     """Strategy #3 — {count:d} parses any integer, one step for all badge values."""
-    actual = _inventory(context).get_cart_badge_count()
+    page = _inventory(context)
+    page.wait_for_badge_count(count)
+    actual = page.get_cart_badge_count()
     assert actual == count, f"Expected cart badge {count}, got {actual}"
 
 

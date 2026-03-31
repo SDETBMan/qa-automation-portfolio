@@ -69,9 +69,13 @@ def step_login_invalid(context: Context) -> None:
 
 @when('I login as "{username}"')
 def step_login_as_user(context: Context, username: str) -> None:
-    """Scenario Outline variant — username from Examples table."""
+    """Scenario Outline variant — username from Examples table.
+
+    Uses LoginPage.login() directly so the @then step can verify the outcome
+    (success OR failure) without LoginTask's success assertion interfering.
+    """
     password = config_reader.get("web", "app_password", "secret_sauce")
-    LoginTask(driver_manager.get_driver()).perform(username, password)
+    LoginPage(driver_manager.get_driver()).login(username, password)
 
 
 @when("I logout")

@@ -53,7 +53,4 @@ class LoginPage(BasePage):
             return ""
 
     def is_login_button_displayed(self) -> bool:
-        try:
-            return self.driver.find_element(*self._LOGIN_BUTTON).is_displayed()
-        except Exception:
-            return False
+        return self.is_element_present(self._LOGIN_BUTTON)

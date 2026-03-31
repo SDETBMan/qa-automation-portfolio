@@ -71,6 +71,15 @@ class InventoryPage(BasePage):
         except Exception:
             return 0
 
+    def wait_for_badge_count(self, expected: int) -> None:
+        """Wait until the cart badge shows the expected count."""
+        try:
+            self.wait.until(
+                EC.text_to_be_present_in_element(self._CART_BADGE, str(expected))
+            )
+        except Exception:
+            pass  # let the calling assertion handle the failure
+
     def is_cart_empty(self) -> bool:
         try:
             self.driver.find_element(*self._CART_BADGE)

@@ -6,6 +6,7 @@ Replaces: CartPage.java
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.support import expected_conditions as EC
 from pages.base_page import BasePage
 
 
@@ -28,7 +29,9 @@ class CartPage(BasePage):
     def get_item_names(self) -> list[str]:
         """Return a list of all product names currently in the cart."""
         try:
-            elements = self.driver.find_elements(*self._ITEM_NAMES)
+            elements = self.wait.until(
+                EC.presence_of_all_elements_located(self._ITEM_NAMES)
+            )
             return [el.text for el in elements]
         except Exception:
             return []
@@ -40,4 +43,4 @@ class CartPage(BasePage):
         self.click(self._CHECKOUT_BTN)
 
     def is_on_checkout_page(self) -> bool:
-        return "checkout" in self.driver.current_url
+        return self.wait_for_url_contains("checkout")
