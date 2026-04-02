@@ -40,7 +40,7 @@ class CartPage(BasePage):
         return product_name in self.get_item_names()
 
     def click_checkout(self) -> None:
-        self.click(self._CHECKOUT_BTN)
+        self.javascript_click(self._CHECKOUT_BTN)
 
     def is_on_checkout_page(self) -> bool:
         return self.wait_for_url_contains("checkout")

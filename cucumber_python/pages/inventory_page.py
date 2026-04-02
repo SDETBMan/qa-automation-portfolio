@@ -66,7 +66,7 @@ class InventoryPage(BasePage):
         btn_id = _REMOVE_BUTTON_IDS.get(product_name)
         if not btn_id:
             raise ValueError(f"Unknown product for removal: '{product_name}'")
-        self.click((By.ID, btn_id))
+        self.javascript_click((By.ID, btn_id))
 
     # ── Cart badge ────────────────────────────────────────────────────────────
 
