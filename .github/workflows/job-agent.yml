@@ -13,6 +13,8 @@ on:
 jobs:
   search:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: job-agent
@@ -42,10 +44,41 @@ jobs:
           DD_SITE:           ${{ vars.DD_SITE || 'datadoghq.com' }}
           ROLE_FILTER:       ${{ github.event.inputs.role_filter }}
 
+      - name: Commit results to job-agent-results branch
+        if: success()
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Fetch the results branch if it already exists on remote
+          git fetch origin job-agent-results 2>/dev/null || true
+
+          # Set up a worktree pointing at the branch (create orphan if brand-new)
+          if git show-ref --quiet refs/remotes/origin/job-agent-results; then
+            git worktree add /tmp/results job-agent-results
+          else
+            git worktree add --orphan -b job-agent-results /tmp/results
+          fi
+
+          # Sync output files into the worktree
+          mkdir -p /tmp/results/output
+          cp -r job-agent/output/. /tmp/results/output/
+
+          # Commit and push only when there are actual changes
+          cd /tmp/results
+          git add output/
+          if git diff --cached --quiet; then
+            echo "No new results to commit."
+          else
+            git commit -m "job-agent: results $(date -u +%Y-%m-%d)"
+            git push origin job-agent-results
+          fi
+
       - name: Upload results artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: job-agent-results-${{ github.run_number }}
           path: job-agent/output/
-          retention-days: 7
+          retention-days: 30

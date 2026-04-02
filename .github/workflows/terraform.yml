@@ -1,0 +1,130 @@
+name: Terraform
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+  pull_request:
+    paths:
+      - "terraform/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write       # Required for OIDC → AWS authentication
+  pull-requests: write  # Required to post plan output as a PR comment
+
+env:
+  TF_WORKING_DIR: terraform
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+jobs:
+  terraform:
+    name: Terraform Plan & Apply
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -out=tfplan
+        continue-on-error: true
+        env:
+          TF_VAR_dd_api_key: ${{ secrets.DD_API_KEY }}
+          TF_VAR_dd_app_key: ${{ secrets.DD_APP_KEY }}
+          TF_VAR_dd_notify_email: ${{ secrets.TF_VAR_dd_notify_email }}
+          TF_VAR_artifacts_bucket_name: ${{ secrets.TF_VAR_artifacts_bucket_name }}
+
+      # Post plan output as a comment on pull requests
+      - name: Post Plan to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('<!-- terraform-plan -->')
+            );
+
+            const fmtOutcome   = '${{ steps.fmt.outcome }}';
+            const initOutcome  = '${{ steps.init.outcome }}';
+            const planOutcome  = '${{ steps.plan.outcome }}';
+            const validateOutcome = '${{ steps.validate.outcome }}';
+
+            const body = `<!-- terraform-plan -->
+            #### Terraform Format \`${ fmtOutcome === 'success' ? '✅' : '⚠️' }\`  \`${ fmtOutcome }\`
+            #### Terraform Init \`${ initOutcome === 'success' ? '✅' : '❌' }\`  \`${ initOutcome }\`
+            #### Terraform Validate \`${ validateOutcome === 'success' ? '✅' : '❌' }\`  \`${ validateOutcome }\`
+            #### Terraform Plan \`${ planOutcome === 'success' ? '✅' : '❌' }\`  \`${ planOutcome }\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`terraform
+            ${{ steps.plan.outputs.stdout }}
+            \`\`\`
+
+            </details>
+
+            *Pushed by @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      # Apply only on push to main (not on PRs or manual dispatches unless explicitly desired)
+      - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply tfplan
+        env:
+          TF_VAR_dd_api_key: ${{ secrets.DD_API_KEY }}
+          TF_VAR_dd_app_key: ${{ secrets.DD_APP_KEY }}
+          TF_VAR_dd_notify_email: ${{ secrets.TF_VAR_dd_notify_email }}
+          TF_VAR_artifacts_bucket_name: ${{ secrets.TF_VAR_artifacts_bucket_name }}

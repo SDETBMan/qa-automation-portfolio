@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status clean
+.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean clean
 
 # Print help when `make` is called with no target
 help:
@@ -42,6 +42,13 @@ help:
 	@echo "  make k8s-apply            Deploy Selenium Grid + Healenium to Kubernetes"
 	@echo "  make k8s-delete           Tear down the selenium-grid namespace"
 	@echo "  make k8s-status           Show pod status in the selenium-grid namespace"
+	@echo "  make terraform-init       terraform init"
+	@echo "  make terraform-validate   terraform validate"
+	@echo "  make terraform-fmt        terraform fmt -recursive"
+	@echo "  make terraform-plan       terraform plan"
+	@echo "  make terraform-apply      terraform apply"
+	@echo "  make terraform-destroy    terraform destroy"
+	@echo "  make terraform-clean      Remove .terraform/ and state files"
 	@echo "  make clean                Remove build artefacts from all frameworks"
 	@echo ""
 	@echo "  Prerequisites:"
@@ -56,6 +63,7 @@ help:
 	@echo "    fastapi-service  — Python 3.11+"
 	@echo "    cypress          — Node.js 20+"
 	@echo "    k8s              — kubectl · running cluster or Kind (kind.sigs.k8s.io)"
+	@echo "    terraform        — Terraform >= 1.6 · AWS credentials · DataDog API/App keys"
 	@echo ""
 
 # ── Full portfolio ─────────────────────────────────────────────────────────────
@@ -185,6 +193,29 @@ k8s-status:
 	@echo ""
 	kubectl get pods -n selenium-grid
 	@echo ""
+
+## ── Terraform ────────────────────────────────────────────────────────────────
+
+terraform-init:
+	cd terraform && terraform init
+
+terraform-validate: terraform-init
+	cd terraform && terraform validate
+
+terraform-fmt:
+	cd terraform && terraform fmt -recursive
+
+terraform-plan: terraform-init
+	cd terraform && terraform plan
+
+terraform-apply: terraform-init
+	cd terraform && terraform apply
+
+terraform-destroy: terraform-init
+	cd terraform && terraform destroy
+
+terraform-clean:
+	rm -rf terraform/.terraform terraform/.terraform.lock.hcl terraform/terraform.tfstate*
 
 # ── Clean ─────────────────────────────────────────────────────────────────────
 

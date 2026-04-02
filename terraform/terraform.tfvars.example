@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# terraform.tfvars.example
+#
+# Copy this file to terraform.tfvars (gitignored) and fill in real values,
+# OR pass variables via environment variables:
+#
+#   export TF_VAR_dd_api_key="xxxxxxxxxxxx"
+#   export TF_VAR_dd_app_key="xxxxxxxxxxxx"
+#
+# All sensitive variables are marked sensitive = true in variables.tf and
+# will not appear in plan/apply output.
+# ─────────────────────────────────────────────────────────────────────────────
+
+aws_region            = "us-east-1"
+environment           = "ci"
+
+# Must be globally unique — add a random suffix or your AWS account ID
+artifacts_bucket_name = "qa-portfolio-artifacts-CHANGEME"
+
+github_org            = "SDETBMan"
+github_repo           = "qa-automation-portfolio"
+
+# Set to false if your AWS account already has a GitHub OIDC provider
+create_oidc_provider  = true
+
+# DataDog — obtain from https://app.datadoghq.com/organization-settings/api-keys
+dd_api_key            = "CHANGEME_DD_API_KEY"
+dd_app_key            = "CHANGEME_DD_APP_KEY"
+dd_site               = "datadoghq.com"
+
+# DataDog monitor notification — use a DataDog handle or email
+# e.g. "@your-email@example.com" or "@slack-channel"
+dd_notify_email       = "@your-email@example.com"

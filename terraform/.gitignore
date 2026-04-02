@@ -1,0 +1,26 @@
+# Local .tfvars files may contain sensitive credentials — never commit them
+*.tfvars
+!*.tfvars.example
+
+# Terraform working directory
+.terraform/
+.terraform.lock.hcl
+
+# State files — use remote backend in production
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfstate.d/
+
+# Plan output
+tfplan
+*.tfplan
+
+# Crash log
+crash.log
+crash.*.log
+
+# Override files (not for version control)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

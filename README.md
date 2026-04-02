@@ -10,8 +10,12 @@
 [![k8s CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/k8s.yml)
 [![postman-newman CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/postman-newman.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/postman-newman.yml)
 [![job-agent CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/job-agent.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/job-agent.yml)
+[![cucumber-python CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber-python.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber-python.yml)
+[![coding-agent CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/coding-agent.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/coding-agent.yml)
+[![fastapi-service CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/fastapi-service.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/fastapi-service.yml)
+[![Terraform CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/terraform.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/terraform.yml)
 
-A monorepo housing nine independent, production-grade test automation frameworks, each showcasing a distinct testing approach used by senior SDETs in the industry.
+A monorepo housing thirteen independent, production-grade frameworks spanning test automation, AI agents, API services, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
 
 ---
 
@@ -28,6 +32,10 @@ A monorepo housing nine independent, production-grade test automation frameworks
 | [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
 | [`job-agent`](./job-agent/) | Python | Anthropic Claude · Tavily · Python 3.11 | [→](./job-agent/README.md) |
 | [`cypress`](./cypress/) | TypeScript | Cypress 13 · React 18 · Vite · Node.js 20 | [→](./cypress/README.md) |
+| [`cucumber-python`](./cucumber_python/) | Python | Behave · Selenium 4 · Python 3.11 | [→](./cucumber_python/README.md) |
+| [`coding-agent`](./coding-agent/) | Python | Anthropic Claude · Python 3.11 | [→](./coding-agent/README.md) |
+| [`fastapi-service`](./fastapi-service/) | Python | FastAPI · Pytest · Python 3.11 | [→](./fastapi-service/README.md) |
+| [`terraform`](./terraform/) | HCL | Terraform ≥ 1.6 · AWS · DataDog | [→](./terraform/README.md) |
 
 ---
 
@@ -267,6 +275,80 @@ python run.py --role "SDET"
 python run.py --role "QA Lead"
 ```
 
+### cucumber-python
+
+**Prerequisites:** [Python 3.11+](https://python.org) · Chrome/Chromium installed
+
+```bash
+# From the repo root
+make cucumber-python
+
+# Or manually
+cd cucumber_python
+pip install -r requirements.txt
+
+# All scenarios (headless Chrome)
+HEADLESS=true behave --no-capture
+
+# Tag filter (e.g. security scenarios only)
+HEADLESS=true behave --tags=security
+
+# Specific feature file
+HEADLESS=true behave features/inventory.feature
+```
+
+### coding-agent
+
+**Prerequisites:** [Python 3.11+](https://python.org) · Anthropic API key in `coding-agent/.env`
+
+```bash
+# From the repo root
+make coding-agent
+
+# Or manually
+cd coding-agent
+pip install -r requirements.txt
+
+# Demo 2 — HTTP validation script (default, no browser needed)
+python run_demo.py --demo 2
+
+# All demos (1–4)
+python run_demo.py --demo all
+```
+
+### fastapi-service
+
+**Prerequisites:** [Python 3.11+](https://python.org)
+
+```bash
+# Start the API server on :8001
+make fastapi-service
+
+# Run the Pytest suite with coverage
+make fastapi-service-test
+
+# Or manually
+cd fastapi-service
+pip install -r requirements.txt
+pytest tests/ -v --cov=app --cov-report=term-missing
+```
+
+### terraform
+
+**Prerequisites:** [Terraform ≥ 1.6](https://developer.hashicorp.com/terraform/downloads) · AWS credentials · DataDog API + App keys
+
+```bash
+# Copy example vars and fill in your values
+cp terraform/terraform.tfvars.example terraform/terraform.tfvars
+
+make terraform-init      # download providers
+make terraform-validate  # check HCL syntax
+make terraform-plan      # preview changes (requires creds)
+make terraform-apply     # apply (requires creds)
+```
+
+See [`terraform/README.md`](./terraform/README.md) for the full bootstrap guide, CI integration notes, and the chicken-and-egg OIDC setup instructions.
+
 ---
 
 ## Repo Structure
@@ -284,6 +366,10 @@ qa-automation-portfolio/
 │       ├── cypress.yml             # triggers on: paths cypress/** · nightly 05:00 UTC
 │       ├── postman-newman.yml      # triggers on: paths postman/**
 │       ├── job-agent.yml           # nightly 09:00 UTC · workflow_dispatch (role_filter input)
+│       ├── cucumber-python.yml     # nightly 05:00 UTC · workflow_dispatch (browser · execution mode)
+│       ├── coding-agent.yml        # push/PR paths: coding-agent/** · workflow_dispatch (demo number)
+│       ├── fastapi-service.yml     # nightly 10:00 UTC · workflow_dispatch
+│       ├── terraform.yml           # push/PR paths: terraform/** · workflow_dispatch (plan + apply)
 │       └── k8s.yml                 # workflow_dispatch only: Kind cluster + grid smoke tests
 ├── ai-eval/                            # Python · Pytest · DeepEval · OpenAI · ChromaDB
 │   ├── rag/                            # RAG pipeline: document, embedder, retriever
@@ -340,6 +426,29 @@ qa-automation-portfolio/
 │   ├── utils/                          # datadog_reporter.py
 │   ├── output/                         # jobs_YYYY-MM-DD.md · cover_letters/ (git-ignored)
 │   └── run.py                          # CLI entry: python run.py [--role SDET]
+├── cucumber_python/                    # Python · Behave · Selenium 4
+│   ├── features/                       # login · dashboard · inventory · cart · api · security
+│   │   ├── steps/                      # auth_steps · inventory_steps · api_steps · security_steps
+│   │   └── environment.py              # before/after_scenario hooks · DataDog metrics · Slack
+│   ├── pages/                          # BasePage · LoginPage · InventoryPage · CartPage · DashboardPage
+│   ├── utils/                          # driver_manager · config_reader · tasks · datadog_utils
+│   └── config.ini
+├── coding-agent/                       # Python · Anthropic Claude · multi-demo AI coding agent
+│   ├── agents/                         # agent loop · tool implementations
+│   ├── shared/                         # shared utilities
+│   └── run_demo.py                     # CLI entry: python run_demo.py --demo 2
+├── fastapi-service/                    # Python · FastAPI · Pytest
+│   ├── app/                            # FastAPI application
+│   ├── tests/                          # Pytest test suite with coverage
+│   └── utils/
+├── terraform/                          # HCL · Terraform ≥ 1.6 · AWS · DataDog IaC
+│   ├── modules/
+│   │   ├── s3-artifacts/               # S3 bucket: versioning, SSE, lifecycle rules
+│   │   ├── iam-ci/                     # GitHub OIDC provider + keyless CI IAM role
+│   │   └── datadog-observability/      # dashboard, 2 monitors, CI pass-rate SLO
+│   ├── main.tf · variables.tf · outputs.tf
+│   ├── backend.tf                      # local (default) + S3 backend (commented out)
+│   └── terraform.tfvars.example
 ├── k8s/                            # Kubernetes manifests (mirrors docker-compose.yaml)
 │   ├── namespace.yaml              # selenium-grid namespace
 │   ├── configmap.yaml              # Healenium DB credentials
@@ -367,6 +476,10 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `agent-eval.yml` | push · PR · nightly 07:00 UTC | pytest marker filter (smoke · regression) |
 | `postman-newman.yml` | push · PR · nightly 08:00 UTC | folder filter (Smoke · Users · Posts · Integration Flow) |
 | `job-agent.yml` | nightly 09:00 UTC · `workflow_dispatch` | role_filter keyword (e.g. SDET · QA Lead) |
+| `cucumber-python.yml` | push · PR · nightly 05:00 UTC | execution mode (local · grid · browserstack) · browser · tag filter |
+| `coding-agent.yml` | push · PR · `workflow_dispatch` | demo number (1–4 or all) |
+| `fastapi-service.yml` | nightly 10:00 UTC · `workflow_dispatch` | — |
+| `terraform.yml` | push · PR · `workflow_dispatch` (paths: `terraform/**`) | plan on PR · apply on merge to main · OIDC AWS auth |
 | `k8s.yml` | `workflow_dispatch` only | framework (selenium-java · cucumber) |
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
