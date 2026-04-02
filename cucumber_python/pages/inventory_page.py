@@ -91,6 +91,7 @@ class InventoryPage(BasePage):
 
     def go_to_cart(self) -> None:
         self.click(self._CART_ICON)
+        self.wait_for_url_contains("cart")
 
     def click_checkout(self) -> None:
         self.click(self._CHECKOUT_BTN)

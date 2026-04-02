@@ -37,9 +37,16 @@ def step_add_multiple_products(context: Context) -> None:
         When I add the following items to the cart:
           | Sauce Labs Backpack   |
           | Sauce Labs Bike Light |
+
+    Reuses a single InventoryPage across all adds and waits for the badge to
+    reflect each add before proceeding.  This prevents a race condition in
+    headless Chrome where rapid successive clicks on different buttons do not
+    all register when the React DOM is still mutating from the previous click.
     """
-    for row in context.table:
-        _inventory(context).add_product(row["product"])
+    page = _inventory(context)
+    for i, row in enumerate(context.table, start=1):
+        page.add_product(row["product"])
+        page.wait_for_badge_count(i)
 
 
 @when('I remove "{product}" from the cart')
