@@ -46,11 +46,20 @@ class InventoryPage(BasePage):
     # ── Product actions ───────────────────────────────────────────────────────
 
     def add_product(self, product_name: str) -> None:
-        """Add a product to the cart by name."""
+        """Add a product to the cart by name.
+
+        Uses javascript_click instead of the standard Selenium click.  After
+        the first add, React re-renders the inventory component; the native
+        WebDriver click fires the event but React's synthetic event delegation
+        does not reliably pick it up on subsequent buttons in headless Chrome.
+        Firing the click via JavaScript dispatches directly on the element and
+        always bubbles through React's delegation root, regardless of re-render
+        timing.
+        """
         btn_id = _PRODUCT_BUTTON_IDS.get(product_name)
         if not btn_id:
             raise ValueError(f"Unknown product: '{product_name}'")
-        self.click((By.ID, btn_id))
+        self.javascript_click((By.ID, btn_id))
 
     def remove_product(self, product_name: str) -> None:
         """Remove a product from the cart while on the inventory page."""
