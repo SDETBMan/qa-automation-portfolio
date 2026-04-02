@@ -99,8 +99,8 @@ class InventoryPage(BasePage):
     # ── Navigation ────────────────────────────────────────────────────────────
 
     def go_to_cart(self) -> None:
-        self.click(self._CART_ICON)
-        self.wait_for_url_contains("cart")
+        self.javascript_click(self._CART_ICON)
+        assert self.wait_for_url_contains("cart"), "Navigation to cart page timed out"
 
     def click_checkout(self) -> None:
         self.click(self._CHECKOUT_BTN)
