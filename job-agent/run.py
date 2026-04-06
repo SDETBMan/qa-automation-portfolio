@@ -27,6 +27,12 @@ try:
 except ImportError:
     pass  # dotenv is optional — env vars may already be set
 
+try:
+    import agentops as _agentops
+    _AGENTOPS_AVAILABLE = True
+except ImportError:
+    _AGENTOPS_AVAILABLE = False
+
 
 def _check_env() -> None:
     missing = [k for k in ("ANTHROPIC_API_KEY", "TAVILY_API_KEY") if not os.getenv(k)]
@@ -47,6 +53,11 @@ def main() -> None:
 
     _check_env()
 
+    ao_key = os.getenv("AGENTOPS_API_KEY")
+    ao_active = bool(_AGENTOPS_AVAILABLE and ao_key)
+    if ao_active:
+        _agentops.init(api_key=ao_key, default_tags=["job-agent"])
+
     # Import here so dotenv is loaded first
     from agent.job_hunter import JobHunter
     from utils.datadog_reporter import send_run_metrics, send_api_latency
@@ -62,9 +73,15 @@ def main() -> None:
     print("=" * 60)
     print()
 
-    start = time.time()
-    summary = hunter.run()
-    elapsed_ms = (time.time() - start) * 1000
+    success = False
+    try:
+        start = time.time()
+        summary = hunter.run()
+        elapsed_ms = (time.time() - start) * 1000
+        success = True
+    finally:
+        if ao_active:
+            _agentops.end_session("Success" if success else "Fail")
 
     print()
     print("=" * 60)

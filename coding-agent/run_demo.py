@@ -19,11 +19,18 @@ ENVIRONMENT VARIABLES:
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
 # Make the coding-agent/ package importable regardless of cwd
 sys.path.insert(0, str(Path(__file__).parent))
+
+try:
+    import agentops as _agentops
+    _AGENTOPS_AVAILABLE = True
+except ImportError:
+    _AGENTOPS_AVAILABLE = False
 
 
 DEMOS = {
@@ -71,11 +78,22 @@ def main() -> None:
     args = parser.parse_args()
     verbose = not args.quiet
 
-    if args.all:
-        for n in DEMOS:
-            run_demo(n, verbose=verbose)
-    else:
-        run_demo(args.demo, verbose=verbose)
+    ao_key = os.getenv("AGENTOPS_API_KEY")
+    ao_active = bool(_AGENTOPS_AVAILABLE and ao_key)
+    if ao_active:
+        _agentops.init(api_key=ao_key, default_tags=["coding-agent"])
+
+    success = False
+    try:
+        if args.all:
+            for n in DEMOS:
+                run_demo(n, verbose=verbose)
+        else:
+            run_demo(args.demo, verbose=verbose)
+        success = True
+    finally:
+        if ao_active:
+            _agentops.end_session("Success" if success else "Fail")
 
 
 if __name__ == "__main__":

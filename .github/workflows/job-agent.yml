@@ -42,6 +42,7 @@ jobs:
           TAVILY_API_KEY:    ${{ secrets.TAVILY_API_KEY }}
           DD_API_KEY:        ${{ secrets.DD_API_KEY }}
           DD_SITE:           ${{ vars.DD_SITE || 'datadoghq.com' }}
+          AGENTOPS_API_KEY:  ${{ secrets.AGENTOPS_API_KEY }}
           ROLE_FILTER:       ${{ github.event.inputs.role_filter }}
 
       - name: Commit results to job-agent-results branch

@@ -99,7 +99,8 @@ jobs:
       - name: Run Demo 2
         run: python run_demo.py --demo 2
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          AGENTOPS_API_KEY:   ${{ secrets.AGENTOPS_API_KEY }}
           REPO_ROOT: ${{ github.workspace }}
 
       - name: Upload output artifact
@@ -144,8 +145,9 @@ jobs:
             python run_demo.py --demo "$DEMO"
           fi
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          REPO_ROOT:         ${{ github.workspace }}
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          AGENTOPS_API_KEY:   ${{ secrets.AGENTOPS_API_KEY }}
+          REPO_ROOT:          ${{ github.workspace }}
 
       - name: Upload all outputs
         if: always()
