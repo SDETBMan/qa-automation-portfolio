@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean clean
+.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer clean
 
 # Print help when `make` is called with no target
 help:
@@ -31,6 +31,9 @@ help:
 	@echo "  make cypress-test         Run Cypress E2E suite (headless Chrome)"
 	@echo "  make cypress-open         Open Cypress interactive Test Runner"
 	@echo "  make coding-agent         Run coding-agent demo suite (requires ANTHROPIC_API_KEY)"
+	@echo "  make langchain-rag        Run LangChain RAG demo — 3 built-in questions (requires OPENAI_API_KEY)"
+	@echo "  make langgraph-agent      Run LangGraph test-case generator demo (requires ANTHROPIC_API_KEY)"
+	@echo "  make dspy-optimizer       Run DSPy baseline vs optimized comparison (requires OPENAI_API_KEY)"
 	@echo "  make job-agent            Run Claude-powered job search agent"
 	@echo "  make playwright           Run playwright-dotnet suite (C# + TypeScript)"
 	@echo "  make selenium             Run selenium-java suite (headless Chrome)"
@@ -60,6 +63,9 @@ help:
 	@echo "    postman          — Node.js 20+"
 	@echo "    coding-agent     — Python 3.11+ · ANTHROPIC_API_KEY in coding-agent/.env"
 	@echo "    job-agent        — Python 3.11+ · ANTHROPIC_API_KEY · TAVILY_API_KEY in job-agent/.env"
+	@echo "    langchain-rag    — Python 3.11+ · OPENAI_API_KEY in langchain-rag/.env"
+	@echo "    langgraph-agent  — Python 3.11+ · ANTHROPIC_API_KEY in langgraph-agent/.env"
+	@echo "    dspy-optimizer   — Python 3.11+ · OPENAI_API_KEY in dspy-optimizer/.env"
 	@echo "    fastapi-service  — Python 3.11+"
 	@echo "    cypress          — Node.js 20+"
 	@echo "    k8s              — kubectl · running cluster or Kind (kind.sigs.k8s.io)"
@@ -164,6 +170,30 @@ cypress-open:
 	@echo ""
 	@echo ">>> [cypress] Opening Cypress Test Runner..."
 	cd cypress && npm ci --quiet && npx cypress open
+	@echo ""
+
+langchain-rag:
+	@echo ""
+	@echo ">>> [langchain-rag] Installing dependencies and running RAG demo..."
+	cd langchain-rag && pip install -r requirements.txt -q && python run.py --demo
+	@echo ""
+	@echo ">>> [langchain-rag] Done."
+	@echo ""
+
+langgraph-agent:
+	@echo ""
+	@echo ">>> [langgraph-agent] Installing dependencies and running test-case generator demo..."
+	cd langgraph-agent && pip install -r requirements.txt -q && python run.py --demo
+	@echo ""
+	@echo ">>> [langgraph-agent] Done. Output in langgraph-agent/output/"
+	@echo ""
+
+dspy-optimizer:
+	@echo ""
+	@echo ">>> [dspy-optimizer] Installing dependencies and running baseline vs optimized comparison..."
+	cd dspy-optimizer && pip install -r requirements.txt -q && python run.py --mode compare
+	@echo ""
+	@echo ">>> [dspy-optimizer] Done. Compiled program in dspy-optimizer/output/"
 	@echo ""
 
 # ── Kubernetes ────────────────────────────────────────────────────────────────

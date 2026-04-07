@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+chroma_db/
+output/*
+!output/.gitkeep

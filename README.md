@@ -14,8 +14,11 @@
 [![coding-agent CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/coding-agent.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/coding-agent.yml)
 [![fastapi-service CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/fastapi-service.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/fastapi-service.yml)
 [![Terraform CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/terraform.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/terraform.yml)
+[![langchain-rag CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langchain-rag.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langchain-rag.yml)
+[![langgraph-agent CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langgraph-agent.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langgraph-agent.yml)
+[![dspy-optimizer CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/dspy-optimizer.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/dspy-optimizer.yml)
 
-A monorepo housing thirteen independent, production-grade frameworks spanning test automation, AI agents, API services, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
+A monorepo housing sixteen independent, production-grade frameworks spanning test automation, AI agents, API services, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
 
 ---
 
@@ -30,12 +33,15 @@ A monorepo housing thirteen independent, production-grade frameworks spanning te
 | [`selenium-java`](./selenium-java/) | Java | Selenium 4 · TestNG · Maven · Java 17 | [→](./selenium-java/README.md) |
 | [`cucumber`](./cucumber/) | Java | Cucumber 7 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
 | [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
-| [`job-agent`](./job-agent/) | Python | Anthropic Claude · Tavily · Python 3.11 | [→](./job-agent/README.md) |
+| [`job-agent`](./job-agent/) | Python | Anthropic Claude · Tavily · AgentOps · Python 3.11 | [→](./job-agent/README.md) |
 | [`cypress`](./cypress/) | TypeScript | Cypress 13 · React 18 · Vite · Node.js 20 | [→](./cypress/README.md) |
 | [`cucumber-python`](./cucumber_python/) | Python | Behave · Selenium 4 · Python 3.11 | [→](./cucumber_python/README.md) |
-| [`coding-agent`](./coding-agent/) | Python | Anthropic Claude · Python 3.11 | [→](./coding-agent/README.md) |
+| [`coding-agent`](./coding-agent/) | Python | Anthropic Claude · AgentOps · Python 3.11 | [→](./coding-agent/README.md) |
 | [`fastapi-service`](./fastapi-service/) | Python | FastAPI · Pytest · Python 3.11 | [→](./fastapi-service/README.md) |
 | [`terraform`](./terraform/) | HCL | Terraform ≥ 1.6 · AWS · DataDog | [→](./terraform/README.md) |
+| [`langchain-rag`](./langchain-rag/) | Python | LangChain 0.3 · LCEL · Chroma · OpenAI `gpt-4o-mini` · Python 3.11 | [→](./langchain-rag/README.md) |
+| [`langgraph-agent`](./langgraph-agent/) | Python | LangGraph 0.4 · LangChain Anthropic · `claude-haiku-4-5` · Python 3.11 | [→](./langgraph-agent/README.md) |
+| [`dspy-optimizer`](./dspy-optimizer/) | Python | DSPy 2.6 · BootstrapFewShot · OpenAI `gpt-4o-mini` · Python 3.11 | [→](./dspy-optimizer/README.md) |
 
 ---
 
@@ -74,6 +80,11 @@ A monorepo housing thirteen independent, production-grade frameworks spanning te
 | **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — | — | — | — | — |
 | **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — | — | — | — | — | — |
 | **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom GAUGE metrics | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility (JUnit XML) | ✅ Custom metrics · run counts · latency |
+| **RAG pipeline (LCEL)** | — | — | — | — | — | — | — | — | — |
+| **Stateful multi-agent graph** | — | — | — | — | — | — | — | — | — |
+| **Conditional edges + cycles** | — | — | — | — | — | — | — | — | — |
+| **DSPy prompt optimization** | — | — | — | — | — | — | — | — | — |
+| **Conversation history (RunnableWithMessageHistory)** | — | — | — | — | — | — | — | — | — |
 | **GitHub Actions CI** | ✅ | ✅ | ✅ | ✅ nightly 05:00 UTC | ✅ | ✅ | ✅ | ✅ | ✅ nightly 09:00 UTC |
 | **Agentic AI Development** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
@@ -349,6 +360,72 @@ make terraform-apply     # apply (requires creds)
 
 See [`terraform/README.md`](./terraform/README.md) for the full bootstrap guide, CI integration notes, and the chicken-and-egg OIDC setup instructions.
 
+### langchain-rag
+
+**Prerequisites:** [Python 3.11+](https://python.org) · OpenAI API key in `langchain-rag/.env`
+
+```bash
+# From the repo root
+make langchain-rag
+
+# Or manually
+cd langchain-rag
+pip install -r requirements.txt
+cp .env.example .env  # add OPENAI_API_KEY
+
+# Run 3 built-in demo questions
+python run.py --demo
+
+# Ask a single question
+python run.py --question "Which frameworks use Selenium?"
+
+# Interactive REPL
+python run.py --interactive
+```
+
+### langgraph-agent
+
+**Prerequisites:** [Python 3.11+](https://python.org) · Anthropic API key in `langgraph-agent/.env`
+
+```bash
+# From the repo root
+make langgraph-agent
+
+# Or manually
+cd langgraph-agent
+pip install -r requirements.txt
+cp .env.example .env  # add ANTHROPIC_API_KEY
+
+# Run built-in demo feature
+python run.py --demo
+
+# Provide your own feature description
+python run.py --feature "User can reset their password via email"
+```
+
+### dspy-optimizer
+
+**Prerequisites:** [Python 3.11+](https://python.org) · OpenAI API key in `dspy-optimizer/.env`
+
+```bash
+# From the repo root
+make dspy-optimizer
+
+# Or manually
+cd dspy-optimizer
+pip install -r requirements.txt
+cp .env.example .env  # add OPENAI_API_KEY
+
+# Side-by-side baseline vs optimized accuracy (default)
+python run.py
+
+# Zero-shot baseline only
+python run.py --mode baseline
+
+# BootstrapFewShot optimized only
+python run.py --mode optimized
+```
+
 ---
 
 ## Repo Structure
@@ -370,7 +447,10 @@ qa-automation-portfolio/
 │       ├── coding-agent.yml        # push/PR paths: coding-agent/** · workflow_dispatch (demo number)
 │       ├── fastapi-service.yml     # nightly 10:00 UTC · workflow_dispatch
 │       ├── terraform.yml           # push/PR paths: terraform/** · workflow_dispatch (plan + apply)
-│       └── k8s.yml                 # workflow_dispatch only: Kind cluster + grid smoke tests
+│       ├── k8s.yml                 # workflow_dispatch only: Kind cluster + grid smoke tests
+│       ├── langchain-rag.yml       # push/PR lint (free) · workflow_dispatch demo (< $0.01)
+│       ├── langgraph-agent.yml     # push/PR lint (free) · workflow_dispatch demo (< $0.02)
+│       └── dspy-optimizer.yml      # push/PR lint (free) · workflow_dispatch compare (~$0.02)
 ├── ai-eval/                            # Python · Pytest · DeepEval · OpenAI · ChromaDB
 │   ├── rag/                            # RAG pipeline: document, embedder, retriever
 │   ├── datasets/golden_dataset.json    # Ground truth Q&A pairs (SauceDemo FAQ)
@@ -454,6 +534,16 @@ qa-automation-portfolio/
 │   ├── configmap.yaml              # Healenium DB credentials
 │   ├── selenium-grid/              # Hub + Chrome/Firefox/Edge node deployments & services
 │   └── healenium/                  # Postgres, hlm-backend, hlm-selector-imitator
+├── langchain-rag/                      # Python · LangChain LCEL · Chroma · OpenAI
+│   ├── rag/                            # loader · vectorstore · LCEL chain + RunnableWithMessageHistory
+│   └── run.py                          # CLI: --question · --demo · --interactive
+├── langgraph-agent/                    # Python · LangGraph · LangChain Anthropic · Haiku
+│   ├── graph/                          # state · nodes · edges · pipeline (StateGraph)
+│   └── run.py                          # CLI: --feature · --demo (streams node events)
+├── dspy-optimizer/                     # Python · DSPy · BootstrapFewShot · OpenAI
+│   ├── classifier/                     # signatures · ChainOfThought module · optimizer
+│   ├── datasets/bug_reports.py         # 30 synthetic examples (hardcoded, offline)
+│   └── run.py                          # CLI: --mode baseline|optimized|compare
 ├── Makefile                            # One-command runner for all suites
 ├── .gitignore
 └── README.md
@@ -481,10 +571,13 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `fastapi-service.yml` | nightly 10:00 UTC · `workflow_dispatch` | — |
 | `terraform.yml` | push · PR · `workflow_dispatch` (paths: `terraform/**`) | plan on PR · apply on merge to main · OIDC AWS auth |
 | `k8s.yml` | `workflow_dispatch` only | framework (selenium-java · cucumber) |
+| `langchain-rag.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
+| `langgraph-agent.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
+| `dspy-optimizer.yml` | push · PR (lint only, free) · `workflow_dispatch` (compare run) | — |
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
 
-> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, and `agent-eval.yml`. `ANTHROPIC_API_KEY` and `TAVILY_API_KEY` are required for `job-agent.yml`. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it.
+> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, `agent-eval.yml`, `langchain-rag.yml`, and `dspy-optimizer.yml`. `ANTHROPIC_API_KEY` and `TAVILY_API_KEY` are required for `job-agent.yml`; `ANTHROPIC_API_KEY` alone is required for `langgraph-agent.yml`. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it. The three new AI framework workflows (`langchain-rag`, `langgraph-agent`, `dspy-optimizer`) only call APIs on `workflow_dispatch` — lint runs for free on every push/PR.
 
 ### DataDog Observability
 

@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+"""Bug Report Severity Classifier — DSPy optimization demo.
+
+Usage:
+    python run.py                      # default: compare baseline vs optimized
+    python run.py --mode baseline      # zero-shot only
+    python run.py --mode optimized     # bootstrap + evaluate
+    python run.py --mode compare       # side-by-side accuracy comparison
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent / ".env")
+
+if not os.getenv("OPENAI_API_KEY"):
+    sys.exit(
+        "ERROR: OPENAI_API_KEY not set.\n"
+        "  Copy .env.example → .env and add your key, or export OPENAI_API_KEY=..."
+    )
+
+import dspy
+
+from classifier.modules import BugClassifier
+from classifier.optimizer import compile_with_bootstrap, evaluate, save_compiled
+from datasets.bug_reports import DEVSET, TRAINSET
+
+DIVIDER = "─" * 60
+COMPILED_PATH = Path(__file__).parent / "output" / "compiled_classifier.json"
+
+
+def _configure_lm() -> None:
+    lm = dspy.LM("openai/gpt-4o-mini", temperature=0)
+    dspy.configure(lm=lm)
+
+
+def run_baseline() -> tuple[BugClassifier, float]:
+    """Evaluate the zero-shot (unoptimized) classifier on the dev set."""
+    print(f"\n{DIVIDER}")
+    print("MODE: Baseline (zero-shot, no few-shot examples)")
+    print(DIVIDER)
+
+    classifier = BugClassifier()
+    print(f"Evaluating on {len(DEVSET)} held-out examples…", flush=True)
+    acc = evaluate(classifier, DEVSET)
+
+    print(f"\nBaseline accuracy: {acc:.0%}  ({int(acc * len(DEVSET))}/{len(DEVSET)} correct)")
+    _print_sample_predictions(classifier, DEVSET[:3], label="Baseline")
+    return classifier, acc
+
+
+def run_optimized() -> tuple[BugClassifier, float]:
+    """Compile with BootstrapFewShot and evaluate on the dev set."""
+    print(f"\n{DIVIDER}")
+    print("MODE: Optimized (BootstrapFewShot, max_bootstrapped_demos=3)")
+    print(DIVIDER)
+
+    print(f"Compiling on {len(TRAINSET)} training examples…", flush=True)
+    compiled = compile_with_bootstrap(TRAINSET, max_bootstrapped_demos=3)
+
+    print(f"Evaluating on {len(DEVSET)} held-out examples…", flush=True)
+    acc = evaluate(compiled, DEVSET)
+
+    save_compiled(compiled, COMPILED_PATH)
+    print(f"\nOptimized accuracy: {acc:.0%}  ({int(acc * len(DEVSET))}/{len(DEVSET)} correct)")
+    print(f"Compiled program saved to: {COMPILED_PATH}")
+    _print_sample_predictions(compiled, DEVSET[:3], label="Optimized")
+    return compiled, acc
+
+
+def run_compare() -> None:
+    """Run both modes and print a side-by-side accuracy comparison."""
+    _, base_acc = run_baseline()
+    _, opt_acc = run_optimized()
+
+    delta = opt_acc - base_acc
+    print(f"\n{DIVIDER}")
+    print("RESULTS SUMMARY")
+    print(DIVIDER)
+    print(f"{'Baseline accuracy':<30} {base_acc:.0%}")
+    print(f"{'Optimized accuracy':<30} {opt_acc:.0%}")
+    print(f"{'Delta':<30} {delta:+.0%}")
+    print(DIVIDER)
+    print("\nKey insight: BootstrapFewShot automatically selects high-quality")
+    print("training demonstrations and injects them as few-shot examples,")
+    print("improving accuracy without any manual prompt engineering.")
+    print("\nProduction upgrade path: replace BootstrapFewShot with MIPROv2")
+    print("for joint optimization of instructions + demonstrations (higher cost).")
+
+
+def _print_sample_predictions(classifier: BugClassifier, examples: list, label: str) -> None:
+    """Print a few sample predictions with gold labels."""
+    print(f"\n  Sample predictions ({label}):")
+    for ex in examples:
+        pred = classifier(report=ex.report)
+        match = "✓" if pred.severity.strip().lower() == ex.severity.lower() else "✗"
+        short_report = ex.report[:70] + ("…" if len(ex.report) > 70 else "")
+        print(f"  {match} Gold={ex.severity:<9} Pred={pred.severity.strip():<9} | {short_report}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="DSPy Bug Severity Classifier")
+    parser.add_argument(
+        "--mode",
+        choices=["baseline", "optimized", "compare"],
+        default="compare",
+        help="Which mode to run (default: compare)",
+    )
+    args = parser.parse_args()
+
+    _configure_lm()
+
+    if args.mode == "baseline":
+        run_baseline()
+    elif args.mode == "optimized":
+        run_optimized()
+    else:
+        run_compare()
+
+
+if __name__ == "__main__":
+    main()
