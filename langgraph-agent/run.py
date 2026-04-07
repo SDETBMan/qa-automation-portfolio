@@ -16,14 +16,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).parent / ".env")
-
-if not os.getenv("ANTHROPIC_API_KEY"):
-    sys.exit(
-        "ERROR: ANTHROPIC_API_KEY not set.\n"
-        "  Copy .env.example → .env and add your key, or export ANTHROPIC_API_KEY=..."
-    )
-
 from graph.pipeline import build_graph
 
 DEMO_FEATURE = "User can add products to cart and proceed to checkout"
@@ -104,6 +96,13 @@ def save_output(state: dict) -> Path:
 
 
 def main() -> None:
+    load_dotenv(Path(__file__).parent / ".env")
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        sys.exit(
+            "ERROR: ANTHROPIC_API_KEY not set.\n"
+            "  Copy .env.example → .env and add your key, or export ANTHROPIC_API_KEY=..."
+        )
+
     parser = argparse.ArgumentParser(description="LangGraph Test Case Generator")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--feature", "-f", help="Plain-English feature description")

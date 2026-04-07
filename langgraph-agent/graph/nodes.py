@@ -8,12 +8,20 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from .state import AgentState
 
 # Use claude-haiku — cheapest Anthropic model; shows LangGraph is provider-agnostic
-_LLM = ChatAnthropic(model="claude-haiku-4-5-20251001", temperature=0)
+# Lazily initialized so importing this module does not require ANTHROPIC_API_KEY.
+_LLM: ChatAnthropic | None = None
+
+
+def _get_llm() -> ChatAnthropic:
+    global _LLM
+    if _LLM is None:
+        _LLM = ChatAnthropic(model="claude-haiku-4-5-20251001", temperature=0)
+    return _LLM
 
 
 def _call(system: str, human: str) -> str:
     """Single LLM call returning stripped text content."""
-    response = _LLM.invoke([SystemMessage(content=system), HumanMessage(content=human)])
+    response = _get_llm().invoke([SystemMessage(content=system), HumanMessage(content=human)])
     return response.content.strip()
 
 

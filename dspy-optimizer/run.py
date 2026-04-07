@@ -15,17 +15,8 @@ import os
 import sys
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv(Path(__file__).parent / ".env")
-
-if not os.getenv("OPENAI_API_KEY"):
-    sys.exit(
-        "ERROR: OPENAI_API_KEY not set.\n"
-        "  Copy .env.example → .env and add your key, or export OPENAI_API_KEY=..."
-    )
-
 import dspy
+from dotenv import load_dotenv
 
 from classifier.modules import BugClassifier
 from classifier.optimizer import compile_with_bootstrap, evaluate, save_compiled
@@ -105,6 +96,13 @@ def _print_sample_predictions(classifier: BugClassifier, examples: list, label: 
 
 
 def main() -> None:
+    load_dotenv(Path(__file__).parent / ".env")
+    if not os.getenv("OPENAI_API_KEY"):
+        sys.exit(
+            "ERROR: OPENAI_API_KEY not set.\n"
+            "  Copy .env.example → .env and add your key, or export OPENAI_API_KEY=..."
+        )
+
     parser = argparse.ArgumentParser(description="DSPy Bug Severity Classifier")
     parser.add_argument(
         "--mode",

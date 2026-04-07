@@ -15,18 +15,8 @@ import sys
 import uuid
 from pathlib import Path
 
-# ── Load .env before any LangChain imports ─────────────────────────────────
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).parent / ".env")
-
-if not os.getenv("OPENAI_API_KEY"):
-    sys.exit(
-        "ERROR: OPENAI_API_KEY not set.\n"
-        "  Copy .env.example → .env and add your key, or export OPENAI_API_KEY=..."
-    )
-
-# ── Now import LangChain modules ────────────────────────────────────────────
 from rag.chain import build_chain
 from rag.loader import load_corpus
 from rag.vectorstore import build_vectorstore
@@ -47,6 +37,13 @@ def ask(chain, question: str, session_id: str) -> str:
 
 
 def main() -> None:
+    load_dotenv(Path(__file__).parent / ".env")
+    if not os.getenv("OPENAI_API_KEY"):
+        sys.exit(
+            "ERROR: OPENAI_API_KEY not set.\n"
+            "  Copy .env.example → .env and add your key, or export OPENAI_API_KEY=..."
+        )
+
     parser = argparse.ArgumentParser(description="QA Portfolio RAG Assistant")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--question", "-q", help="Single question to answer")
