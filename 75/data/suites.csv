@@ -1,0 +1,62 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"  As a logged in user
+  I want to verify the dashboard state and navigation
+  So that I can confirm the application behaves correctly after login","17691","Multiple user types can access the dashboard","","Sat Apr 18 05:28:27 UTC 2026","passed","Sat Apr 18 05:28:44 UTC 2026","","Dashboard Functionality","Multiple user types can access the dashboard",""
+"  As a logged in user
+  I want to add, remove, and purchase products from the inventory
+  So that I can complete the full shopping flow","7742","Add and then remove an item from the cart","","Sat Apr 18 05:28:41 UTC 2026","passed","Sat Apr 18 05:28:48 UTC 2026","","Inventory Page Functionality","Add and then remove an item from the cart",""
+"","19161","Add a backpack to the cart","","Sat Apr 18 05:28:27 UTC 2026","passed","Sat Apr 18 05:28:46 UTC 2026","","Shopping Cart Functionality","Add a backpack to the cart",""
+"  As a logged in user
+  I want to verify the dashboard state and navigation
+  So that I can confirm the application behaves correctly after login","15200","Direct URL access without login redirects to login page","","Sat Apr 18 05:28:27 UTC 2026","passed","Sat Apr 18 05:28:42 UTC 2026","","Dashboard Functionality","Direct URL access without login redirects to login page",""
+"  As a user of the SauceDemo application
+  I want to log in with different accounts
+  So that I can access the product features","6120","Login with multiple user types","","Sat Apr 18 05:28:44 UTC 2026","passed","Sat Apr 18 05:28:51 UTC 2026","","Login Functionality","Login with multiple user types",""
+"  As a security-aware QA engineer
+  I want to verify the login surface handles malicious input safely
+  So that the application does not expose internal system details or execute injected code","5491","SQL injection attempt is safely rejected","","Sat Apr 18 05:28:46 UTC 2026","passed","Sat Apr 18 05:28:52 UTC 2026","","Security","SQL injection attempt is safely rejected",""
+"  As a QA Engineer
+  I want to validate backend API endpoints
+  So that I can confirm data integrity independently of the UI","13805","Validate users list endpoint returns multiple records","","Sat Apr 18 05:28:27 UTC 2026","passed","Sat Apr 18 05:28:41 UTC 2026","","API Health and Data Integrity","Validate users list endpoint returns multiple records",""
+"  As a logged in user
+  I want to verify the dashboard state and navigation
+  So that I can confirm the application behaves correctly after login","22586","Multiple user types can access the dashboard","","Sat Apr 18 05:28:27 UTC 2026","passed","Sat Apr 18 05:28:49 UTC 2026","","Dashboard Functionality","Multiple user types can access the dashboard",""
+"  As a security-aware QA engineer
+  I want to verify the login surface handles malicious input safely
+  So that the application does not expose internal system details or execute injected code","3075","Security response headers are present","","Sat Apr 18 05:28:49 UTC 2026","passed","Sat Apr 18 05:28:52 UTC 2026","","Security","Security response headers are present",""
+"  As a QA Engineer
+  I want to validate backend API endpoints
+  So that I can confirm data integrity independently of the UI","13527","Validate user API returns 200 and correct data","","Sat Apr 18 05:28:27 UTC 2026","passed","Sat Apr 18 05:28:40 UTC 2026","","API Health and Data Integrity","Validate user API returns 200 and correct data",""
+"  As a user of the SauceDemo application
+  I want to log in with different accounts
+  So that I can access the product features","10646","Login with multiple user types","","Sat Apr 18 05:28:45 UTC 2026","passed","Sat Apr 18 05:28:56 UTC 2026","","Login Functionality","Login with multiple user types",""
+"  As a logged in user
+  I want to verify the dashboard state and navigation
+  So that I can confirm the application behaves correctly after login","17584","User can logout from the dashboard","","Sat Apr 18 05:28:27 UTC 2026","passed","Sat Apr 18 05:28:44 UTC 2026","","Dashboard Functionality","User can logout from the dashboard",""
+"  As a security-aware QA engineer
+  I want to verify the login surface handles malicious input safely
+  So that the application does not expose internal system details or execute injected code","3400","XSS payload in login field is handled safely","","Sat Apr 18 05:28:49 UTC 2026","passed","Sat Apr 18 05:28:52 UTC 2026","","Security","XSS payload in login field is handled safely",""
+"  As a logged in user
+  I want to verify the dashboard state and navigation
+  So that I can confirm the application behaves correctly after login","17389","Multiple user types can access the dashboard","","Sat Apr 18 05:28:27 UTC 2026","passed","Sat Apr 18 05:28:44 UTC 2026","","Dashboard Functionality","Multiple user types can access the dashboard",""
+"  As a user of the SauceDemo application
+  I want to log in with different accounts
+  So that I can access the product features","6557","Login with multiple user types","","Sat Apr 18 05:28:45 UTC 2026","passed","Sat Apr 18 05:28:51 UTC 2026","","Login Functionality","Login with multiple user types",""
+"  As a user of the SauceDemo application
+  I want to log in with different accounts
+  So that I can access the product features","6414","Login with multiple user types","","Sat Apr 18 05:28:45 UTC 2026","passed","Sat Apr 18 05:28:51 UTC 2026","","Login Functionality","Login with multiple user types",""
+"  As a logged in user
+  I want to add, remove, and purchase products from the inventory
+  So that I can complete the full shopping flow","17762","Add a single item to the cart","","Sat Apr 18 05:28:27 UTC 2026","passed","Sat Apr 18 05:28:45 UTC 2026","","Inventory Page Functionality","Add a single item to the cart",""
+"  As a user of the SauceDemo application
+  I want to log in with different accounts
+  So that I can access the product features","5760","Failed login with invalid credentials","","Sat Apr 18 05:28:44 UTC 2026","passed","Sat Apr 18 05:28:50 UTC 2026","","Login Functionality","Failed login with invalid credentials",""
+"  As a logged in user
+  I want to add, remove, and purchase products from the inventory
+  So that I can complete the full shopping flow","18364","Add multiple items to the cart","","Sat Apr 18 05:28:27 UTC 2026","passed","Sat Apr 18 05:28:45 UTC 2026","","Inventory Page Functionality","Add multiple items to the cart",""
+"  As a user of the SauceDemo application
+  I want to log in with different accounts
+  So that I can access the product features","6806","Successful login with valid credentials","","Sat Apr 18 05:28:42 UTC 2026","passed","Sat Apr 18 05:28:49 UTC 2026","","Login Functionality","Successful login with valid credentials",""
+"  As a logged in user
+  I want to add, remove, and purchase products from the inventory
+  So that I can complete the full shopping flow","7744","Navigate to checkout after adding an item","","Sat Apr 18 05:28:41 UTC 2026","passed","Sat Apr 18 05:28:48 UTC 2026","","Inventory Page Functionality","Navigate to checkout after adding an item",""
