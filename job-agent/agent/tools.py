@@ -42,44 +42,54 @@ def search_jobs(query: str) -> list[dict]:
     """
     Search for job postings via Tavily.
     Returns a list of {title, url, snippet, score} dicts.
+    Returns an empty list on API errors (quota exhausted, network, etc.).
     """
-    payload = {
-        "api_key": _tavily_key(),
-        "query": query,
-        "search_depth": "basic",
-        "include_answer": False,
-        "max_results": 5,
-    }
-    resp = requests.post(f"{_TAVILY_BASE}/search", json=payload, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
-    results = []
-    for r in data.get("results", []):
-        results.append({
-            "title":   r.get("title", ""),
-            "url":     r.get("url", ""),
-            "snippet": r.get("content", "")[:500],
-            "score":   r.get("score", 0.0),
-        })
-    return results
+    try:
+        payload = {
+            "api_key": _tavily_key(),
+            "query": query,
+            "search_depth": "basic",
+            "include_answer": False,
+            "max_results": 5,
+        }
+        resp = requests.post(f"{_TAVILY_BASE}/search", json=payload, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        results = []
+        for r in data.get("results", []):
+            results.append({
+                "title":   r.get("title", ""),
+                "url":     r.get("url", ""),
+                "snippet": r.get("content", "")[:500],
+                "score":   r.get("score", 0.0),
+            })
+        return results
+    except (requests.exceptions.RequestException, EnvironmentError) as exc:
+        print(f"[job-agent] search_jobs failed: {exc}")
+        return []
 
 
 def fetch_job_posting(url: str) -> str:
     """
     Fetch the full text of a job posting via Tavily extract.
     Returns raw text content (truncated to 4 000 chars to stay within context).
+    Returns an empty string on API errors.
     """
-    payload = {
-        "api_key": _tavily_key(),
-        "urls": [url],
-    }
-    resp = requests.post(f"{_TAVILY_BASE}/extract", json=payload, timeout=30)
-    resp.raise_for_status()
-    data = resp.json()
-    results = data.get("results", [])
-    if results:
-        return results[0].get("raw_content", "")[:2000]
-    return ""
+    try:
+        payload = {
+            "api_key": _tavily_key(),
+            "urls": [url],
+        }
+        resp = requests.post(f"{_TAVILY_BASE}/extract", json=payload, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        results = data.get("results", [])
+        if results:
+            return results[0].get("raw_content", "")[:2000]
+        return ""
+    except (requests.exceptions.RequestException, EnvironmentError) as exc:
+        print(f"[job-agent] fetch_job_posting failed: {exc}")
+        return ""
 
 
 def score_job_fit(job_title: str, company: str, job_description: str) -> dict:

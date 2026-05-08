@@ -1,8 +1,6 @@
 name: Job Agent
 
 on:
-  schedule:
-    - cron: '0 9 * * *'   # nightly 09:00 UTC
   workflow_dispatch:
     inputs:
       role_filter:

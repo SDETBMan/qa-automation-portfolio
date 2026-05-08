@@ -34,12 +34,9 @@ except ImportError:
     _AGENTOPS_AVAILABLE = False
 
 
-def _check_env() -> None:
-    missing = [k for k in ("ANTHROPIC_API_KEY", "TAVILY_API_KEY") if not os.getenv(k)]
-    if missing:
-        print(f"[ERROR] Missing required environment variables: {', '.join(missing)}")
-        print("        Add them to job-agent/.env or export them in your shell.")
-        sys.exit(1)
+def _check_env() -> list[str]:
+    """Return list of missing required env vars (empty list = all present)."""
+    return [k for k in ("ANTHROPIC_API_KEY", "TAVILY_API_KEY") if not os.getenv(k)]
 
 
 def main() -> None:
@@ -51,16 +48,22 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    _check_env()
+    missing = _check_env()
+    if missing:
+        print(f"[job-agent] Skipping run: missing environment variables: {', '.join(missing)}")
+        print("            Add them to job-agent/.env or export them in your shell.")
+        print("[job-agent] Exiting gracefully (exit 0).")
+        return
+
+    # Import here so dotenv is loaded first
+    import anthropic
+    from agent.job_hunter import JobHunter
+    from utils.datadog_reporter import send_run_metrics, send_api_latency
 
     ao_key = os.getenv("AGENTOPS_API_KEY")
     ao_active = bool(_AGENTOPS_AVAILABLE and ao_key)
     if ao_active:
         _agentops.init(api_key=ao_key, default_tags=["job-agent"])
-
-    # Import here so dotenv is loaded first
-    from agent.job_hunter import JobHunter
-    from utils.datadog_reporter import send_run_metrics, send_api_latency
 
     role_filter = args.role.strip() or None
     hunter      = JobHunter(role_filter=role_filter)
@@ -74,11 +77,22 @@ def main() -> None:
     print()
 
     success = False
+    elapsed_ms = 0.0
+    summary = ""
     try:
         start = time.time()
         summary = hunter.run()
         elapsed_ms = (time.time() - start) * 1000
         success = True
+    except anthropic.AuthenticationError:
+        summary = "Anthropic API key is invalid or expired. No results produced."
+        print(f"[job-agent] {summary}")
+    except anthropic.RateLimitError:
+        summary = "Anthropic API rate limit exceeded (quota may be exhausted). No results produced."
+        print(f"[job-agent] {summary}")
+    except anthropic.APIStatusError as exc:
+        summary = f"Anthropic API error (HTTP {exc.status_code}). No results produced."
+        print(f"[job-agent] {summary}")
     finally:
         if ao_active:
             _agentops.end_session("Success" if success else "Fail")
@@ -96,7 +110,8 @@ def main() -> None:
     letters_dir  = output_dir / "cover_letters"
     letter_files = list(letters_dir.glob("*.md")) if letters_dir.exists() else []
 
-    send_api_latency(elapsed_ms)
+    if elapsed_ms > 0:
+        send_api_latency(elapsed_ms)
     send_run_metrics(
         jobs_found=0,             # updated by save_results; approximate here
         jobs_scored=len(jobs_files),
