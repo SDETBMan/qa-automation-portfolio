@@ -1,0 +1,4 @@
+pandas>=2.0.0
+pydantic>=2.6.0
+python-dotenv>=1.0.0
+# google-cloud-bigquery>=3.20.0  # optional: uncomment when using BigQuery loader
