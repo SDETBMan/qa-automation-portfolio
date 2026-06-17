@@ -127,6 +127,27 @@ jobs:
           APP_USERNAME: standard_user
           APP_PASSWORD: secret_sauce
 
+      - name: Generate TypeScript Allure report
+        if: always()
+        working-directory: playwright-dotnet/tests/playwright-ts
+        run: npx allure generate allure-results --clean -o allure-report
+
+      - name: Upload TypeScript Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-ts-allure-results
+          path: playwright-dotnet/tests/playwright-ts/allure-results/
+          retention-days: 30
+
+      - name: Upload TypeScript Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-ts-allure-report
+          path: playwright-dotnet/tests/playwright-ts/allure-report/
+          retention-days: 30
+
       - name: Upload TypeScript Playwright report
         if: always()
         uses: actions/upload-artifact@v4

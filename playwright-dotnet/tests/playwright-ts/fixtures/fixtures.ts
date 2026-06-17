@@ -3,6 +3,8 @@ import { LoginPage } from '../pages/loginPage';
 import { InventoryPage } from '../pages/inventoryPage';
 import { CartPage } from '../pages/cartPage';
 import { GraphQLClient } from '../utils/graphqlClient';
+import { DbClient } from '../utils/dbClient';
+import { DbAssertions } from '../utils/dbAssertions';
 
 /**
  * Custom fixture types for the app under test.
@@ -48,6 +50,26 @@ type AppFixtures = {
    * Tests using this fixture begin already on inventory.html — zero login boilerplate.
    */
   authenticatedPage: InventoryPage;
+
+  /**
+   * Database client for querying backend state during E2E tests.
+   * SETUP:    creates a DbClient with connection pool from env vars (DB_HOST, DB_PORT, etc.)
+   * YIELD:    delivers DbClient to the test
+   * TEARDOWN: closes the connection pool
+   *
+   * C# equivalent: DatabaseUtils.ExecuteQueryAsync() / ExecuteNonQueryAsync()
+   */
+  dbClient: DbClient;
+
+  /**
+   * Fluent database-to-UI assertion helpers.
+   * Wraps a DbClient and provides methods like scalarMatchesText(),
+   * rowCountMatchesLocatorCount(), fieldMatchesText(), etc.
+   *
+   * No C# equivalent — this is a TypeScript-only addition that bridges
+   * database verification with Playwright's auto-retrying expect() API.
+   */
+  dbAssertions: DbAssertions;
 
   /**
    * Pre-configured GraphQLClient backed by Playwright's APIRequestContext.
@@ -98,6 +120,26 @@ export const test = base.extend<AppFixtures>({
     await use(new InventoryPage(page));
 
     // ── TEARDOWN — Playwright auto-disposes the page; nothing to clean up ────
+  },
+
+  dbClient: async ({}, use) => {
+    // ── SETUP ────────────────────────────────────────────────────────────────
+    // DbClient reads DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_TYPE
+    // from environment variables. Defaults to MySQL on localhost:3306/testdb.
+    const client = new DbClient();
+
+    // ── YIELD — test body receives a ready-to-use DbClient ─────────────────
+    await use(client);
+
+    // ── TEARDOWN — release connection pool ─────────────────────────────────
+    await client.close();
+  },
+
+  dbAssertions: async ({ dbClient }, use) => {
+    // ── SETUP ────────────────────────────────────────────────────────────────
+    // Wraps the dbClient fixture for a fluent assertion API.
+    await use(new DbAssertions(dbClient));
+    // ── TEARDOWN — nothing to clean up; dbClient fixture handles pool close ─
   },
 
   graphqlClient: async ({ request }, use) => {

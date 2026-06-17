@@ -8,12 +8,14 @@ import { defineConfig, devices } from '@playwright/test';
  *  - fullyParallel: true          → Parallel execution across all spec files
  *  - retries: CI ? 2 : 0          → Retry on CI, fail-fast locally
  *  - projects: 3 browsers         → Cross-browser strategy (Chromium, Firefox, WebKit)
+ *  - reporter: allure-playwright  → Allure report generation (mirrors C# Allure.NUnit)
  *
  * C# equivalent settings:
  *  - trace        → Context.Tracing.StartAsync / StopAsync in BaseTest.cs
  *  - parallel     → [Parallelizable(ParallelScope.Self)]
  *  - retries      → [Retry] attribute / retry:max in appsettings.json
  *  - cross-browser → grid-firefox.runsettings / grid-webkit.runsettings
+ *  - allure       → [AllureNUnit] / [AllureSuite] / [AllureFeature] / [AllureStory]
  */
 export default defineConfig({
   testDir: './tests',
@@ -21,7 +23,15 @@ export default defineConfig({
   forbidOnly: !!process.env['CI'],          // Block accidental test.only() in CI
   retries: process.env['CI'] ? 2 : 0,       // Retry on CI, fail-fast locally
   workers: process.env['CI'] ? 4 : undefined,
-  reporter: [['html', { open: 'never' }], ['list']],
+  reporter: [
+    ['html', { open: 'never' }],
+    ['list'],
+    ['allure-playwright', {
+      resultsDir: 'allure-results',
+      detail: true,
+      suiteTitle: true,
+    }],
+  ],
 
   use: {
     baseURL: process.env['BASE_URL'] ?? 'https://www.saucedemo.com',

@@ -27,6 +27,8 @@ appsettings.local.json
 tests/playwright-ts/node_modules/
 tests/playwright-ts/playwright-report/
 tests/playwright-ts/test-results/
+tests/playwright-ts/allure-results/
+tests/playwright-ts/allure-report/
 
 # C# Playwright traces (attached to Allure; gitignore the raw files)
 traces/

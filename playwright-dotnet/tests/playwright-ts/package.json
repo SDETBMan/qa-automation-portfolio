@@ -1,7 +1,7 @@
 {
   "name": "playwright-ts",
   "version": "1.0.0",
-  "description": "Playwright TypeScript test suite for SauceDemo — demonstrates fixtures, network interception, trace viewer, and cross-browser testing.",
+  "description": "Playwright TypeScript test suite for SauceDemo — demonstrates fixtures, network interception, trace viewer, cross-browser testing, Allure reporting, and database-to-UI assertions.",
   "scripts": {
     "test": "npx playwright test",
     "test:chromium": "npx playwright test --project=chromium",
@@ -10,10 +10,19 @@
     "test:headed": "npx playwright test --project=chromium --headed",
     "test:graphql": "npx playwright test tests/graphql.spec.ts --project=api",
     "test:graphql:live": "npx playwright test tests/graphql.spec.ts --project=api --grep \"@smoke|@regression\"",
-    "report": "npx playwright show-report"
+    "test:db": "npx playwright test tests/db-assertions.spec.ts --project=chromium",
+    "report": "npx playwright show-report",
+    "allure:generate": "npx allure generate allure-results --clean -o allure-report",
+    "allure:open": "npx allure open allure-report",
+    "allure:serve": "npx allure serve allure-results"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "allure-playwright": "^3.0.0",
+    "allure-commandline": "^2.30.0",
+    "mysql2": "^3.11.0",
+    "pg": "^8.13.0",
+    "@types/pg": "^8.11.0"
   }
 }
