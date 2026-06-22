@@ -75,9 +75,11 @@ jobs:
         if: steps.check_changes.outputs.changes == 'true'
         run: |
           cd ${{ github.workspace }}
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           BRANCH="visual-baseline-update/${{ inputs.project }}-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
-          git add "playwright-dotnet/tests/playwright-ts/tests/**/*-snapshots/**"
+          git add playwright-dotnet/tests/playwright-ts/tests/
           git commit -m "chore: update ${{ inputs.project }} visual regression baselines
 
           Updated via visual-regression-update workflow.
