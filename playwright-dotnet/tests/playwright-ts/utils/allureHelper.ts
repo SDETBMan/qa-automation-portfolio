@@ -1,4 +1,10 @@
-import { allure, LabelName, ContentType } from 'allure-js-commons';
+import {
+  label,
+  step as allureStep,
+  attachment as allureAttachment,
+  LabelName,
+  ContentType,
+} from 'allure-js-commons';
 
 /**
  * Allure metadata helpers — TypeScript equivalent of C# [AllureSuite], [AllureFeature],
@@ -22,42 +28,42 @@ import { allure, LabelName, ContentType } from 'allure-js-commons';
 
 /** Attach suite label (top-level grouping). C# equivalent: [AllureSuite("...")] */
 export function suite(name: string): void {
-  allure.label(LabelName.SUITE, name);
+  label(LabelName.SUITE, name);
 }
 
 /** Attach parent suite label (above suite in the tree). */
 export function parentSuite(name: string): void {
-  allure.label(LabelName.PARENT_SUITE, name);
+  label(LabelName.PARENT_SUITE, name);
 }
 
 /** Attach sub-suite label (below suite in the tree). */
 export function subSuite(name: string): void {
-  allure.label(LabelName.SUB_SUITE, name);
+  label(LabelName.SUB_SUITE, name);
 }
 
 /** Attach feature label. C# equivalent: [AllureFeature("...")] */
 export function feature(name: string): void {
-  allure.label(LabelName.FEATURE, name);
+  label(LabelName.FEATURE, name);
 }
 
 /** Attach story label. C# equivalent: [AllureStory("...")] */
 export function story(name: string): void {
-  allure.label(LabelName.STORY, name);
+  label(LabelName.STORY, name);
 }
 
 /** Attach severity label (blocker, critical, normal, minor, trivial). */
 export function severity(level: 'blocker' | 'critical' | 'normal' | 'minor' | 'trivial'): void {
-  allure.label(LabelName.SEVERITY, level);
+  label(LabelName.SEVERITY, level);
 }
 
 /** Attach an owner label (useful for triage — who owns this test area). */
 export function owner(name: string): void {
-  allure.label(LabelName.OWNER, name);
+  label(LabelName.OWNER, name);
 }
 
 /** Attach a tag label (maps to @smoke, @regression tags in Playwright grep). */
 export function tag(name: string): void {
-  allure.label(LabelName.TAG, name);
+  label(LabelName.TAG, name);
 }
 
 /**
@@ -76,7 +82,7 @@ export function tag(name: string): void {
  *   });
  */
 export async function step<T>(name: string, body: () => Promise<T>): Promise<T> {
-  return allure.step(name, body);
+  return allureStep(name, body);
 }
 
 /**
@@ -88,5 +94,5 @@ export async function step<T>(name: string, body: () => Promise<T>): Promise<T> 
  */
 export function attach(name: string, content: string, type?: string): void {
   const contentType = type ?? ContentType.TEXT;
-  allure.attachment(name, Buffer.from(content), contentType);
+  allureAttachment(name, Buffer.from(content), contentType);
 }
