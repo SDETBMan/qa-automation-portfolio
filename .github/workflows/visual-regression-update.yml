@@ -1,0 +1,114 @@
+name: Visual Regression — Update Baselines
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Manual workflow to update visual regression baselines.
+#
+# Baselines are intentionally NOT auto-updated — every visual change requires
+# explicit human review. This workflow:
+#   1. Runs visual regression tests with --update-snapshots
+#   2. Commits updated baselines to a new branch
+#   3. Opens a PR for review
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'Browser project to update baselines for'
+        required: true
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+        default: chromium
+
+jobs:
+  update-baselines:
+    name: Update Visual Baselines (${{ inputs.project }})
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: playwright-dotnet/tests/playwright-ts
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: playwright-dotnet/tests/playwright-ts/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install ${{ inputs.project }}
+
+      - name: Update visual baselines
+        run: |
+          npx playwright test --grep "@visual" \
+            --project=${{ inputs.project }} \
+            --update-snapshots \
+            --retries=0
+        env:
+          CI: 'true'
+          APP_USERNAME: standard_user
+          APP_PASSWORD: secret_sauce
+
+      - name: Check for changed baselines
+        id: check_changes
+        run: |
+          cd ${{ github.workspace }}
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "No baseline changes detected."
+          fi
+
+      - name: Create branch and commit
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          cd ${{ github.workspace }}
+          BRANCH="visual-baseline-update/${{ inputs.project }}-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH"
+          git add "playwright-dotnet/tests/playwright-ts/tests/**/*-snapshots/**"
+          git commit -m "chore: update ${{ inputs.project }} visual regression baselines
+
+          Updated via visual-regression-update workflow.
+          Project: ${{ inputs.project }}
+          Runner: ${{ runner.os }}"
+          git push origin "$BRANCH"
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+
+      - name: Create pull request
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          cd ${{ github.workspace }}
+          gh pr create \
+            --title "chore: update ${{ inputs.project }} visual baselines" \
+            --body "## Visual Baseline Update
+
+          Updated visual regression baselines for **${{ inputs.project }}** project.
+
+          **Review the snapshot diffs carefully** — these represent intentional UI changes.
+
+          Triggered by: @${{ github.actor }}
+          Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --base main \
+            --head "$BRANCH"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Upload updated baselines as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines-${{ inputs.project }}
+          path: playwright-dotnet/tests/playwright-ts/tests/**/*-snapshots/
+          retention-days: 30

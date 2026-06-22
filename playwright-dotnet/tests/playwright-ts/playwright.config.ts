@@ -82,5 +82,30 @@ export default defineConfig({
       },
       testMatch: ['**/graphql.spec.ts'],
     },
+
+    /**
+     * Shopify project — E2E tests against a live Shopify storefront.
+     *
+     * Requires SHOPIFY_STORE_URL env var (e.g. https://my-store.myshopify.com).
+     * Tests skip gracefully when the URL is not set.
+     */
+    {
+      name: 'shopify',
+      use: {
+        baseURL: process.env['SHOPIFY_STORE_URL'] ?? 'https://shopify.com',
+        ...devices['Desktop Chrome'],
+        actionTimeout: 15_000,
+        navigationTimeout: 45_000,
+      },
+      testMatch: ['**/shopify/**'],
+    },
   ],
+
+  /** Visual comparison settings for toHaveScreenshot(). */
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.01,
+      threshold: 0.2,
+    },
+  },
 });

@@ -7,15 +7,17 @@
 #   make setup    → install all dependencies + Playwright browsers
 #   make test     → run C# + TypeScript tests (skip setup)
 #   make test-cs  → run C# tests only
-#   make test-ts  → run TypeScript tests only (Chromium)
-#   make report   → open TypeScript Playwright HTML report
-#   make clean    → remove build artefacts and test output
+#   make test-ts      → run TypeScript tests only (Chromium)
+#   make test-visual  → run visual regression tests
+#   make test-shopify → run Shopify storefront tests
+#   make report       → open TypeScript Playwright HTML report
+#   make clean        → remove build artefacts and test output
 #
 # Prerequisites: .NET 8 SDK   (dotnet --version)
 #                Node.js 20+  (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all setup install-browsers test test-cs test-ts report clean
+.PHONY: help all setup install-browsers test test-cs test-ts test-visual test-shopify report clean
 
 # Print help when `make` is called with no target
 help:
@@ -26,9 +28,11 @@ help:
 	@echo "  make setup     Install .NET deps, npm deps, and Playwright browsers"
 	@echo "  make test      Run both C# and TypeScript tests (assumes setup done)"
 	@echo "  make test-cs   Run C# / NUnit tests only"
-	@echo "  make test-ts   Run TypeScript Playwright tests (Chromium)"
-	@echo "  make report    Open TypeScript HTML report"
-	@echo "  make clean     Remove build artefacts and test output"
+	@echo "  make test-ts      Run TypeScript Playwright tests (Chromium)"
+	@echo "  make test-visual  Run visual regression tests (Chromium)"
+	@echo "  make test-shopify Run Shopify storefront tests"
+	@echo "  make report       Open TypeScript HTML report"
+	@echo "  make clean        Remove build artefacts and test output"
 	@echo ""
 
 # ── Full pipeline ─────────────────────────────────────────────────────────────
@@ -71,6 +75,16 @@ test-ts:
 	@echo "\n>>> Running TypeScript Playwright tests (Chromium)..."
 	cd tests/playwright-ts && npx playwright test --project=chromium
 	@echo "\n>>> TypeScript tests complete.\n"
+
+test-visual:
+	@echo "\n>>> Running visual regression tests (Chromium)..."
+	cd tests/playwright-ts && npx playwright test --grep "@visual" --project=chromium
+	@echo "\n>>> Visual regression tests complete.\n"
+
+test-shopify:
+	@echo "\n>>> Running Shopify storefront tests..."
+	cd tests/playwright-ts && npx playwright test --project=shopify
+	@echo "\n>>> Shopify tests complete.\n"
 
 # ── Report ────────────────────────────────────────────────────────────────────
 

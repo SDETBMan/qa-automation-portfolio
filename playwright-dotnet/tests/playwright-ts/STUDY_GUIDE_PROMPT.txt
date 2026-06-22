@@ -1,0 +1,1281 @@
+Below are the exact source files from my Playwright TypeScript framework. I need a study guide / cheat sheet I can use to explain every architectural decision in an interview for a Senior Automation QA Engineer / SDET role at BlastPoint (B2B SaaS data platform). The role emphasizes: building QA from the ground up, database-to-UI data integrity, Allure reporting, CI/CD quality gates, and using AI as a co-engineer.
+
+For EACH file below, cover:
+1. What it does (2-3 sentences)
+2. Why this pattern over the alternatives (what other approaches exist and why this one wins)
+3. What breaks if you remove it (concrete failure scenarios)
+4. How it behaves differently in CI vs local
+5. The 3 most likely interview questions about it, with strong answers
+
+After the per-file sections, add a "Cross-Cutting Concepts" section covering:
+- Why mysql2 over mysql (true async — the mysql package fakes async with callbacks)
+- Why connection pooling even in test code (parallel workers from fullyParallel: true can exhaust max_connections)
+- Why parameterized queries in test code (test DBs mirror production schemas; also prevents accidental data corruption)
+- Why allure-playwright over just Playwright's HTML reporter (hierarchical suite/feature/story maps to regression coverage; the HTML reporter is flat)
+- Why DB assertions use Playwright's auto-retrying expect().toHaveText() where possible vs. raw expect().toBe() (UI can lag behind DB writes; auto-retry handles render timing)
+- Why lazy pool initialization (getMysqlPool/getPgPool) instead of eager (pool only created when a test actually requests the dbClient fixture)
+- Why test.skip() guards instead of test.fixme() or conditional describe blocks (skip shows in Allure as "skipped" with a reason; fixme marks tests as known-broken which is semantically wrong)
+- The fixture dependency chain: dbAssertions depends on dbClient, which means Playwright auto-provisions dbClient when any test requests dbAssertions — explain how this works
+- Why the allureHelper.ts wraps allure-js-commons instead of calling allure.label() directly in tests (single import, consistent API, easy to swap if allure-js-commons changes)
+
+Finally, add a "Whiteboard / System Design" section: if asked "how would you design the QA infrastructure for a B2B SaaS data platform from scratch?", outline a 5-minute answer that references these actual modules as evidence.
+
+=== FILE: utils/dbClient.ts ===
+
+import { createPool, Pool, PoolOptions, RowDataPacket, ResultSetHeader } from 'mysql2/promise';
+import pg from 'pg';
+
+/**
+ * Async database client for test automation — TypeScript equivalent of C# DatabaseUtils.cs.
+ *
+ * Supports MySQL (via mysql2/promise) and PostgreSQL (via pg) with parameterized queries.
+ * Connection config is read from environment variables so CI and local runs can target
+ * different databases without code changes.
+ *
+ * Environment variables:
+ *   DB_TYPE     — "mysql" (default) or "postgres"
+ *   DB_HOST     — database hostname (default: "localhost")
+ *   DB_PORT     — port number (default: 3306 for MySQL, 5432 for Postgres)
+ *   DB_NAME     — database / schema name (default: "testdb")
+ *   DB_USER     — username (default: "root")
+ *   DB_PASSWORD — password (default: "")
+ *
+ * Why connection pooling: Even though tests are short-lived, parallel test workers can
+ * open many simultaneous connections. A pool caps concurrency and reuses connections,
+ * preventing "too many connections" errors on shared CI databases.
+ *
+ * Why parameterized queries: Prevents SQL injection — even in test code, because test
+ * databases sometimes mirror production schemas and can contain sensitive data.
+ */
+
+/** Shape returned by executeQuery — each row is a plain key/value object. */
+export type DbRow = Record<string, unknown>;
+
+/** Supported database engines. */
+export type DbType = 'mysql' | 'postgres';
+
+interface DbConfig {
+  type: DbType;
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+  password: string;
+}
+
+function readConfig(): DbConfig {
+  const type = (process.env['DB_TYPE'] ?? 'mysql') as DbType;
+  return {
+    type,
+    host: process.env['DB_HOST'] ?? 'localhost',
+    port: Number(process.env['DB_PORT'] ?? (type === 'postgres' ? 5432 : 3306)),
+    database: process.env['DB_NAME'] ?? 'testdb',
+    user: process.env['DB_USER'] ?? 'root',
+    password: process.env['DB_PASSWORD'] ?? '',
+  };
+}
+
+/**
+ * DbClient wraps a connection pool and exposes two methods mirroring
+ * the C# DatabaseUtils API:
+ *   - executeQuery(sql, params?)  → SELECT → DbRow[]
+ *   - executeNonQuery(sql, params?) → INSERT/UPDATE/DELETE → affected row count
+ *
+ * Instantiate once per test worker via the `dbClient` fixture (see fixtures.ts).
+ * Call `close()` in teardown to release pool connections cleanly.
+ */
+export class DbClient {
+  private mysqlPool: Pool | null = null;
+  private pgPool: pg.Pool | null = null;
+  private readonly config: DbConfig;
+
+  constructor(config?: Partial<DbConfig>) {
+    const envConfig = readConfig();
+    this.config = { ...envConfig, ...config };
+  }
+
+  /** Lazy-initialise the MySQL connection pool. */
+  private getMysqlPool(): Pool {
+    if (!this.mysqlPool) {
+      const opts: PoolOptions = {
+        host: this.config.host,
+        port: this.config.port,
+        database: this.config.database,
+        user: this.config.user,
+        password: this.config.password,
+        waitForConnections: true,
+        connectionLimit: 5,
+        queueLimit: 0,
+      };
+      this.mysqlPool = createPool(opts);
+    }
+    return this.mysqlPool;
+  }
+
+  /** Lazy-initialise the PostgreSQL connection pool. */
+  private getPgPool(): pg.Pool {
+    if (!this.pgPool) {
+      this.pgPool = new pg.Pool({
+        host: this.config.host,
+        port: this.config.port,
+        database: this.config.database,
+        user: this.config.user,
+        password: this.config.password,
+        max: 5,
+      });
+    }
+    return this.pgPool;
+  }
+
+  /**
+   * Execute a SELECT query and return all matching rows.
+   *
+   * @param sql    — SQL query string with parameter placeholders:
+   *                 MySQL: `?` positional (e.g., `WHERE id = ?`)
+   *                 Postgres: `$1, $2` positional (e.g., `WHERE id = $1`)
+   * @param params — Array of parameter values matching the placeholders in order.
+   *
+   * @returns Array of plain objects where keys are column names.
+   *
+   * Example (MySQL):
+   *   const rows = await db.executeQuery(
+   *     'SELECT email, name FROM users WHERE status = ?',
+   *     ['active']
+   *   );
+   *
+   * Example (Postgres):
+   *   const rows = await db.executeQuery(
+   *     'SELECT email, name FROM users WHERE status = $1',
+   *     ['active']
+   *   );
+   */
+  async executeQuery(sql: string, params?: unknown[]): Promise<DbRow[]> {
+    if (this.config.type === 'postgres') {
+      const pool = this.getPgPool();
+      const result = await pool.query(sql, params);
+      return result.rows as DbRow[];
+    }
+
+    const pool = this.getMysqlPool();
+    const [rows] = await pool.execute<RowDataPacket[]>(sql, params);
+    return rows as DbRow[];
+  }
+
+  /**
+   * Execute an INSERT, UPDATE, or DELETE statement and return the affected row count.
+   *
+   * @param sql    — SQL statement with parameter placeholders.
+   * @param params — Array of parameter values.
+   * @returns Number of rows affected (0 if no rows matched the WHERE clause).
+   *
+   * Example:
+   *   const affected = await db.executeNonQuery(
+   *     'UPDATE users SET status = ? WHERE id = ?',
+   *     ['inactive', 42]
+   *   );
+   */
+  async executeNonQuery(sql: string, params?: unknown[]): Promise<number> {
+    if (this.config.type === 'postgres') {
+      const pool = this.getPgPool();
+      const result = await pool.query(sql, params);
+      return result.rowCount ?? 0;
+    }
+
+    const pool = this.getMysqlPool();
+    const [result] = await pool.execute<ResultSetHeader>(sql, params);
+    return result.affectedRows;
+  }
+
+  /**
+   * Execute a SELECT that returns a single scalar value (first column of first row).
+   * Convenient for COUNT(*), MAX(), or single-field lookups.
+   *
+   * @returns The scalar value, or null if the query returned no rows.
+   *
+   * Example:
+   *   const count = await db.executeScalar<number>('SELECT COUNT(*) FROM orders WHERE user_id = ?', [42]);
+   */
+  async executeScalar<T = unknown>(sql: string, params?: unknown[]): Promise<T | null> {
+    const rows = await this.executeQuery(sql, params);
+    if (rows.length === 0) return null;
+    const firstRow = rows[0];
+    const keys = Object.keys(firstRow);
+    if (keys.length === 0) return null;
+    return firstRow[keys[0]] as T;
+  }
+
+  /** Close all pool connections. Call in fixture teardown. */
+  async close(): Promise<void> {
+    await this.mysqlPool?.end();
+    await this.pgPool?.end();
+    this.mysqlPool = null;
+    this.pgPool = null;
+  }
+}
+
+=== FILE: utils/dbAssertions.ts ===
+
+import { Locator, expect } from '@playwright/test';
+import { DbClient, DbRow } from './dbClient';
+
+/**
+ * Database-to-UI assertion helpers.
+ *
+ * These functions bridge the gap between backend database state and frontend
+ * rendered content — the core pattern for end-to-end data integrity validation.
+ *
+ * Why this matters:
+ *   A UI test that only checks "success toast appeared" can silently pass even
+ *   when the database write failed. Conversely, an API test that only checks
+ *   the response body can miss rendering bugs. DB-to-UI assertions close both
+ *   gaps by verifying the full round-trip: database → API → UI.
+ *
+ * Usage: Import individual helpers or use the `DbAssertions` class which bundles
+ * a DbClient reference for a more fluent API inside test bodies.
+ */
+
+// ─── Standalone helper functions ────────────────────────────────────────────
+
+/**
+ * Assert that a database scalar value matches a locator's visible text.
+ *
+ * Queries the database for a single value (first column, first row) and asserts
+ * that the target locator's trimmed innerText matches the stringified DB value.
+ *
+ * @param db      — Active DbClient instance
+ * @param sql     — SELECT query expected to return one scalar value
+ * @param params  — Parameterized query values
+ * @param locator — Playwright Locator pointing to the UI element
+ * @param options — Optional: transform functions, custom message, timeout
+ *
+ * Example:
+ *   await expectDbValueMatchesText(
+ *     db,
+ *     'SELECT display_name FROM users WHERE id = ?', [userId],
+ *     page.locator('[data-testid="user-name"]'),
+ *   );
+ */
+export async function expectDbValueMatchesText(
+  db: DbClient,
+  sql: string,
+  params: unknown[],
+  locator: Locator,
+  options?: {
+    /** Transform the DB value before comparison (e.g., formatting currency). */
+    transformDb?: (value: unknown) => string;
+    /** Transform the UI text before comparison (e.g., stripping whitespace). */
+    transformUi?: (text: string) => string;
+    /** Custom assertion message on failure. */
+    message?: string;
+  },
+): Promise<void> {
+  const dbValue = await db.executeScalar(sql, params);
+
+  const dbText = options?.transformDb
+    ? options.transformDb(dbValue)
+    : String(dbValue ?? '');
+
+  const expectedText = options?.transformUi
+    ? expect(locator).toHaveText(/.*/,) // get text first for transform
+    : undefined;
+
+  // Use Playwright's auto-retrying toHaveText to handle UI render lag gracefully.
+  if (options?.transformUi) {
+    const uiText = options.transformUi(await locator.innerText());
+    expect(uiText, options?.message ?? `DB value "${dbText}" should match UI`).toBe(dbText);
+  } else {
+    await expect(
+      locator,
+      options?.message ?? `Expected locator text to match DB value "${dbText}"`,
+    ).toHaveText(dbText);
+  }
+}
+
+/**
+ * Assert that a specific field in a DB row matches a locator's text.
+ *
+ * Runs a SELECT query, picks a named column from the first row, and compares
+ * its stringified value against the locator's visible text.
+ *
+ * @param db       — Active DbClient instance
+ * @param sql      — SELECT query returning at least one row
+ * @param params   — Parameterized query values
+ * @param column   — Column name to extract from the result row
+ * @param locator  — Playwright Locator for the UI element
+ *
+ * Example:
+ *   await expectDbFieldMatchesText(
+ *     db,
+ *     'SELECT price, name FROM products WHERE sku = ?', ['SKU-001'],
+ *     'price',
+ *     page.locator('.product-price'),
+ *     { transformDb: (v) => `$${Number(v).toFixed(2)}` },
+ *   );
+ */
+export async function expectDbFieldMatchesText(
+  db: DbClient,
+  sql: string,
+  params: unknown[],
+  column: string,
+  locator: Locator,
+  options?: {
+    transformDb?: (value: unknown) => string;
+    transformUi?: (text: string) => string;
+    message?: string;
+  },
+): Promise<void> {
+  const rows = await db.executeQuery(sql, params);
+  expect(rows.length, `Expected at least 1 row from query`).toBeGreaterThan(0);
+
+  const rawValue = rows[0][column];
+  const dbText = options?.transformDb
+    ? options.transformDb(rawValue)
+    : String(rawValue ?? '');
+
+  if (options?.transformUi) {
+    const uiText = options.transformUi(await locator.innerText());
+    expect(uiText, options?.message ?? `DB column "${column}" should match UI`).toBe(dbText);
+  } else {
+    await expect(
+      locator,
+      options?.message ?? `Expected locator to show DB column "${column}" value "${dbText}"`,
+    ).toHaveText(dbText);
+  }
+}
+
+/**
+ * Assert that the number of rows returned by a DB query matches
+ * the count of elements matched by a Playwright locator.
+ *
+ * Useful for verifying list/table views render the correct number of records.
+ *
+ * Example:
+ *   await expectDbRowCountMatchesLocatorCount(
+ *     db,
+ *     'SELECT id FROM orders WHERE user_id = ? AND status = ?', [userId, 'active'],
+ *     page.locator('[data-testid="order-row"]'),
+ *   );
+ */
+export async function expectDbRowCountMatchesLocatorCount(
+  db: DbClient,
+  sql: string,
+  params: unknown[],
+  locator: Locator,
+  options?: { message?: string },
+): Promise<void> {
+  const rows = await db.executeQuery(sql, params);
+  await expect(
+    locator,
+    options?.message ?? `Expected ${rows.length} UI elements to match DB row count`,
+  ).toHaveCount(rows.length);
+}
+
+/**
+ * Assert that a DB scalar matches the `value` attribute of an input/select element.
+ *
+ * Targets form fields where content lives in `.value`, not `.innerText`.
+ *
+ * Example:
+ *   await expectDbValueMatchesInputValue(
+ *     db,
+ *     'SELECT email FROM users WHERE id = ?', [userId],
+ *     page.locator('#email-input'),
+ *   );
+ */
+export async function expectDbValueMatchesInputValue(
+  db: DbClient,
+  sql: string,
+  params: unknown[],
+  locator: Locator,
+  options?: {
+    transformDb?: (value: unknown) => string;
+    message?: string;
+  },
+): Promise<void> {
+  const dbValue = await db.executeScalar(sql, params);
+  const dbText = options?.transformDb
+    ? options.transformDb(dbValue)
+    : String(dbValue ?? '');
+
+  await expect(
+    locator,
+    options?.message ?? `Expected input value to match DB value "${dbText}"`,
+  ).toHaveValue(dbText);
+}
+
+/**
+ * Assert that every row's column value appears somewhere in a list of UI elements.
+ *
+ * Queries the database for a list of values, then checks each one appears in the
+ * locator's allInnerTexts(). Order-independent comparison.
+ *
+ * Example:
+ *   await expectDbColumnValuesInList(
+ *     db,
+ *     'SELECT name FROM categories WHERE active = ?', [true],
+ *     'name',
+ *     page.locator('.category-name'),
+ *   );
+ */
+export async function expectDbColumnValuesInList(
+  db: DbClient,
+  sql: string,
+  params: unknown[],
+  column: string,
+  locator: Locator,
+  options?: {
+    transformDb?: (value: unknown) => string;
+    message?: string;
+  },
+): Promise<void> {
+  const rows = await db.executeQuery(sql, params);
+  const dbValues = rows.map((row) =>
+    options?.transformDb
+      ? options.transformDb(row[column])
+      : String(row[column] ?? ''),
+  );
+
+  const uiTexts = await locator.allInnerTexts();
+  const trimmedUiTexts = uiTexts.map((t) => t.trim());
+
+  for (const dbVal of dbValues) {
+    expect(
+      trimmedUiTexts,
+      options?.message ?? `Expected UI list to contain DB value "${dbVal}"`,
+    ).toContain(dbVal);
+  }
+}
+
+// ─── Class-based API for fluent usage ───────────────────────────────────────
+
+/**
+ * Bundles a DbClient reference for a cleaner API when running multiple
+ * DB-to-UI assertions in a single test.
+ *
+ * Example:
+ *   const assert = new DbAssertions(dbClient);
+ *   await assert.scalarMatchesText(
+ *     'SELECT name FROM users WHERE id = ?', [1],
+ *     page.locator('#user-name'),
+ *   );
+ *   await assert.rowCountMatchesLocatorCount(
+ *     'SELECT * FROM orders WHERE user_id = ?', [1],
+ *     page.locator('.order-row'),
+ *   );
+ */
+export class DbAssertions {
+  constructor(private readonly db: DbClient) {}
+
+  async scalarMatchesText(
+    sql: string,
+    params: unknown[],
+    locator: Locator,
+    options?: Parameters<typeof expectDbValueMatchesText>[4],
+  ) {
+    return expectDbValueMatchesText(this.db, sql, params, locator, options);
+  }
+
+  async fieldMatchesText(
+    sql: string,
+    params: unknown[],
+    column: string,
+    locator: Locator,
+    options?: Parameters<typeof expectDbFieldMatchesText>[5],
+  ) {
+    return expectDbFieldMatchesText(this.db, sql, params, column, locator, options);
+  }
+
+  async rowCountMatchesLocatorCount(
+    sql: string,
+    params: unknown[],
+    locator: Locator,
+    options?: Parameters<typeof expectDbRowCountMatchesLocatorCount>[4],
+  ) {
+    return expectDbRowCountMatchesLocatorCount(this.db, sql, params, locator, options);
+  }
+
+  async scalarMatchesInputValue(
+    sql: string,
+    params: unknown[],
+    locator: Locator,
+    options?: Parameters<typeof expectDbValueMatchesInputValue>[4],
+  ) {
+    return expectDbValueMatchesInputValue(this.db, sql, params, locator, options);
+  }
+
+  async columnValuesInList(
+    sql: string,
+    params: unknown[],
+    column: string,
+    locator: Locator,
+    options?: Parameters<typeof expectDbColumnValuesInList>[5],
+  ) {
+    return expectDbColumnValuesInList(this.db, sql, params, column, locator, options);
+  }
+}
+
+=== FILE: utils/allureHelper.ts ===
+
+import { allure, LabelName, ContentType } from 'allure-js-commons';
+
+/**
+ * Allure metadata helpers — TypeScript equivalent of C# [AllureSuite], [AllureFeature],
+ * [AllureStory], and Allure.Step() decorators.
+ *
+ * In C#, Allure metadata is applied via NUnit attributes on test classes and methods:
+ *   [AllureNUnit]
+ *   [AllureSuite("Login")]
+ *   [AllureFeature("Authentication")]
+ *   [AllureStory("Valid login navigates to inventory")]
+ *
+ * In Playwright + TypeScript, there are no decorators on test functions. Instead,
+ * call these helpers at the top of each test body (or in a beforeEach hook) to attach
+ * the same metadata to the Allure report.
+ *
+ * Why this matters for the BlastPoint role:
+ *   Allure's suite/feature/story hierarchy maps directly to how QA teams organise
+ *   regression coverage: Suite → functional area, Feature → capability,
+ *   Story → specific user scenario. This makes test gaps visible at a glance.
+ */
+
+/** Attach suite label (top-level grouping). C# equivalent: [AllureSuite("...")] */
+export function suite(name: string): void {
+  allure.label(LabelName.SUITE, name);
+}
+
+/** Attach parent suite label (above suite in the tree). */
+export function parentSuite(name: string): void {
+  allure.label(LabelName.PARENT_SUITE, name);
+}
+
+/** Attach sub-suite label (below suite in the tree). */
+export function subSuite(name: string): void {
+  allure.label(LabelName.SUB_SUITE, name);
+}
+
+/** Attach feature label. C# equivalent: [AllureFeature("...")] */
+export function feature(name: string): void {
+  allure.label(LabelName.FEATURE, name);
+}
+
+/** Attach story label. C# equivalent: [AllureStory("...")] */
+export function story(name: string): void {
+  allure.label(LabelName.STORY, name);
+}
+
+/** Attach severity label (blocker, critical, normal, minor, trivial). */
+export function severity(level: 'blocker' | 'critical' | 'normal' | 'minor' | 'trivial'): void {
+  allure.label(LabelName.SEVERITY, level);
+}
+
+/** Attach an owner label (useful for triage — who owns this test area). */
+export function owner(name: string): void {
+  allure.label(LabelName.OWNER, name);
+}
+
+/** Attach a tag label (maps to @smoke, @regression tags in Playwright grep). */
+export function tag(name: string): void {
+  allure.label(LabelName.TAG, name);
+}
+
+/**
+ * Wrap an async operation as a named Allure step. Steps appear as collapsible
+ * entries in the Allure report, giving visibility into what each test does
+ * without reading the source.
+ *
+ * C# equivalent: AllureApi.Step("step name", () => { ... });
+ *
+ * Example:
+ *   await step('Query database for user record', async () => {
+ *     rows = await db.executeQuery('SELECT * FROM users WHERE id = ?', [userId]);
+ *   });
+ *   await step('Verify username on profile page', async () => {
+ *     await expect(page.locator('#name')).toHaveText(rows[0].name);
+ *   });
+ */
+export async function step<T>(name: string, body: () => Promise<T>): Promise<T> {
+  return allure.step(name, body);
+}
+
+/**
+ * Attach a text or JSON artifact to the current test in the Allure report.
+ * Useful for attaching DB query results, API responses, or debug context.
+ *
+ * Example:
+ *   attach('DB query result', JSON.stringify(rows, null, 2), 'application/json');
+ */
+export function attach(name: string, content: string, type?: string): void {
+  const contentType = type ?? ContentType.TEXT;
+  allure.attachment(name, Buffer.from(content), contentType);
+}
+
+=== FILE: fixtures/fixtures.ts ===
+
+import { test as base, expect } from '@playwright/test';
+import { LoginPage } from '../pages/loginPage';
+import { InventoryPage } from '../pages/inventoryPage';
+import { CartPage } from '../pages/cartPage';
+import { GraphQLClient } from '../utils/graphqlClient';
+import { DbClient } from '../utils/dbClient';
+import { DbAssertions } from '../utils/dbAssertions';
+
+/**
+ * Custom fixture types for the app under test.
+ *
+ * Fixture pattern explained:
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Each fixture is a function: async ({ page }, use) => { ... }
+ *
+ *  1. Code BEFORE  `await use(value)` = SETUP   (runs before the test body)
+ *  2. `await use(value)`              = YIELD    (test body receives `value`)
+ *  3. Code AFTER   `await use(value)` = TEARDOWN (runs after the test body)
+ *
+ * Playwright disposes the `page` automatically — no explicit cleanup needed
+ * in most fixtures. The `authenticatedPage` fixture demonstrates setup + yield
+ * with an implicit teardown handled by the framework.
+ *
+ * C# equivalent comparison:
+ * ─────────────────────────────────────────────────────────────────────────────
+ * | Concept    | TypeScript                          | C#                          |
+ * |------------|-------------------------------------|-----------------------------|
+ * | Fixture    | test.extend<AppFixtures>            | AuthenticatedTest : BaseTest |
+ * | Setup      | code before await use(...)          | [SetUp] LoginBeforeEach()   |
+ * | Teardown   | code after await use(...)           | [TearDown] OnTearDown()     |
+ * | Guard      | await page.waitForURL(/inventory/)  | Assert.That(Page.Url, ...)  |
+ * | Page obj   | new InventoryPage(page)             | new InventoryPage(Page)     |
+ */
+type AppFixtures = {
+  /** Login page object; browser is at baseURL (login screen). */
+  loginPage: LoginPage;
+
+  /** Inventory page object; browser is at baseURL. Tests must navigate/login themselves. */
+  inventoryPage: InventoryPage;
+
+  /** Cart page object; browser is at baseURL. Tests must navigate themselves. */
+  cartPage: CartPage;
+
+  /**
+   * Pre-authenticated InventoryPage.
+   * SETUP:    navigates to /, logs in as standard_user, waits for inventory.html
+   * YIELD:    delivers InventoryPage to the test
+   * TEARDOWN: Playwright disposes the page automatically
+   *
+   * Tests using this fixture begin already on inventory.html — zero login boilerplate.
+   */
+  authenticatedPage: InventoryPage;
+
+  /**
+   * Database client for querying backend state during E2E tests.
+   * SETUP:    creates a DbClient with connection pool from env vars (DB_HOST, DB_PORT, etc.)
+   * YIELD:    delivers DbClient to the test
+   * TEARDOWN: closes the connection pool
+   *
+   * C# equivalent: DatabaseUtils.ExecuteQueryAsync() / ExecuteNonQueryAsync()
+   */
+  dbClient: DbClient;
+
+  /**
+   * Fluent database-to-UI assertion helpers.
+   * Wraps a DbClient and provides methods like scalarMatchesText(),
+   * rowCountMatchesLocatorCount(), fieldMatchesText(), etc.
+   *
+   * No C# equivalent — this is a TypeScript-only addition that bridges
+   * database verification with Playwright's auto-retrying expect() API.
+   */
+  dbAssertions: DbAssertions;
+
+  /**
+   * Pre-configured GraphQLClient backed by Playwright's APIRequestContext.
+   *
+   * SETUP:    reads GRAPHQL_URL and API_TOKEN from the environment, constructs
+   *           a GraphQLClient with the correct endpoint and auth headers
+   * YIELD:    delivers GraphQLClient to the test
+   * TEARDOWN: APIRequestContext is disposed automatically by Playwright
+   *
+   * Environment variables:
+   *   GRAPHQL_URL — GraphQL endpoint (default: https://countries.trevorblades.com/)
+   *   API_TOKEN   — Bearer token injected as Authorization header when present
+   *
+   * In production (e.g. Instinct Science):
+   *   Set GRAPHQL_URL to the application GraphQL endpoint and API_TOKEN to a
+   *   valid session or service-account token. The fixture propagates both.
+   *
+   * C# equivalent: no direct analog — this replaces manual HttpClient setup
+   * that would otherwise be duplicated in every API test method.
+   */
+  graphqlClient: GraphQLClient;
+};
+
+export const test = base.extend<AppFixtures>({
+  loginPage: async ({ page }, use) => {
+    await use(new LoginPage(page));
+  },
+
+  inventoryPage: async ({ page }, use) => {
+    await use(new InventoryPage(page));
+  },
+
+  cartPage: async ({ page }, use) => {
+    await use(new CartPage(page));
+  },
+
+  authenticatedPage: async ({ page }, use) => {
+    // ── SETUP ────────────────────────────────────────────────────────────────
+    await page.goto('/');
+    await new LoginPage(page).loginAs(
+      process.env['APP_USERNAME'] ?? 'standard_user',
+      process.env['APP_PASSWORD'] ?? 'secret_sauce',
+    );
+    // Fixture guard: fail fast if login did not land on inventory.
+    await page.waitForURL(/inventory/, { timeout: 10_000 });
+
+    // ── YIELD — test body executes here ──────────────────────────────────────
+    await use(new InventoryPage(page));
+
+    // ── TEARDOWN — Playwright auto-disposes the page; nothing to clean up ────
+  },
+
+  dbClient: async ({}, use) => {
+    // ── SETUP ────────────────────────────────────────────────────────────────
+    // DbClient reads DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_TYPE
+    // from environment variables. Defaults to MySQL on localhost:3306/testdb.
+    const client = new DbClient();
+
+    // ── YIELD — test body receives a ready-to-use DbClient ─────────────────
+    await use(client);
+
+    // ── TEARDOWN — release connection pool ─────────────────────────────────
+    await client.close();
+  },
+
+  dbAssertions: async ({ dbClient }, use) => {
+    // ── SETUP ────────────────────────────────────────────────────────────────
+    // Wraps the dbClient fixture for a fluent assertion API.
+    await use(new DbAssertions(dbClient));
+    // ── TEARDOWN — nothing to clean up; dbClient fixture handles pool close ─
+  },
+
+  graphqlClient: async ({ request }, use) => {
+    // ── SETUP ────────────────────────────────────────────────────────────────
+    const endpoint = process.env['GRAPHQL_URL'] ?? 'https://countries.trevorblades.com/';
+
+    // Inject Authorization header when API_TOKEN is present.
+    // No-op when absent so unauthenticated public APIs work without config.
+    const headers: Record<string, string> = {};
+    const token = process.env['API_TOKEN'];
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // ── YIELD — test body receives a ready-to-use GraphQLClient ──────────────
+    await use(new GraphQLClient(request, endpoint, headers));
+
+    // ── TEARDOWN — Playwright disposes the APIRequestContext automatically ───
+  },
+});
+
+export { expect };
+
+=== FILE: playwright.config.ts ===
+
+import { defineConfig, devices } from '@playwright/test';
+
+/**
+ * Playwright configuration for the TypeScript test suite.
+ *
+ * Key settings for portfolio / JD demonstration:
+ *  - trace: 'retain-on-failure'  → Trace Viewer captures DOM + network on failure
+ *  - fullyParallel: true          → Parallel execution across all spec files
+ *  - retries: CI ? 2 : 0          → Retry on CI, fail-fast locally
+ *  - projects: 3 browsers         → Cross-browser strategy (Chromium, Firefox, WebKit)
+ *  - reporter: allure-playwright  → Allure report generation (mirrors C# Allure.NUnit)
+ *
+ * C# equivalent settings:
+ *  - trace        → Context.Tracing.StartAsync / StopAsync in BaseTest.cs
+ *  - parallel     → [Parallelizable(ParallelScope.Self)]
+ *  - retries      → [Retry] attribute / retry:max in appsettings.json
+ *  - cross-browser → grid-firefox.runsettings / grid-webkit.runsettings
+ *  - allure       → [AllureNUnit] / [AllureSuite] / [AllureFeature] / [AllureStory]
+ */
+export default defineConfig({
+  testDir: './tests',
+  fullyParallel: true,
+  forbidOnly: !!process.env['CI'],          // Block accidental test.only() in CI
+  retries: process.env['CI'] ? 2 : 0,       // Retry on CI, fail-fast locally
+  workers: process.env['CI'] ? 4 : undefined,
+  reporter: [
+    ['html', { open: 'never' }],
+    ['list'],
+    ['allure-playwright', {
+      resultsDir: 'allure-results',
+      detail: true,
+      suiteTitle: true,
+    }],
+  ],
+
+  use: {
+    baseURL: process.env['BASE_URL'] ?? 'https://www.saucedemo.com',
+    trace: 'retain-on-failure',             // ← Trace Viewer: saves on failure only
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+    actionTimeout: 10_000,
+    navigationTimeout: 30_000,
+  },
+
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+
+    /**
+     * API project — GraphQL and REST API tests that do not require a browser.
+     *
+     * Runs graphql.spec.ts tests using Playwright's APIRequestContext (the `request`
+     * fixture) without launching a browser process. This is faster and appropriate
+     * for pure data layer tests. Tests that also use `page` (mock interception,
+     * operation auditing) still run correctly — Playwright spins up a browser
+     * only for those test functions.
+     *
+     * Target endpoint is controlled by GRAPHQL_URL env var:
+     *   Default: https://countries.trevorblades.com/ (public demo)
+     *   Production: https://api.instinct.vet/graphql (or equivalent)
+     */
+    {
+      name: 'api',
+      use: {
+        baseURL: process.env['GRAPHQL_URL'] ?? 'https://countries.trevorblades.com/',
+        extraHTTPHeaders: {
+          'Accept': 'application/json',
+          ...(process.env['API_TOKEN'] && {
+            'Authorization': `Bearer ${process.env['API_TOKEN']}`,
+          }),
+        },
+      },
+      testMatch: ['**/graphql.spec.ts'],
+    },
+  ],
+});
+
+=== FILE: tests/db-assertions.spec.ts ===
+
+import { test, expect } from '../fixtures/fixtures';
+import { suite, feature, story, severity, step, tag, attach } from '../utils/allureHelper';
+
+/**
+ * Database-to-UI assertion demo tests.
+ *
+ * These tests demonstrate the full data-integrity verification pattern:
+ *   1. Query the database for backend state
+ *   2. Navigate to the corresponding UI view
+ *   3. Assert that rendered values match the DB source of truth
+ *
+ * This pattern catches bugs that purely UI-based or purely API-based tests miss:
+ *   - UI renders stale cached data while DB has the correct value
+ *   - API returns 200 + success message but the DB write silently failed
+ *   - Frontend formatting/rounding differs from the stored value
+ *
+ * NOTE: These tests require a running database. Set DB_HOST, DB_PORT, DB_NAME,
+ * DB_USER, DB_PASSWORD env vars. When no database is available (e.g., SauceDemo
+ * has no public DB), the tests demonstrate the pattern with skips.
+ *
+ * To run:   npm run test:db
+ * In CI:    Set DB_* env vars in the workflow and remove the skip conditions.
+ *
+ * C# equivalent: No direct equivalent — this is a TypeScript-only addition.
+ * The C# DatabaseUtils.cs provides the raw query layer; these tests add the
+ * assertion bridge between DB and Playwright locators.
+ */
+
+test.describe('Database-to-UI Assertions @regression', () => {
+  /**
+   * PATTERN 1: Scalar match
+   * Query a single value from the DB and assert it matches a locator's text.
+   */
+  test('scalar value matches rendered text', async ({ authenticatedPage, dbAssertions, page }) => {
+    suite('Data Integrity');
+    feature('Database-to-UI Verification');
+    story('Product name from DB matches inventory page');
+    severity('critical');
+    tag('regression');
+    tag('db');
+
+    // Skip if no database is configured (SauceDemo has no public DB).
+    // Remove this guard when pointing at a real application with a database.
+    test.skip(!process.env['DB_HOST'], 'Requires DB_HOST — skipping against SauceDemo');
+
+    await step('Query product name from database', async () => {
+      await dbAssertions.scalarMatchesText(
+        'SELECT name FROM products WHERE sku = ?',
+        ['sauce-labs-backpack'],
+        page.locator('.inventory_item_name').first(),
+      );
+    });
+  });
+
+  /**
+   * PATTERN 2: Row count match
+   * Verify the number of items rendered in a list matches the DB row count.
+   */
+  test('row count matches UI list length', async ({ authenticatedPage, dbAssertions, page }) => {
+    suite('Data Integrity');
+    feature('Database-to-UI Verification');
+    story('Product count in DB matches inventory list');
+    severity('critical');
+    tag('regression');
+    tag('db');
+
+    test.skip(!process.env['DB_HOST'], 'Requires DB_HOST — skipping against SauceDemo');
+
+    await step('Count active products in database', async () => {
+      await dbAssertions.rowCountMatchesLocatorCount(
+        'SELECT id FROM products WHERE active = ?',
+        [true],
+        page.locator('.inventory_item'),
+      );
+    });
+  });
+
+  /**
+   * PATTERN 3: Named field match with transform
+   * Query a specific column, apply formatting, and compare to UI text.
+   * Demonstrates the transformDb option for currency/number formatting.
+   */
+  test('price field matches with currency formatting', async ({ authenticatedPage, dbAssertions, page }) => {
+    suite('Data Integrity');
+    feature('Database-to-UI Verification');
+    story('Product price from DB matches displayed price after formatting');
+    severity('normal');
+    tag('regression');
+    tag('db');
+
+    test.skip(!process.env['DB_HOST'], 'Requires DB_HOST — skipping against SauceDemo');
+
+    await step('Query price and compare with $XX.XX format', async () => {
+      await dbAssertions.fieldMatchesText(
+        'SELECT price FROM products WHERE sku = ?',
+        ['sauce-labs-backpack'],
+        'price',
+        page.locator('.inventory_item_price').first(),
+        { transformDb: (v) => `$${Number(v).toFixed(2)}` },
+      );
+    });
+  });
+
+  /**
+   * PATTERN 4: Form input pre-fill match
+   * Verify that a form field's value attribute matches the DB-stored value.
+   * Common for edit/profile screens where fields are pre-populated from backend data.
+   */
+  test('input value matches DB record', async ({ authenticatedPage, dbAssertions, page }) => {
+    suite('Data Integrity');
+    feature('Database-to-UI Verification');
+    story('Profile email input pre-filled from database');
+    severity('normal');
+    tag('regression');
+    tag('db');
+
+    test.skip(!process.env['DB_HOST'], 'Requires DB_HOST — skipping against SauceDemo');
+
+    await step('Verify email input pre-fill from DB', async () => {
+      await dbAssertions.scalarMatchesInputValue(
+        'SELECT email FROM users WHERE id = ?',
+        [1],
+        page.locator('#email-input'),
+      );
+    });
+  });
+
+  /**
+   * PATTERN 5: Column values in list (order-independent)
+   * Verify that all DB values for a column appear somewhere in a list of UI elements.
+   * Does not enforce ordering — useful for tag clouds, filter chips, category lists.
+   */
+  test('all DB categories appear in filter sidebar', async ({ authenticatedPage, dbAssertions, page }) => {
+    suite('Data Integrity');
+    feature('Database-to-UI Verification');
+    story('All active categories from DB appear in UI filter list');
+    severity('minor');
+    tag('regression');
+    tag('db');
+
+    test.skip(!process.env['DB_HOST'], 'Requires DB_HOST — skipping against SauceDemo');
+
+    await step('Verify all categories render in sidebar', async () => {
+      await dbAssertions.columnValuesInList(
+        'SELECT name FROM categories WHERE active = ?',
+        [true],
+        'name',
+        page.locator('.filter-category'),
+      );
+    });
+  });
+});
+
+/**
+ * Standalone DB-to-UI test demonstrating the functional import style
+ * (as opposed to the class-based dbAssertions fixture).
+ */
+test.describe('DB Assertions — standalone function style @regression', () => {
+  test('direct function import pattern', async ({ authenticatedPage, dbClient, page }) => {
+    suite('Data Integrity');
+    feature('Database-to-UI Verification');
+    story('Demonstrate standalone function imports');
+    severity('normal');
+    tag('regression');
+    tag('db');
+
+    test.skip(!process.env['DB_HOST'], 'Requires DB_HOST — skipping against SauceDemo');
+
+    // Import the standalone functions directly instead of using the DbAssertions class.
+    const { expectDbValueMatchesText, expectDbRowCountMatchesLocatorCount } = await import('../utils/dbAssertions');
+
+    await step('Query and verify user name', async () => {
+      await expectDbValueMatchesText(
+        dbClient,
+        'SELECT display_name FROM users WHERE id = ?',
+        [1],
+        page.locator('[data-testid="user-name"]'),
+      );
+    });
+
+    await step('Query and verify order count', async () => {
+      await expectDbRowCountMatchesLocatorCount(
+        dbClient,
+        'SELECT id FROM orders WHERE user_id = ?',
+        [1],
+        page.locator('[data-testid="order-row"]'),
+      );
+    });
+  });
+});
+
+/**
+ * Allure metadata demo — runs against SauceDemo without a database.
+ * Demonstrates step annotations, attachments, and severity/tag/suite labels.
+ */
+test.describe('Allure Reporting Metadata @smoke', () => {
+  test('inventory item count with Allure steps', async ({ authenticatedPage, page }) => {
+    suite('Inventory');
+    feature('Product Listing');
+    story('All 6 SauceDemo products render on inventory page');
+    severity('blocker');
+    tag('smoke');
+
+    const items = page.locator('.inventory_item');
+
+    await step('Verify inventory page loaded with products', async () => {
+      await expect(items.first()).toBeVisible();
+    });
+
+    const count = await items.count();
+
+    await step('Attach item count to report', async () => {
+      attach('inventory-item-count', JSON.stringify({ count }, null, 2), 'application/json');
+    });
+
+    await step('Assert 6 products displayed', async () => {
+      expect(count).toBe(6);
+    });
+  });
+});
+
+=== FILE: package.json ===
+
+{
+  "name": "playwright-ts",
+  "version": "1.0.0",
+  "description": "Playwright TypeScript test suite for SauceDemo — demonstrates fixtures, network interception, trace viewer, cross-browser testing, Allure reporting, and database-to-UI assertions.",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:chromium": "npx playwright test --project=chromium",
+    "test:smoke": "npx playwright test --grep \"@smoke\" --project=chromium",
+    "test:smoke:pr": "npx playwright test --grep \"@smoke\" --project=chromium --retries=0 --reporter=github,list,html",
+    "test:headed": "npx playwright test --project=chromium --headed",
+    "test:graphql": "npx playwright test tests/graphql.spec.ts --project=api",
+    "test:graphql:live": "npx playwright test tests/graphql.spec.ts --project=api --grep \"@smoke|@regression\"",
+    "test:db": "npx playwright test tests/db-assertions.spec.ts --project=chromium",
+    "report": "npx playwright show-report",
+    "allure:generate": "npx allure generate allure-results --clean -o allure-report",
+    "allure:open": "npx allure open allure-report",
+    "allure:serve": "npx allure serve allure-results"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "typescript": "^5.4.0",
+    "allure-playwright": "^3.0.0",
+    "allure-commandline": "^2.30.0",
+    "mysql2": "^3.11.0",
+    "pg": "^8.13.0",
+    "@types/pg": "^8.11.0"
+  }
+}
+
+=== FILE: .github/workflows/playwright-dotnet.yml ===
+
+name: playwright-dotnet CI
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'playwright-dotnet/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'playwright-dotnet/**' ]
+  schedule:
+    # Run nightly at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: playwright-dotnet   # all run steps default to this directory
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore dependencies
+        run: dotnet restore PlaywrightDotNetFramework.sln
+
+      - name: Build solution
+        run: dotnet build PlaywrightDotNetFramework.sln --configuration Release --no-restore
+
+      - name: Install Playwright browsers
+        run: npx --yes playwright@1.44.0 install chromium
+
+      - name: Run tests (CI settings)
+        run: >
+          dotnet test PlaywrightDotNetFramework.sln
+          --settings ci.runsettings
+          --configuration Release
+          --no-build
+          --logger "trx"
+          --logger "junit;LogFileName=junit-results.xml"
+          --logger "console;verbosity=normal"
+          --results-directory TestResults
+        env:
+          PLAYWRIGHT_HEADLESS: true
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      # ── DataDog CI Visibility ────────────────────────────────────────────
+      - name: Upload test results to Datadog CI Visibility
+        if: always()
+        continue-on-error: true
+        run: |
+          curl -fsSL "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" \
+            --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
+          datadog-ci junit upload --service qa-automation-portfolio \
+            --tags framework:playwright-dotnet \
+            TestResults/**/junit-results.xml
+        env:
+          DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
+          DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      - name: Prepare workspace for ZAP
+        if: always()
+        run: chmod a+w ${{ github.workspace }}
+
+      - name: OWASP ZAP Baseline Scan
+        if: always()
+        uses: zaproxy/action-baseline@v0.14.0
+        continue-on-error: true
+        with:
+          target: 'https://www.saucedemo.com'
+          allow_issue_writing: false
+          cmd_options: '-I'
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: playwright-dotnet/allure-results/
+          retention-days: 30
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: playwright-dotnet/TestResults/
+          retention-days: 7
+
+      # ── TypeScript Playwright Tests ──────────────────────────────────────
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: playwright-dotnet/tests/playwright-ts/package-lock.json
+
+      - name: Install TypeScript dependencies
+        working-directory: playwright-dotnet/tests/playwright-ts
+        run: npm ci
+
+      - name: Install Playwright browsers (TypeScript)
+        working-directory: playwright-dotnet/tests/playwright-ts
+        run: npx playwright install chromium
+
+      - name: Run TypeScript Playwright tests
+        working-directory: playwright-dotnet/tests/playwright-ts
+        run: npx playwright test --project=chromium
+        env:
+          CI: 'true'
+          APP_USERNAME: standard_user
+          APP_PASSWORD: secret_sauce
+
+      - name: Generate TypeScript Allure report
+        if: always()
+        working-directory: playwright-dotnet/tests/playwright-ts
+        run: npx allure generate allure-results --clean -o allure-report
+
+      - name: Upload TypeScript Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-ts-allure-results
+          path: playwright-dotnet/tests/playwright-ts/allure-results/
+          retention-days: 30
+
+      - name: Upload TypeScript Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-ts-allure-report
+          path: playwright-dotnet/tests/playwright-ts/allure-report/
+          retention-days: 30
+
+      - name: Upload TypeScript Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-ts-report
+          path: playwright-dotnet/tests/playwright-ts/playwright-report/
+          retention-days: 30
+
+      - name: Upload TypeScript traces (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-ts-traces
+          path: playwright-dotnet/tests/playwright-ts/test-results/
+          retention-days: 7

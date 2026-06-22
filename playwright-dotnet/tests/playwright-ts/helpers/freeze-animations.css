@@ -1,0 +1,19 @@
+/*
+ * freeze-animations.css
+ *
+ * Injected via Playwright's `stylePath` option during screenshot capture.
+ * Halts all CSS animations, transitions, and smooth-scrolling so that
+ * visual regression baselines are deterministic across runs.
+ */
+
+*,
+*::before,
+*::after {
+  animation-delay: -0.0001ms !important;
+  animation-duration: 0s !important;
+  animation-play-state: paused !important;
+  transition-delay: 0s !important;
+  transition-duration: 0s !important;
+  scroll-behavior: auto !important;
+  caret-color: transparent !important;
+}

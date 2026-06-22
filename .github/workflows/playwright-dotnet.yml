@@ -127,6 +127,23 @@ jobs:
           APP_USERNAME: standard_user
           APP_PASSWORD: secret_sauce
 
+      - name: Run visual regression tests
+        if: always()
+        working-directory: playwright-dotnet/tests/playwright-ts
+        run: npx playwright test --grep "@visual" --project=chromium
+        env:
+          CI: 'true'
+          APP_USERNAME: standard_user
+          APP_PASSWORD: secret_sauce
+
+      - name: Run Shopify storefront tests
+        if: always()
+        working-directory: playwright-dotnet/tests/playwright-ts
+        run: npx playwright test --project=shopify || true
+        env:
+          CI: 'true'
+          SHOPIFY_STORE_URL: ${{ secrets.SHOPIFY_STORE_URL }}
+
       - name: Generate TypeScript Allure report
         if: always()
         working-directory: playwright-dotnet/tests/playwright-ts
@@ -163,3 +180,12 @@ jobs:
           name: playwright-ts-traces
           path: playwright-dotnet/tests/playwright-ts/test-results/
           retention-days: 7
+
+      - name: Upload visual regression snapshot diffs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-diffs
+          path: playwright-dotnet/tests/playwright-ts/test-results/**/*-diff.png
+          retention-days: 14
+          if-no-files-found: ignore
