@@ -6,7 +6,7 @@ A production-grade **conversational AI evaluation framework** built with **DeepE
 
 ## Key Features
 
-* **Four DeepEval conversational metrics:** `ConversationRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, and `ConversationalGEval` (graceful handling). Each evaluating the full conversation history rather than a single exchange.
+* **Six DeepEval conversational metrics:** `ConversationRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationalGEval` (graceful handling), `BiasMetric` (per-turn bias), and `ToxicityMetric` (per-turn toxicity). Each evaluating conversation quality from a different safety or quality dimension.
 * **Stateful chatbot under test:** `SwagSupportBot` accumulates the full message history across turns so the model resolves pronouns, follows topic switches, and acknowledges corrections, exactly like a real support bot. Each test gets a fresh bot instance via a function-scoped fixture.
 * **Conversation dataset:** `datasets/conversations.json` contains 7 multi-turn scenarios covering normal support queries, implicit reference resolution, context corrections, off-domain deflection, and adversarial prompt injection. Each scenario carries `smoke`, `regression`, `safety`, or `retention` tags.
 * **Pytest markers:** `smoke` (push-safe), `regression` (nightly), `safety`, and `retention`. Filter with `-m smoke`, `-m retention`, etc.
@@ -40,8 +40,9 @@ A production-grade **conversational AI evaluation framework** built with **DeepE
 | `test_knowledge_retention.py` | `KnowledgeRetentionMetric` | Bot correctly recalls facts mentioned in earlier turns (implicit references, corrections) |
 | `test_role_adherence.py` | `RoleAdherenceMetric` | Bot stays in character as a Swag Labs support agent across all turns |
 | `test_graceful_handling.py` | `ConversationalGEval` | Bot politely deflects out-of-domain queries and resists prompt injection without breaking character |
+| `test_safety.py` | `BiasMetric` · `ToxicityMetric` | Each response in a multi-turn conversation is free of bias and toxicity, even as adversarial context accumulates |
 
-All four test files are parametrized over the conversation dataset. Each scenario's tags map directly to pytest markers.
+All five test files are parametrized over the conversation dataset or inline safety conversations. Each scenario's tags map directly to pytest markers.
 
 ## How to Run
 
@@ -100,7 +101,8 @@ conv-eval/
 │   ├── test_conversation_relevancy.py  # ConversationRelevancyMetric
 │   ├── test_knowledge_retention.py     # KnowledgeRetentionMetric
 │   ├── test_role_adherence.py          # RoleAdherenceMetric
-│   └── test_graceful_handling.py       # ConversationalGEval (safety)
+│   ├── test_graceful_handling.py       # ConversationalGEval (safety)
+│   └── test_safety.py                 # BiasMetric + ToxicityMetric (per-turn)
 ├── utils/
 │   └── datadog_reporter.py         # GAUGE metrics: test suite + per-eval scores + token/latency
 ├── conftest.py                     # Session fixtures: OpenAI client · function-scoped bot with teardown
@@ -118,6 +120,8 @@ conv-eval/
 | `llm.conv.knowledge_retention` | Per-scenario KnowledgeRetentionMetric score (0–1) |
 | `llm.conv.role_adherence` | Per-scenario RoleAdherenceMetric score (0–1) |
 | `llm.conv.graceful_handling` | Per-scenario GEval graceful handling score (0–1) |
+| `llm.conv.bias` | Per-turn BiasMetric score (0–1) |
+| `llm.conv.toxicity` | Per-turn ToxicityMetric score (0–1) |
 | `llm.api.latency_ms` | Per-API-call latency (every chat turn) |
 | `llm.api.prompt_tokens` | Per-call prompt token count |
 | `llm.api.completion_tokens` | Per-call completion token count |

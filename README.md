@@ -18,7 +18,7 @@
 [![langgraph-agent CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langgraph-agent.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langgraph-agent.yml)
 [![dspy-optimizer CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/dspy-optimizer.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/dspy-optimizer.yml)
 
-A monorepo housing sixteen independent, production-grade frameworks spanning test automation, AI agents, API services, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
+A monorepo housing eighteen independent, production-grade frameworks spanning test automation, AI agents, API services, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
 
 ---
 
@@ -37,11 +37,13 @@ A monorepo housing sixteen independent, production-grade frameworks spanning tes
 | [`cypress`](./cypress/) | TypeScript | Cypress 13 · React 18 · Vite · Node.js 20 | [→](./cypress/README.md) |
 | [`cucumber-python`](./cucumber_python/) | Python | Behave · Selenium 4 · Python 3.11 | [→](./cucumber_python/README.md) |
 | [`coding-agent`](./coding-agent/) | Python | Anthropic Claude · AgentOps · Python 3.11 | [→](./coding-agent/README.md) |
-| [`fastapi-service`](./fastapi-service/) | Python | FastAPI · Pytest · Python 3.11 | [→](./fastapi-service/README.md) |
+| [`fastapi-service`](./fastapi-service/) | Python | FastAPI · Redis · Pytest · Python 3.11 | [→](./fastapi-service/README.md) |
 | [`terraform`](./terraform/) | HCL | Terraform ≥ 1.6 · AWS · DataDog | [→](./terraform/README.md) |
 | [`langchain-rag`](./langchain-rag/) | Python | LangChain 0.3 · LCEL · Chroma · OpenAI `gpt-4o-mini` · Python 3.11 | [→](./langchain-rag/README.md) |
 | [`langgraph-agent`](./langgraph-agent/) | Python | LangGraph 0.4 · LangChain Anthropic · `claude-haiku-4-5` · Python 3.11 | [→](./langgraph-agent/README.md) |
 | [`dspy-optimizer`](./dspy-optimizer/) | Python | DSPy 2.6 · BootstrapFewShot · OpenAI `gpt-4o-mini` · Python 3.11 | [→](./dspy-optimizer/README.md) |
+| [`dspy-vertex`](./dspy-vertex/) | Python | DSPy 2.6 · BootstrapFewShot · Vertex AI Gemini 1.5 · Python 3.11 | [→](./dspy-vertex/README.md) |
+| [`claims-diff`](./claims-diff/) | Python | Pandas · Pydantic · BigQuery (optional) · Python 3.11 | [→](./claims-diff/README.md) |
 
 ---
 
@@ -60,13 +62,18 @@ A monorepo housing sixteen independent, production-grade frameworks spanning tes
 | **Screenshot/video on failure** | ✅ Trace Viewer | — | — | ✅ `screenshotOnRunFailure` · `video: true` | — | — | — | — | — |
 | **BDD / Gherkin** | — | — | ✅ 6 feature files · 19+ scenarios | — | — | — | — | — | — |
 | **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline | ✅ `cy.fixture()` JSON datasets | ✅ `golden_dataset.json` · `@pytest.mark.parametrize` | ✅ `conversations.json` · `@pytest.mark.parametrize` | ✅ `agent_scenarios.json` · `@pytest.mark.parametrize` | ✅ pre-request scripts · collection variables | — |
-| **REST API testing** | ✅ `HttpClient` | ✅ RestAssured | ✅ RestAssured | — | — | — | — | ✅ Newman CLI · 10 requests · 4 test groups | — |
+| **Visual regression** | ✅ `toHaveScreenshot()` · snapshot baselines · CI update workflow | — | — | — | — | — | — | — | — |
+| **GraphQL API testing** | ✅ Playwright `request` fixture · 5 patterns (query, variables, mock, error, auditing) | — | — | — | — | — | — | — | — |
+| **Database-to-UI assertions** | ✅ 5 patterns: scalar match, row count, field match, pre-fill, column values | — | — | — | — | — | — | — | — |
+| **Shopify E2E testing** | ✅ 8 storefront tests · 4 visual baselines · Page Objects | — | — | — | — | — | — | — | — |
+| **Deploy validation + rollback** | ✅ Vercel health-check → Playwright smoke → auto-rollback pipeline | — | — | — | — | — | — | — | — |
+| **REST API testing** | ✅ `HttpClient` · Playwright `request` | ✅ RestAssured | ✅ RestAssured | — | — | — | — | ✅ Newman CLI · 10 requests · 4 test groups | — |
 | **Mocking & Service Virtualization** | ✅ 4 patterns: block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | ✅ `cy.intercept()` response stub + failure sim | — | — | — | — | — |
 | **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`): DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages | ✅ JUnit XML · videos · screenshots | — | — | — | ✅ JUnit XML · htmlextra HTML report | — |
 | **AI/ML Self-Healing Locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 | — | — | — | — | — | — |
-| **LLM Evaluation (RAG pipeline)** | — | — | — | — | ✅ Answer Relevancy · Faithfulness · Hallucination · Safety · JSON Schema | — | — | — | — |
-| **LLM Evaluation (Conversational)** | — | — | — | — | — | ✅ Turn Relevancy · Knowledge Retention · Role Adherence · Graceful Handling | — | — | — |
-| **LLM Evaluation (Agentic / tool-use)** | — | — | — | — | — | — | ✅ Tool Correctness · Task Completion | — | — |
+| **LLM Evaluation (RAG pipeline)** | — | — | — | — | ✅ Answer Relevancy · Faithfulness · Hallucination · Safety · Bias · JSON Schema | — | — | — | — |
+| **LLM Evaluation (Conversational)** | — | — | — | — | — | ✅ Turn Relevancy · Knowledge Retention · Role Adherence · Graceful Handling · Bias · Toxicity | — | — | — |
+| **LLM Evaluation (Agentic / tool-use)** | — | — | — | — | — | — | ✅ Tool Correctness · Task Completion · Bias · Toxicity | — | — |
 | **Function-calling agent** | — | — | — | — | — | — | ✅ Multi-step tool orchestration · deterministic tool implementations | — | — |
 | **Agentic tool-use loop** | — | — | — | — | — | — | — | — | ✅ Claude claude-sonnet-4-6 · 5 tools · max 30 iterations · Tavily web search |
 | **Automated job search** | — | — | — | — | — | — | — | — | ✅ 5 role queries · score_job_fit · draft_cover_letter · save_results |
@@ -74,7 +81,7 @@ A monorepo housing sixteen independent, production-grade frameworks spanning tes
 | **Cost & latency tracking** | — | — | — | — | ✅ per-call tokens · `latency_ms` → DataDog | ✅ per-turn tokens · `latency_ms` → DataDog | ✅ per-step tokens · `latency_ms` → DataDog | — | ✅ `latency_ms` · run counts → DataDog |
 | **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS | — | — | — | — | — | — |
 | **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — | — | — | — | — | — |
-| **Database validation** | — | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — | — | — | — | — | — |
+| **Database validation** | ✅ dbClient + dbAssertions (MySQL · PostgreSQL) | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — | — | — | — | — | — |
 | **Security testing (OWASP)** | ✅ 4 test cases | ✅ 4 test cases | ✅ 3 BDD scenarios | — | — | — | — | — | — |
 | **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — | — | — | — | — |
 | **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — | — | — | — | — |
@@ -329,19 +336,23 @@ python run_demo.py --demo all
 
 ### fastapi-service
 
-**Prerequisites:** [Python 3.11+](https://python.org)
+**Prerequisites:** [Python 3.11+](https://python.org) · Docker (optional, for Redis)
 
 ```bash
 # Start the API server on :8001
 make fastapi-service
 
-# Run the Pytest suite with coverage
+# Run the Pytest suite with coverage (37 tests, no Redis needed)
 make fastapi-service-test
 
 # Or manually
 cd fastapi-service
 pip install -r requirements.txt
 pytest tests/ -v --cov=app --cov-report=term-missing
+
+# Start with Redis caching (optional)
+docker compose up -d
+uvicorn app.main:app --reload --port 8001
 ```
 
 ### terraform
@@ -426,6 +437,37 @@ python run.py --mode baseline
 python run.py --mode optimized
 ```
 
+### dspy-vertex
+
+**Prerequisites:** [Python 3.11+](https://python.org) · GCP credentials (`gcloud auth application-default login`)
+
+```bash
+cd dspy-vertex
+pip install -r requirements.txt
+cp .env.example .env  # add GCP_PROJECT
+
+# Side-by-side baseline vs optimized accuracy (default)
+python run.py
+
+# Zero-shot baseline only
+python run.py --mode baseline
+
+# BootstrapFewShot optimized only
+python run.py --mode optimized
+```
+
+### claims-diff
+
+**Prerequisites:** [Python 3.11+](https://python.org)
+
+```bash
+cd claims-diff
+pip install -r requirements.txt
+
+# Run diff against included synthetic datasets
+python run.py
+```
+
 ---
 
 ## Repo Structure
@@ -450,29 +492,37 @@ qa-automation-portfolio/
 │       ├── k8s.yml                 # workflow_dispatch only: Kind cluster + grid smoke tests
 │       ├── langchain-rag.yml       # push/PR lint (free) · workflow_dispatch demo (< $0.01)
 │       ├── langgraph-agent.yml     # push/PR lint (free) · workflow_dispatch demo (< $0.02)
-│       └── dspy-optimizer.yml      # push/PR lint (free) · workflow_dispatch compare (~$0.02)
+│       ├── dspy-optimizer.yml      # push/PR lint (free) · workflow_dispatch compare (~$0.02)
+│       ├── playwright-smoke-pr.yml # PR gate: @smoke Chromium only, 5-min timeout, fail-fast
+│       ├── deploy-validate-rollback.yml  # Vercel health-check → smoke → auto-rollback
+│       └── visual-regression-update.yml  # Manual baseline update → PR for review
 ├── ai-eval/                            # Python · Pytest · DeepEval · OpenAI · ChromaDB
 │   ├── rag/                            # RAG pipeline: document, embedder, retriever
 │   ├── datasets/golden_dataset.json    # Ground truth Q&A pairs (SauceDemo FAQ)
-│   ├── evals/                          # test_answer_relevancy · faithfulness · hallucination · safety · json_correctness
+│   ├── evals/                          # test_answer_relevancy · faithfulness · hallucination · safety · bias · json_correctness
 │   ├── conftest.py                     # Session fixtures: OpenAI client, ChromaDB, retriever, answer_generator
 │   └── pytest.ini
 ├── conv-eval/                          # Python · Pytest · DeepEval · OpenAI
 │   ├── chatbot/                        # SwagSupportBot (stateful) · knowledge base · system prompt
 │   ├── datasets/conversations.json     # 7 multi-turn conversation scenarios
-│   ├── evals/                          # test_conversation_relevancy · knowledge_retention · role_adherence · graceful_handling
+│   ├── evals/                          # test_conversation_relevancy · knowledge_retention · role_adherence · graceful_handling · safety
 │   ├── conftest.py                     # Session fixtures: OpenAI client · function-scoped bot with teardown
 │   └── pytest.ini
 ├── agent-eval/                         # Python · Pytest · DeepEval · OpenAI · Pydantic
 │   ├── agent/                          # SwagAgent (function-calling) · tools · tool implementations
 │   ├── datasets/agent_scenarios.json   # 7 scenarios: single-tool and multi-tool orchestration
-│   ├── evals/                          # test_tool_correctness · test_task_completion
+│   ├── evals/                          # test_tool_correctness · test_task_completion · test_safety
 │   ├── conftest.py                     # Session fixtures: OpenAI client · function-scoped agent with teardown
 │   └── pytest.ini
 ├── playwright-dotnet/              # Playwright · NUnit · C# · TypeScript
 │   ├── tests/
 │   │   ├── Framework.Tests/        # NUnit C# test project
 │   │   └── playwright-ts/          # TypeScript Playwright project
+│   │       ├── tests/              # login · inventory · network · visual-regression · db-assertions · graphql
+│   │       │   └── shopify/        # storefront E2E + visual baselines (Shopify)
+│   │       ├── pages/shopify/      # ShopifyStorefront · Product · Cart page objects
+│   │       ├── utils/              # dbClient · dbAssertions · graphqlClient · allureHelper
+│   │       └── scripts/            # health-check.ts (deploy validation)
 │   ├── Makefile
 │   └── run-all.sh
 ├── selenium-java/                  # Selenium 4 · TestNG · Java · Maven
@@ -517,10 +567,11 @@ qa-automation-portfolio/
 │   ├── agents/                         # agent loop · tool implementations
 │   ├── shared/                         # shared utilities
 │   └── run_demo.py                     # CLI entry: python run_demo.py --demo 2
-├── fastapi-service/                    # Python · FastAPI · Pytest
-│   ├── app/                            # FastAPI application
-│   ├── tests/                          # Pytest test suite with coverage
-│   └── utils/
+├── fastapi-service/                    # Python · FastAPI · Redis · Pytest
+│   ├── app/                            # FastAPI application + Redis cache layer
+│   ├── tests/                          # 37 tests: CRUD, contract, cache (fakeredis)
+│   ├── utils/                          # datadog_reporter (test + cache metrics)
+│   └── docker-compose.yml             # redis:7-alpine for local dev
 ├── terraform/                          # HCL · Terraform ≥ 1.6 · AWS · DataDog IaC
 │   ├── modules/
 │   │   ├── s3-artifacts/               # S3 bucket: versioning, SSE, lifecycle rules
@@ -544,6 +595,14 @@ qa-automation-portfolio/
 │   ├── classifier/                     # signatures · ChainOfThought module · optimizer
 │   ├── datasets/bug_reports.py         # 30 synthetic examples (hardcoded, offline)
 │   └── run.py                          # CLI: --mode baseline|optimized|compare
+├── dspy-vertex/                        # Python · DSPy · BootstrapFewShot · Vertex AI Gemini
+│   ├── classifier/                     # identical pipeline, Vertex AI backend
+│   ├── datasets/bug_reports.py         # 30 synthetic examples (shared with dspy-optimizer)
+│   └── run.py                          # CLI: --mode baseline|optimized|compare
+├── claims-diff/                        # Python · Pandas · Pydantic · BigQuery (optional)
+│   ├── differ/                         # models · loader · diff_engine
+│   ├── datasets/                       # baseline_claims.csv · current_claims.csv
+│   └── run.py                          # CLI: structured JSON diff report
 ├── Makefile                            # One-command runner for all suites
 ├── .gitignore
 └── README.md
@@ -563,7 +622,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `cypress.yml` | push · PR · nightly 05:00 UTC | browser (chrome · firefox · edge · electron) · test type (e2e · component · all) |
 | `ai-eval.yml` | push · PR · nightly 05:00 UTC | pytest marker filter (smoke · regression · safety) |
 | `conv-eval.yml` | push · PR · nightly 06:00 UTC | pytest marker filter (smoke · regression · safety · retention) |
-| `agent-eval.yml` | push · PR · nightly 07:00 UTC | pytest marker filter (smoke · regression) |
+| `agent-eval.yml` | push · PR · nightly 07:00 UTC | pytest marker filter (smoke · regression · safety) |
 | `postman-newman.yml` | push · PR · nightly 08:00 UTC | folder filter (Smoke · Users · Posts · Integration Flow) |
 | `job-agent.yml` | nightly 09:00 UTC · `workflow_dispatch` | role_filter keyword (e.g. SDET · QA Lead) |
 | `cucumber-python.yml` | push · PR · nightly 05:00 UTC | execution mode (local · grid · browserstack) · browser · tag filter |
@@ -574,10 +633,13 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `langchain-rag.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
 | `langgraph-agent.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
 | `dspy-optimizer.yml` | push · PR (lint only, free) · `workflow_dispatch` (compare run) | — |
+| `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright-dotnet/**`) | Chromium-only @smoke gate, 5-min timeout, fail-fast |
+| `deploy-validate-rollback.yml` | `workflow_dispatch` · `workflow_call` | deployment URL · Vercel project ID · auto-rollback toggle |
+| `visual-regression-update.yml` | `workflow_dispatch` | browser project (chromium · firefox · webkit) |
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
 
-> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, `agent-eval.yml`, `langchain-rag.yml`, and `dspy-optimizer.yml`. `ANTHROPIC_API_KEY` and `TAVILY_API_KEY` are required for `job-agent.yml`; `ANTHROPIC_API_KEY` alone is required for `langgraph-agent.yml`. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it. The three new AI framework workflows (`langchain-rag`, `langgraph-agent`, `dspy-optimizer`) only call APIs on `workflow_dispatch` — lint runs for free on every push/PR.
+> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, `agent-eval.yml`, `langchain-rag.yml`, and `dspy-optimizer.yml`. `ANTHROPIC_API_KEY` and `TAVILY_API_KEY` are required for `job-agent.yml`; `ANTHROPIC_API_KEY` alone is required for `langgraph-agent.yml`. `dspy-vertex` requires GCP credentials (`GOOGLE_APPLICATION_CREDENTIALS` or `gcloud auth`). `VERCEL_TOKEN` is required for `deploy-validate-rollback.yml`. `SHOPIFY_STORE_URL` is required for Shopify E2E tests. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it. The three new AI framework workflows (`langchain-rag`, `langgraph-agent`, `dspy-optimizer`) only call APIs on `workflow_dispatch` — lint runs for free on every push/PR.
 
 ### DataDog Observability
 
@@ -591,11 +653,12 @@ Two DataDog features run across all frameworks:
 
 | Framework | DataDog metrics |
 |---|---|
-| `ai-eval` | `llm.eval.answer_relevancy` · `llm.eval.faithfulness` · `llm.eval.hallucination` · `llm.eval.safety` · `llm.eval.json_correctness` |
-| `conv-eval` | `llm.conv.turn_relevancy` · `llm.conv.knowledge_retention` · `llm.conv.role_adherence` · `llm.conv.graceful_handling` |
-| `agent-eval` | `llm.agent.tool_correctness` · `llm.agent.task_completion` |
+| `ai-eval` | `llm.eval.answer_relevancy` · `llm.eval.faithfulness` · `llm.eval.hallucination` · `llm.eval.safety` · `llm.eval.bias` · `llm.eval.json_correctness` |
+| `conv-eval` | `llm.conv.turn_relevancy` · `llm.conv.knowledge_retention` · `llm.conv.role_adherence` · `llm.conv.graceful_handling` · `llm.conv.bias` · `llm.conv.toxicity` |
+| `agent-eval` | `llm.agent.tool_correctness` · `llm.agent.task_completion` · `llm.agent.bias` · `llm.agent.toxicity` |
 | `job-agent` | `llm.job_agent.jobs_found` · `llm.job_agent.jobs_scored` · `llm.job_agent.cover_letters_drafted` · `llm.job_agent.duration_ms` |
 | all four + job-agent | `llm.api.latency_ms` |
+| `fastapi-service` | `cache.hits` · `cache.misses` |
 
 All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues, while the CI stays green.
 
