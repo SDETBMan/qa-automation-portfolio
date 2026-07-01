@@ -6,11 +6,11 @@ A production-grade **agentic AI evaluation framework** built with **DeepEval + P
 
 ## Key Features
 
-* **Four DeepEval metrics:** `ToolCorrectnessMetric` (did the agent invoke the correct tools with correct arguments?), `TaskCompletionMetric` (did the agent fully satisfy the user's request?), `BiasMetric` (is the agent's output free of demographic bias?), and `ToxicityMetric` (is the output free of harmful language?).
+* **Five DeepEval metrics:** `ToolCorrectnessMetric` (did the agent invoke the correct tools with correct arguments?), `TaskCompletionMetric` (did the agent fully satisfy the user's request?), `BiasMetric` (is the agent's output free of demographic bias?), `ToxicityMetric` (is the output free of harmful language?), and `GEval InjectionResistance` (did the agent resist prompt injection attacks and stay in role?).
 * **Function-calling agent under test:** `SwagAgent` runs a multi-step tool-use loop. The model decides which tools to call and with what arguments, executes them, observes results, and synthesizes a grounded final response. The loop is capped at 6 iterations as a runaway guard.
 * **Four deterministic tools:** `lookup_product`, `check_return_eligibility`, `calculate_shipping_cost`, and `get_account_status` are backed by in-memory Swag Labs data. The agent's tool-selection decisions are evaluated; the tools themselves always return correct, known data.
 * **Scenario dataset:** `datasets/agent_scenarios.json` contains 7 scenarios covering single-tool queries (product lookup, shipping, account status) and multi-tool orchestration (return eligibility requiring both product and policy data). Each scenario carries `smoke` or `regression` tags.
-* **Pytest markers:** `smoke` (single-tool, push-safe), `regression` (full suite including multi-tool orchestration, nightly), and `safety` (bias and toxicity checks).
+* **Pytest markers:** `smoke` (single-tool, push-safe), `regression` (full suite including multi-tool orchestration, nightly), `safety` (bias and toxicity checks), and `security` (prompt injection and adversarial resistance checks).
 * **DataDog observability:** Suite-level metrics plus per-step `llm.agent.*` scores and per-API-call latency/token usage (every step in the agent loop) sent after each test teardown. Skips gracefully without `DD_API_KEY`.
 * **Transient-failure resilience:** `pytest-rerunfailures` retries up to 3× with 60 s delay to tolerate transient OpenAI API timeouts in CI.
 
@@ -42,8 +42,9 @@ A production-grade **agentic AI evaluation framework** built with **DeepEval + P
 | `test_tool_correctness.py` | `ToolCorrectnessMetric` | Agent called the expected tool(s) with correct argument values for each scenario |
 | `test_task_completion.py` | `TaskCompletionMetric` | Agent's final response fully satisfies the user's stated intent |
 | `test_safety.py` | `BiasMetric` · `ToxicityMetric` | Agent output is free of demographic bias and toxic language, even under adversarial prompts |
+| `test_prompt_injection.py` | `GEval InjectionResistance` | Agent resists 10 prompt injection attack categories (instruction override, system prompt extraction, role hijacking, tool escape, delimiter injection, etc.) |
 
-The tool correctness and task completion files are parametrized over the scenario dataset. The safety file uses 8 inline cases (4 bias probes + 4 toxicity probes) with a single parametrized test that dispatches to the correct metric based on each case's tag.
+The tool correctness and task completion files are parametrized over the scenario dataset. The safety file uses 7 inline cases (4 bias probes + 3 toxicity probes) with a single parametrized test that dispatches to the correct metric based on each case's tag. The prompt injection file uses 10 inline cases across attack categories, each evaluated with a custom GEval rubric and a tool sanity assertion.
 
 ## Tools
 
@@ -68,6 +69,9 @@ pytest -m smoke -v
 # Safety tests — bias and toxicity checks
 pytest -m safety -v
 
+# Security tests — prompt injection resistance
+pytest -m security -v
+
 # Full suite — includes multi-tool orchestration scenarios
 pytest -v
 ```
@@ -82,7 +86,7 @@ The `agent-eval.yml` workflow triggers on every push/PR to `main` that touches `
 
 | Input | Description |
 |---|---|
-| `marker` | pytest marker filter: `smoke`, `regression`, or `safety`. Leave blank to run `smoke` (CI default). |
+| `marker` | pytest marker filter: `smoke`, `regression`, `safety`, or `security`. Leave blank to run `smoke` (CI default). |
 
 **Pipeline steps:**
 
@@ -107,11 +111,12 @@ agent-eval/
 ├── evals/
 │   ├── test_tool_correctness.py    # ToolCorrectnessMetric
 │   ├── test_task_completion.py     # TaskCompletionMetric
-│   └── test_safety.py             # BiasMetric + ToxicityMetric (safety)
+│   ├── test_safety.py             # BiasMetric + ToxicityMetric (safety)
+│   └── test_prompt_injection.py   # GEval InjectionResistance (security)
 ├── utils/
 │   └── datadog_reporter.py         # GAUGE metrics: test suite + per-eval scores + token/latency
 ├── conftest.py                     # Session fixtures: OpenAI client · function-scoped agent with teardown
-├── pytest.ini                      # markers: smoke · regression · safety
+├── pytest.ini                      # markers: smoke · regression · safety · security
 └── requirements.txt
 ```
 
@@ -125,6 +130,7 @@ agent-eval/
 | `llm.agent.task_completion` | Per-scenario TaskCompletionMetric score (0–1) |
 | `llm.agent.bias` | Per-scenario BiasMetric score (0–1) |
 | `llm.agent.toxicity` | Per-scenario ToxicityMetric score (0–1) |
+| `llm.agent.prompt_injection_resistance` | Per-scenario InjectionResistance GEval score (0–1), tagged by scenario and attack category |
 | `llm.api.latency_ms` | Per-API-call latency (every step in the agent loop) |
 | `llm.api.prompt_tokens` | Per-call prompt token count |
 | `llm.api.completion_tokens` | Per-call completion token count |
