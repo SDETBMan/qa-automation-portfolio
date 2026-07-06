@@ -25,7 +25,8 @@ letter review, or job-fit analysis.
 - **UI Automation:** Selenium WebDriver, Playwright (C# + TypeScript), Cucumber/BDD
 - **API Testing:** REST Assured, Postman/Newman, pytest
 - **AI / LLM Testing:** DeepEval, Anthropic Claude (tool-use, agentic loops, `@beta_tool` auto-schema, multi-agent orchestration), OpenAI function-calling, ChromaDB, RAG evaluation, conversation evaluation, agent evaluation
-- **CI/CD:** GitHub Actions, Jenkins, Docker, Kubernetes (k8s health checks)
+- **CI/CD:** GitHub Actions, Azure DevOps Pipelines, Jenkins, Docker, Kubernetes (k8s health checks)
+- **Performance Testing:** k6 (load testing with scenario executors), JMeter (Maven plugin)
 - **Monitoring / Observability:** DataDog (custom metrics via v2 API, CI Visibility, dashboard JSON, Allure reporting)
 - **Build tools:** Maven, pip, npm, .NET CLI
 - **Other:** Git, JIRA, TestRail, Page Object Model, Factory pattern, BDD, parallel execution, retry analyzers, OWASP ZAP
@@ -154,6 +155,7 @@ All run nightly on GitHub Actions.
 - 4 OWASP security test cases (SQL injection, XSS, auth failures, security headers)
 - `Assert.Multiple` for soft assertions on security header checks
 - OWASP ZAP passive baseline scan in CI (`continue-on-error: true`)
+- **Azure DevOps Pipeline** (`azure-pipelines.yml`) — ADO YAML equivalent of the GHA PR smoke gate
 - Allure reporting + GitHub Pages deployment
 - Trace Viewer artifacts on failure (DOM snapshots, screenshots, network calls)
 - DataDog CI Visibility via TRX upload
@@ -383,6 +385,7 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | Workflow | Trigger | Key dispatch inputs |
 |---|---|---|
 | `playwright-smoke-pr.yml` | PR only · 5-min hard cap | — (Chromium · @smoke · retries=0 always) |
+| `azure-pipelines.yml` | PR (Azure DevOps) | ADO equivalent of GHA smoke gate |
 | `playwright-dotnet.yml` | push · PR · nightly 02:00 UTC | browser · execution mode · JMeter toggle |
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | browser · execution mode · JMeter toggle |
@@ -393,6 +396,7 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | `postman-newman.yml` | push · PR · nightly 08:00 UTC | folder filter |
 | `job-agent.yml` | nightly 09:00 UTC · workflow_dispatch | role_filter keyword |
 | `coding-agent.yml` | push · PR · workflow_dispatch | demo number (1-4 or all) |
+| `k6-load-test.yml` | nightly 11:00 UTC · workflow_dispatch | — |
 | `k8s.yml` | workflow_dispatch only | framework (selenium-java · cucumber) |
 
 **Secrets required:**

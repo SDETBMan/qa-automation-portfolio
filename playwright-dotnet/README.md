@@ -29,8 +29,13 @@ A professional Playwright + .NET 8 + NUnit test automation framework targeting [
 - **Database utilities**: `MySqlConnector` async ADO.NET helpers
 - **Slack notifications**: post suite results to a webhook
 - **BrowserStack upload**: app binary upload for mobile (Phase 2)
-- **Allure reporting**: rich HTML reports with screenshots and traces on failure
-- **GitHub Actions CI**: nightly regression pipeline with C# + TypeScript artifact upload
+- **Visual regression**: `toHaveScreenshot()` with configurable thresholds, baseline update workflow, dynamic content masking
+- **GraphQL API testing**: 5 patterns via Playwright `request` fixture (direct query, variables, mock by operationName, error handling, operation auditing)
+- **Database-to-UI assertions**: `dbClient` + `dbAssertions` utilities — 5 validation patterns (scalar match, row count, field match, input pre-fill, column values in list)
+- **Shopify E2E testing**: 8 storefront tests + 4 visual baselines with dedicated page objects and fixtures
+- **Deploy validation + rollback**: Vercel health-check → Playwright smoke → auto-rollback CI pipeline
+- **Allure reporting**: rich HTML reports with screenshots and traces on failure (`allure-playwright` v3)
+- **GitHub Actions CI**: nightly regression pipeline with C# + TypeScript artifact upload, PR smoke gate
 - **NUnit `[Retry]`**: built-in retry replaces Java's `AnnotationTransformer` + `RetryAnalyzer`
 
 ---
@@ -46,13 +51,15 @@ A professional Playwright + .NET 8 + NUnit test automation framework targeting [
 | Language (C#) | C# / .NET 8 |
 | Language (TS) | TypeScript 5.4 (strict mode) |
 | Test runner | `dotnet test` + NUnit3TestAdapter / `npx playwright test` |
-| Reporting | Allure.NUnit 2.x + Playwright HTML report |
+| Reporting | Allure.NUnit 2.x + allure-playwright v3 + Playwright HTML report |
 | Configuration | `appsettings.json` + `IConfigurationBuilder` / `playwright.config.ts` |
 | HTTP client | `System.Net.Http.HttpClient` |
+| GraphQL | Playwright `request` fixture + `graphqlClient.ts` |
 | JSON | `System.Text.Json` |
-| Database | MySqlConnector 2.x (async ADO.NET) |
-| CI/CD | GitHub Actions |
-| Target app | [SauceDemo](https://www.saucedemo.com/) |
+| Database | MySqlConnector 2.x (async ADO.NET) / `dbClient.ts` (MySQL · PostgreSQL) |
+| Visual regression | Playwright `toHaveScreenshot()` with baseline management |
+| CI/CD | GitHub Actions (nightly full + PR smoke gate + deploy validation) |
+| Target apps | [SauceDemo](https://www.saucedemo.com/) · Shopify storefronts |
 
 ---
 
@@ -283,18 +290,40 @@ PlaywrightDotNetFramework/
 │   └── playwright-ts/                     # Playwright TypeScript project
 │       ├── package.json
 │       ├── tsconfig.json
-│       ├── playwright.config.ts           # trace, retries, parallel, 3 browsers
+│       ├── playwright.config.ts           # 5 projects: chromium, firefox, webkit, api, shopify
 │       ├── pages/
 │       │   ├── basePage.ts                # Abstract base: click, fill, getText helpers
 │       │   ├── loginPage.ts
 │       │   ├── inventoryPage.ts
-│       │   └── cartPage.ts
+│       │   ├── cartPage.ts
+│       │   └── shopify/                   # Shopify storefront page objects
+│       │       ├── shopifyStorefrontPage.ts
+│       │       ├── shopifyProductPage.ts
+│       │       └── shopifyCartPage.ts
 │       ├── fixtures/
-│       │   └── fixtures.ts                # test.extend — authenticatedPage fixture
+│       │   ├── fixtures.ts                # test.extend — authenticatedPage fixture
+│       │   └── shopifyFixtures.ts         # Shopify test fixtures
+│       ├── utils/
+│       │   ├── dbClient.ts                # Async MySQL/PostgreSQL with connection pooling
+│       │   ├── dbAssertions.ts            # 5 DB-to-UI assertion patterns
+│       │   ├── graphqlClient.ts           # GraphQL query client
+│       │   └── allureHelper.ts            # Allure v3 metadata (suite, feature, story, severity)
+│       ├── helpers/
+│       │   ├── visual-config.ts           # Visual regression threshold config
+│       │   └── freeze-animations.css      # CSS injection for deterministic screenshots
+│       ├── scripts/
+│       │   └── health-check.ts            # Deploy validation health-check script
 │       └── tests/
 │           ├── login.spec.ts              # @smoke + @regression login tests
 │           ├── inventory.spec.ts          # @smoke + @regression cart tests (fixture)
-│           └── network.spec.ts            # 4 network interception patterns
+│           ├── network.spec.ts            # 4 network interception patterns
+│           ├── visual-regression.spec.ts  # 5 visual baseline tests
+│           ├── db-assertions.spec.ts      # 7 DB-to-UI assertion patterns
+│           ├── graphql.spec.ts            # 5 GraphQL patterns (pure API, no browser)
+│           ├── smoke-health.spec.ts       # Deploy validation smoke tests
+│           └── shopify/                   # Shopify E2E + visual tests
+│               ├── storefront.spec.ts     # 8 storefront E2E tests
+│               └── storefront-visual.spec.ts  # 4 Shopify visual baselines
 ├── config/
 │   └── appsettings.json
 ├── default.runsettings                    # Local: chromium headed, 4 workers
@@ -321,6 +350,91 @@ PlaywrightDotNetFramework/
 | `network` | Network interception patterns | `--filter "Category=network"` | — |
 | `integration` | REST API tests | `--filter "Category=integration"` | — |
 | `ai` | AI-assisted test data generation | `--filter "Category=ai"` | — |
+| `visual` | Visual regression snapshot tests | — | `--grep "@visual"` |
+| `graphql` | GraphQL API patterns (no browser) | — | `--project=api` |
+| `database` | Database-to-UI assertion patterns | — | `--grep "@database"` |
+| `shopify` | Shopify storefront E2E + visual | — | `--project=shopify` |
+
+---
+
+## Visual Regression Testing
+
+Playwright's `toHaveScreenshot()` captures pixel-level baselines and diffs them on subsequent runs. Baseline images live in `tests/*-snapshots/` directories, checked into source control.
+
+| Test | Page |
+|---|---|
+| Login page baseline | Login form at default state |
+| Inventory page baseline | Product grid after login |
+| Cart page baseline | Cart with items |
+| Product detail baseline | Single product view |
+| Error state baseline | Login error message |
+
+**Configuration** (`playwright.config.ts`):
+- `maxDiffPixelRatio: 0.01` — tolerates up to 1% pixel variance
+- `threshold: 0.2` — per-pixel color distance tolerance
+- `freeze-animations.css` injected to eliminate flaky animation diffs
+
+**Baseline update workflow** (`visual-regression-update.yml`): manually triggered, runs `--update-snapshots`, commits to a branch, and opens a PR for human review. Baselines are never auto-updated.
+
+---
+
+## GraphQL API Testing
+
+Five patterns tested via Playwright's `request` fixture (no browser launched):
+
+| Pattern | What it validates |
+|---|---|
+| Direct query | Simple query execution against GraphQL endpoint |
+| Variables | Parameterized queries with variable injection |
+| Mock by operationName | `page.route()` intercepts GraphQL by operation name |
+| Error handling | Graceful handling of malformed queries |
+| Operation auditing | Intercept and log all GraphQL operations (N+1 detection) |
+
+Default endpoint: `https://countries.trevorblades.com/` (public demo).
+Override via `GRAPHQL_URL` env var for production targets.
+
+---
+
+## Database-to-UI Assertions
+
+The `dbClient.ts` utility provides async connection pooling for MySQL and PostgreSQL. The `dbAssertions.ts` module implements five reusable assertion patterns:
+
+| Pattern | What it validates |
+|---|---|
+| Scalar match | Single DB value matches UI element text |
+| Row count | DB record count matches UI list length |
+| Field match | DB row fields match UI detail view |
+| Input pre-fill | DB defaults pre-populate form fields |
+| Column values in list | DB column values appear in UI dropdown/list |
+
+---
+
+## Shopify E2E Testing
+
+A dedicated `shopify` project in `playwright.config.ts` runs against a live Shopify storefront. Tests skip gracefully when `SHOPIFY_STORE_URL` is not set.
+
+**E2E tests** (8): homepage load, collection browsing, product detail, add-to-cart, cart verification, search, empty cart, checkout flow.
+
+**Visual baselines** (4): homepage, collection page, product page, cart page.
+
+Page objects: `ShopifyStorefrontPage`, `ShopifyProductPage`, `ShopifyCartPage`.
+
+---
+
+## Deploy Validation Pipeline
+
+The `deploy-validate-rollback.yml` workflow implements a three-stage deployment gate:
+
+```
+Deploy URL → Health Check (HTTP + Playwright smoke) → PASS → done
+                                                    → FAIL → Rollback (Vercel API) → Summary
+```
+
+- Accepts any Vercel deployment URL via `workflow_dispatch`
+- Runs `health-check.ts` script + `smoke-health.spec.ts` Playwright tests
+- On failure: finds previous successful deployment via Vercel API and triggers rollback
+- Posts a summary table to the GitHub Actions job summary
+- Also available as `workflow_call` for composing into other pipelines
 
 ---
 
@@ -376,6 +490,28 @@ dotnet test --settings ci.runsettings --filter "Category=security"
 ```
 
 The CI pipeline also runs an **OWASP ZAP Baseline Scan** after every test run (`if: always()`). Passive scan against `https://www.saucedemo.com` with `continue-on-error: true` so findings never block a green build.
+
+---
+
+## CI Workflows
+
+| Workflow | Trigger | Purpose |
+|---|---|---|
+| `playwright-dotnet.yml` | push · PR · nightly 02:00 UTC | Full regression: C# + TypeScript + Shopify + visual + OWASP ZAP |
+| `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright-dotnet/**`) | Fast @smoke gate: Chromium only, 5-min timeout, fail-fast |
+| `azure-pipelines.yml` | PR to `main` (paths: `playwright-dotnet/*`) | Azure DevOps equivalent of the GHA smoke gate |
+| `deploy-validate-rollback.yml` | `workflow_dispatch` · `workflow_call` | Health-check → smoke → auto-rollback pipeline |
+| `visual-regression-update.yml` | `workflow_dispatch` | Update visual baselines → commit → open PR for review |
+
+### Azure DevOps Pipeline
+
+`azure-pipelines.yml` is a direct port of the GitHub Actions PR smoke gate to Azure DevOps YAML. It mirrors the same functionality — TypeScript `@smoke` tests, Chromium only, 5-minute timeout, fail-fast — using ADO equivalents:
+
+- `pr:` trigger with `autoCancel: true` (replaces GHA `concurrency.cancel-in-progress`)
+- `NodeTool@0` + `Cache@2` (replaces `actions/setup-node` + `actions/cache`)
+- `PublishTestResults@2` for JUnit XML (surfaces in the ADO Test tab)
+- `PublishBuildArtifacts@1` conditioned on `failed()` for HTML report + traces
+- Variable group `playwright-secrets` for credentials (replaces GitHub Secrets)
 
 ---
 

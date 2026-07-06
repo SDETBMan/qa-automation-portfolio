@@ -1,0 +1,63 @@
+name: k6 Load Test
+
+on:
+  schedule:
+    - cron: '0 11 * * *'   # nightly 11:00 UTC (1 hour after fastapi-service.yml)
+  workflow_dispatch:
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fastapi-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: fastapi-service/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Start FastAPI server
+        run: |
+          uvicorn app.main:app --host 0.0.0.0 --port 8001 &
+          echo "Waiting for server to start..."
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:8001/health > /dev/null 2>&1; then
+              echo "Server is ready (attempt $i)"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "Server failed to start within 30 seconds"
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Run k6 load tests
+        run: k6 run k6/load-test.js --out json=k6-results.json
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-load-test-results
+          path: fastapi-service/k6-results.json
+          retention-days: 30

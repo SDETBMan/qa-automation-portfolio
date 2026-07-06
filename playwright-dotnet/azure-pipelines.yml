@@ -1,0 +1,128 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Azure DevOps Pipeline — Playwright Smoke PR Gate
+#
+# ADO equivalent of .github/workflows/playwright-smoke-pr.yml.
+# Runs TypeScript @smoke tests on Chromium only, 5-minute timeout, fail-fast.
+#
+# Setup instructions:
+#   1. In your Azure DevOps project, go to Pipelines → New Pipeline
+#   2. Select your GitHub repo (or Azure Repos mirror)
+#   3. Choose "Existing Azure Pipelines YAML file"
+#   4. Path: /playwright-dotnet/azure-pipelines.yml
+#   5. Create a variable group named "playwright-secrets" with:
+#        APP_PASSWORD = secret_sauce
+#   6. Grant the pipeline permission to use the variable group
+# ──────────────────────────────────────────────────────────────────────────────
+
+# No push trigger — smoke gate is PR-only.
+# Nightly/push runs are handled by GitHub Actions (playwright-dotnet.yml).
+trigger: none
+
+# Run on every PR targeting main that touches playwright-dotnet/.
+# autoCancel: true cancels superseded runs (equivalent to GHA cancel-in-progress).
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - playwright-dotnet/*
+
+variables:
+  - group: playwright-secrets
+  - name: WORKING_DIR
+    value: playwright-dotnet/tests/playwright-ts
+  - name: NODE_VERSION
+    value: '20'
+  - name: BASE_URL
+    value: 'https://www.saucedemo.com'
+  - name: GRAPHQL_URL
+    value: 'https://countries.trevorblades.com/'
+  - name: APP_USERNAME
+    value: 'standard_user'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+jobs:
+  - job: smoke
+    displayName: 'smoke (Chromium)'
+    timeoutInMinutes: 5
+
+    steps:
+      # ── 1. Source ────────────────────────────────────────────────────────────
+      - checkout: self
+
+      # ── 2. Node.js setup ────────────────────────────────────────────────────
+      - task: NodeTool@0
+        displayName: 'Set up Node.js $(NODE_VERSION)'
+        inputs:
+          versionSpec: $(NODE_VERSION)
+
+      # ── 3. npm cache ────────────────────────────────────────────────────────
+      - task: Cache@2
+        displayName: 'Cache npm packages'
+        inputs:
+          key: 'npm | "$(Agent.OS)" | $(WORKING_DIR)/package-lock.json'
+          path: $(WORKING_DIR)/node_modules
+          restoreKeys: |
+            npm | "$(Agent.OS)"
+
+      - script: npm ci
+        displayName: 'Install dependencies'
+        workingDirectory: $(WORKING_DIR)
+
+      # ── 4. Playwright Chromium cache ────────────────────────────────────────
+      - task: Cache@2
+        displayName: 'Cache Playwright Chromium'
+        inputs:
+          key: 'playwright-chromium | "$(Agent.OS)" | $(WORKING_DIR)/package-lock.json'
+          path: ~/.cache/ms-playwright
+          restoreKeys: |
+            playwright-chromium | "$(Agent.OS)"
+
+      - script: npx playwright install chromium --with-deps
+        displayName: 'Install Playwright Chromium'
+        workingDirectory: $(WORKING_DIR)
+
+      # ── 5. Run @smoke suite ─────────────────────────────────────────────────
+      - script: >
+          npx playwright test
+          --grep "@smoke"
+          --project=chromium
+          --retries=0
+          --reporter=list,html,junit
+        displayName: 'Run @smoke suite'
+        workingDirectory: $(WORKING_DIR)
+        env:
+          CI: 'true'
+          BASE_URL: $(BASE_URL)
+          GRAPHQL_URL: $(GRAPHQL_URL)
+          APP_USERNAME: $(APP_USERNAME)
+          APP_PASSWORD: $(APP_PASSWORD)
+
+      # ── 6. Publish JUnit results to ADO Test tab ───────────────────────────
+      - task: PublishTestResults@2
+        displayName: 'Publish test results'
+        condition: always()
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: '$(WORKING_DIR)/test-results/results.xml'
+          testRunTitle: 'Playwright Smoke — PR Gate'
+          failTaskOnFailedTests: true
+
+      # ── 7. Upload HTML report + traces on failure ──────────────────────────
+      - task: PublishBuildArtifacts@1
+        displayName: 'Upload HTML report (failure only)'
+        condition: failed()
+        inputs:
+          PathtoPublish: $(WORKING_DIR)/playwright-report
+          ArtifactName: 'smoke-report'
+
+      - task: PublishBuildArtifacts@1
+        displayName: 'Upload traces (failure only)'
+        condition: failed()
+        inputs:
+          PathtoPublish: $(WORKING_DIR)/test-results
+          ArtifactName: 'smoke-traces'

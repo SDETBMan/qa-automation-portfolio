@@ -37,7 +37,7 @@ A monorepo housing eighteen independent, production-grade frameworks spanning te
 | [`cypress`](./cypress/) | TypeScript | Cypress 13 · React 18 · Vite · Node.js 20 | [→](./cypress/README.md) |
 | [`cucumber-python`](./cucumber_python/) | Python | Behave · Selenium 4 · Python 3.11 | [→](./cucumber_python/README.md) |
 | [`coding-agent`](./coding-agent/) | Python | Anthropic Claude · AgentOps · Python 3.11 | [→](./coding-agent/README.md) |
-| [`fastapi-service`](./fastapi-service/) | Python | FastAPI · Redis · Pytest · Python 3.11 | [→](./fastapi-service/README.md) |
+| [`fastapi-service`](./fastapi-service/) | Python · JavaScript | FastAPI · Redis · Pytest · k6 · Python 3.11 | [→](./fastapi-service/README.md) |
 | [`terraform`](./terraform/) | HCL | Terraform ≥ 1.6 · AWS · DataDog | [→](./terraform/README.md) |
 | [`langchain-rag`](./langchain-rag/) | Python | LangChain 0.3 · LCEL · Chroma · OpenAI `gpt-4o-mini` · Python 3.11 | [→](./langchain-rag/README.md) |
 | [`langgraph-agent`](./langgraph-agent/) | Python | LangGraph 0.4 · LangChain Anthropic · `claude-haiku-4-5` · Python 3.11 | [→](./langgraph-agent/README.md) |
@@ -494,6 +494,7 @@ qa-automation-portfolio/
 │       ├── langgraph-agent.yml     # push/PR lint (free) · workflow_dispatch demo (< $0.02)
 │       ├── dspy-optimizer.yml      # push/PR lint (free) · workflow_dispatch compare (~$0.02)
 │       ├── playwright-smoke-pr.yml # PR gate: @smoke Chromium only, 5-min timeout, fail-fast
+│       ├── k6-load-test.yml       # nightly k6 load test against fastapi-service
 │       ├── deploy-validate-rollback.yml  # Vercel health-check → smoke → auto-rollback
 │       └── visual-regression-update.yml  # Manual baseline update → PR for review
 ├── ai-eval/                            # Python · Pytest · DeepEval · OpenAI · ChromaDB
@@ -567,9 +568,10 @@ qa-automation-portfolio/
 │   ├── agents/                         # agent loop · tool implementations
 │   ├── shared/                         # shared utilities
 │   └── run_demo.py                     # CLI entry: python run_demo.py --demo 2
-├── fastapi-service/                    # Python · FastAPI · Redis · Pytest
+├── fastapi-service/                    # Python · FastAPI · Redis · Pytest · k6
 │   ├── app/                            # FastAPI application + Redis cache layer
 │   ├── tests/                          # 37 tests: CRUD, contract, cache (fakeredis)
+│   ├── k6/                             # k6 load tests (4 scenarios: health, read, CRUD, error)
 │   ├── utils/                          # datadog_reporter (test + cache metrics)
 │   └── docker-compose.yml             # redis:7-alpine for local dev
 ├── terraform/                          # HCL · Terraform ≥ 1.6 · AWS · DataDog IaC
@@ -628,12 +630,14 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `cucumber-python.yml` | push · PR · nightly 05:00 UTC | execution mode (local · grid · browserstack) · browser · tag filter |
 | `coding-agent.yml` | push · PR · `workflow_dispatch` | demo number (1–4 or all) |
 | `fastapi-service.yml` | nightly 10:00 UTC · `workflow_dispatch` | — |
+| `k6-load-test.yml` | nightly 11:00 UTC · `workflow_dispatch` | k6 load test against fastapi-service (4 scenarios) |
 | `terraform.yml` | push · PR · `workflow_dispatch` (paths: `terraform/**`) | plan on PR · apply on merge to main · OIDC AWS auth |
 | `k8s.yml` | `workflow_dispatch` only | framework (selenium-java · cucumber) |
 | `langchain-rag.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
 | `langgraph-agent.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
 | `dspy-optimizer.yml` | push · PR (lint only, free) · `workflow_dispatch` (compare run) | — |
 | `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright-dotnet/**`) | Chromium-only @smoke gate, 5-min timeout, fail-fast |
+| `azure-pipelines.yml` | PR (Azure DevOps) | ADO YAML equivalent of GHA smoke gate (playwright-dotnet) |
 | `deploy-validate-rollback.yml` | `workflow_dispatch` · `workflow_call` | deployment URL · Vercel project ID · auto-rollback toggle |
 | `visual-regression-update.yml` | `workflow_dispatch` | browser project (chromium · firefox · webkit) |
 
