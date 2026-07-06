@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer clean
+.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test clean
 
 # Print help when `make` is called with no target
 help:
@@ -52,6 +52,8 @@ help:
 	@echo "  make terraform-apply      terraform apply"
 	@echo "  make terraform-destroy    terraform destroy"
 	@echo "  make terraform-clean      Remove .terraform/ and state files"
+	@echo "  make claims-diff          Run claims-diff engine (diff default datasets)"
+	@echo "  make claims-diff-test     Run claims-diff pytest suite with coverage"
 	@echo "  make clean                Remove build artefacts from all frameworks"
 	@echo ""
 	@echo "  Prerequisites:"
@@ -67,6 +69,7 @@ help:
 	@echo "    langgraph-agent  — Python 3.11+ · ANTHROPIC_API_KEY in langgraph-agent/.env"
 	@echo "    dspy-optimizer   — Python 3.11+ · OPENAI_API_KEY in dspy-optimizer/.env"
 	@echo "    fastapi-service  — Python 3.11+"
+	@echo "    claims-diff      — Python 3.11+"
 	@echo "    cypress          — Node.js 20+"
 	@echo "    k8s              — kubectl · running cluster or Kind (kind.sigs.k8s.io)"
 	@echo "    terraform        — Terraform >= 1.6 · AWS credentials · DataDog API/App keys"
@@ -194,6 +197,21 @@ dspy-optimizer:
 	cd dspy-optimizer && pip install -r requirements.txt -q && python run.py --mode compare
 	@echo ""
 	@echo ">>> [dspy-optimizer] Done. Compiled program in dspy-optimizer/output/"
+	@echo ""
+
+claims-diff:
+	@echo ""
+	@echo ">>> [claims-diff] Installing dependencies and running diff engine..."
+	cd claims-diff && pip install -r requirements.txt -q && python run.py
+	@echo ""
+	@echo ">>> [claims-diff] Done. Report in claims-diff/output/"
+	@echo ""
+
+claims-diff-test:
+	@echo ""
+	@echo ">>> [claims-diff] Running tests..."
+	cd claims-diff && pip install -r requirements.txt -q && \
+		pytest tests/ -v --cov=differ --cov-report=term-missing
 	@echo ""
 
 # ── Kubernetes ────────────────────────────────────────────────────────────────

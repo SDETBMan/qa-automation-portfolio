@@ -17,6 +17,7 @@
 [![langchain-rag CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langchain-rag.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langchain-rag.yml)
 [![langgraph-agent CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langgraph-agent.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langgraph-agent.yml)
 [![dspy-optimizer CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/dspy-optimizer.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/dspy-optimizer.yml)
+[![claims-diff CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/claims-diff.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/claims-diff.yml)
 
 A monorepo housing eighteen independent, production-grade frameworks spanning test automation, AI agents, API services, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
 
@@ -461,11 +462,19 @@ python run.py --mode optimized
 **Prerequisites:** [Python 3.11+](https://python.org)
 
 ```bash
+# From the repo root
+make claims-diff           # run diff against default datasets
+make claims-diff-test      # run pytest suite (28 tests) with coverage
+
+# Or manually
 cd claims-diff
 pip install -r requirements.txt
 
 # Run diff against included synthetic datasets
 python run.py
+
+# Run test suite
+pytest tests/ -v --cov=differ --cov-report=term-missing
 ```
 
 ---
@@ -493,6 +502,7 @@ qa-automation-portfolio/
 │       ├── langchain-rag.yml       # push/PR lint (free) · workflow_dispatch demo (< $0.01)
 │       ├── langgraph-agent.yml     # push/PR lint (free) · workflow_dispatch demo (< $0.02)
 │       ├── dspy-optimizer.yml      # push/PR lint (free) · workflow_dispatch compare (~$0.02)
+│       ├── claims-diff.yml        # push/PR paths: claims-diff/** · workflow_dispatch
 │       ├── playwright-smoke-pr.yml # PR gate: @smoke Chromium only, 5-min timeout, fail-fast
 │       ├── k6-load-test.yml       # nightly k6 load test against fastapi-service
 │       ├── deploy-validate-rollback.yml  # Vercel health-check → smoke → auto-rollback
@@ -604,6 +614,7 @@ qa-automation-portfolio/
 ├── claims-diff/                        # Python · Pandas · Pydantic · BigQuery (optional)
 │   ├── differ/                         # models · loader · diff_engine
 │   ├── datasets/                       # baseline_claims.csv · current_claims.csv
+│   ├── tests/                          # 28 tests: model validation, diff logic, CSV loading
 │   └── run.py                          # CLI: structured JSON diff report
 ├── Makefile                            # One-command runner for all suites
 ├── .gitignore
@@ -636,6 +647,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `langchain-rag.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
 | `langgraph-agent.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
 | `dspy-optimizer.yml` | push · PR (lint only, free) · `workflow_dispatch` (compare run) | — |
+| `claims-diff.yml` | push · PR (paths: `claims-diff/**`) · `workflow_dispatch` | — |
 | `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright-dotnet/**`) | Chromium-only @smoke gate, 5-min timeout, fail-fast |
 | `azure-pipelines.yml` | PR (Azure DevOps) | ADO YAML equivalent of GHA smoke gate (playwright-dotnet) |
 | `deploy-validate-rollback.yml` | `workflow_dispatch` · `workflow_call` | deployment URL · Vercel project ID · auto-rollback toggle |

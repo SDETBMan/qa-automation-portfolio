@@ -9,6 +9,13 @@ pip install -r requirements.txt
 python run.py
 ```
 
+Or from the repo root:
+
+```bash
+make claims-diff          # run diff against default datasets
+make claims-diff-test     # run pytest suite with coverage
+```
+
 ## What It Does
 
 - Loads claim records from CSV (or BigQuery when credentials are available)
@@ -16,6 +23,42 @@ python run.py
 - Detects: added claims, removed claims, field-level modifications
 - Outputs a structured JSON diff report
 - Exits non-zero when differences are found (CI-friendly)
+
+## Healthcare Validation Rules
+
+The `ClaimRecord` Pydantic model enforces domain-specific constraints:
+
+| Field | Constraint | Rationale |
+|---|---|---|
+| `claim_id` | `^CLM-\d{3,}$` | Standardised claim identifier format |
+| `patient_id` | `^PAT-\d{3,}$` | Standardised patient identifier format |
+| `procedure_code` | `^\d{5}$` | CPT codes are 5-digit numeric |
+| `billed_cents`, `allowed_cents`, `paid_cents` | `>= 0` | Monetary amounts cannot be negative |
+| `status` | `paid \| denied \| pending` | Only valid adjudication statuses accepted |
+| `adjudication_date` | ISO 8601 date | Enforced by Pydantic `date` type |
+
+## Test Suite
+
+```bash
+pytest tests/ -v --cov=differ --cov-report=term-missing
+```
+
+| File | Tests | What it validates |
+|---|---|---|
+| `tests/test_models.py` | 10 | Pydantic schema enforcement — CPT format, status enum, negative amounts, extra fields, serialization round-trip |
+| `tests/test_diff_engine.py` | 12 | Core diff logic — added/removed/modified detection, multi-field changes, empty datasets, real CSV integration |
+| `tests/test_loader.py` | 6 | CSV loading — field types, missing columns, empty files, non-numeric values, file-not-found |
+| **Total** | **28** | |
+
+## CI Workflow
+
+`claims-diff.yml` — triggers on push/PR to `claims-diff/**` and `workflow_dispatch`:
+
+- Python 3.11, pip cache
+- `pytest tests/ -v --junit-xml --cov=differ`
+- CLI verification (`python run.py` exits with code 1 on expected diffs)
+- JUnit XML + coverage uploaded as 30-day artifacts
+- DataDog CI Visibility upload
 
 ## BigQuery Integration
 

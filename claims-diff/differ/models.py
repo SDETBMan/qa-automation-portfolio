@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ClaimRecord(BaseModel):
@@ -13,13 +13,13 @@ class ClaimRecord(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    claim_id: str
-    patient_id: str
-    procedure_code: str
-    billed_cents: int
-    allowed_cents: int
-    paid_cents: int
-    status: str
+    claim_id: str = Field(pattern=r"^CLM-\d{3,}$")
+    patient_id: str = Field(pattern=r"^PAT-\d{3,}$")
+    procedure_code: str = Field(pattern=r"^\d{5}$")
+    billed_cents: int = Field(ge=0)
+    allowed_cents: int = Field(ge=0)
+    paid_cents: int = Field(ge=0)
+    status: Literal["paid", "denied", "pending"]
     adjudication_date: date
 
 

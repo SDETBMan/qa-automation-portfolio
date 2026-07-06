@@ -74,7 +74,7 @@ Bachelor of Science | Expected Completion: 2026
 ## Portfolio: qa-automation-portfolio (GitHub Monorepo)
 
 **Repo:** github.com/SDETBMan/qa-automation-portfolio
-**Structure:** 10 independent, production-grade frameworks in a single monorepo.
+**Structure:** 11 independent, production-grade frameworks in a single monorepo.
 Each framework has its own CI workflow, dependencies, and DataDog integration.
 All run nightly on GitHub Actions.
 
@@ -352,6 +352,34 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 
 ---
 
+### Framework 11: `claims-diff` — Claims Adjudication Data Diff Engine
+**Stack:** Python 3.11 · Pydantic · Pandas · BigQuery (optional) · pytest
+**What it does:** Compares two sets of healthcare claim records to detect discrepancies in adjudication results — added claims, removed claims, and field-level modifications. Demonstrates healthcare data validation patterns relevant to claims processing QA.
+
+**Healthcare validation rules (Pydantic model):**
+- `claim_id`: `^CLM-\d{3,}$` — standardised claim ID format
+- `patient_id`: `^PAT-\d{3,}$` — standardised patient ID format
+- `procedure_code`: `^\d{5}$` — CPT codes are 5-digit numeric
+- `billed_cents`, `allowed_cents`, `paid_cents`: `>= 0` — monetary amounts cannot be negative
+- `status`: `Literal["paid", "denied", "pending"]` — only valid adjudication statuses
+
+**Test suite (28 tests across 3 files):**
+- `test_models.py` (10 tests) — Pydantic schema enforcement: CPT format, status enum, negative amounts, extra fields, serialization round-trip
+- `test_diff_engine.py` (12 tests) — core diff logic: added/removed/modified detection, multi-field changes, empty datasets, real CSV integration test
+- `test_loader.py` (6 tests) — CSV loading: field types, missing columns, empty files, non-numeric values, file-not-found
+
+**Key architecture decisions:**
+- `conftest.py` factory fixtures: `sample_claim()` with keyword overrides, `tmp_csv()` for temp file generation
+- Frozen Pydantic models with `extra="forbid"` — immutable records, no silent data corruption
+- `diff_claims()` returns a structured `DiffReport` with field-level `FieldDiff` objects
+- BigQuery loader available for warehouse-scale validation when credentials are configured
+
+**CI (`claims-diff.yml`):**
+- Triggers: push to `main` (path: `claims-diff/**`), PR, `workflow_dispatch`
+- Pipeline: Python 3.11 → install deps → pytest with JUnit XML + coverage → CLI verification → DataDog CI Visibility → artifact upload
+
+---
+
 ## DataDog Observability (All Frameworks)
 
 **Two DataDog features run across all frameworks:**
@@ -397,6 +425,7 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | `job-agent.yml` | nightly 09:00 UTC · workflow_dispatch | role_filter keyword |
 | `coding-agent.yml` | push · PR · workflow_dispatch | demo number (1-4 or all) |
 | `k6-load-test.yml` | nightly 11:00 UTC · workflow_dispatch | — |
+| `claims-diff.yml` | push · PR (paths: `claims-diff/**`) · `workflow_dispatch` | — |
 | `k8s.yml` | workflow_dispatch only | framework (selenium-java · cucumber) |
 
 **Secrets required:**
