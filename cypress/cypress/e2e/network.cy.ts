@@ -16,16 +16,34 @@
  * Note: SauceDemo ships a separate CSS file (/assets/index-*.css).
  * These four patterns drive the four cy.intercept() scenarios below.
  *
- * testIsolation is disabled so all tests share a single browser session.
- * Test 1 performs the only cold page load, priming the browser cache.
- * Subsequent tests use cy.reload(true) (hard reload) to bypass the browser's
- * disk cache for Vite's immutable-hashed ES module bundles, ensuring network
- * requests are always issued for cy.intercept() to observe.
+ * CACHING STRATEGY:
+ *   testIsolation is disabled so all tests share a single browser session.
+ *   Vite's immutable-hashed ES module bundles are aggressively cached by Chrome
+ *   — even cy.reload(true) won't trigger a network request (the forceReload
+ *   parameter to location.reload() was deprecated in Chrome 94+).
+ *   We disable the HTTP cache via Chrome DevTools Protocol for this suite so
+ *   cy.intercept() can observe all network requests reliably.
  */
 
 describe('Network — cy.intercept() showcase', { testIsolation: false, retries: 0 }, () => {
+  // Disable HTTP cache via CDP so cy.intercept() can observe Vite's
+  // immutable-hashed ES module bundles, which would otherwise be served
+  // from disk cache without any network request.
+  before(() => {
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Network.setCacheDisabled',
+      params: { cacheDisabled: true },
+    });
+  });
+
+  after(() => {
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Network.setCacheDisabled',
+      params: { cacheDisabled: false },
+    });
+  });
+
   // ── @regression: spy on initial HTML request ───────────────────────────────
-  // This is the only cold load in the suite — it also primes the browser cache.
 
   it('@regression spies on initial page request and asserts 200', () => {
     cy.intercept('GET', '/').as('homePage');
@@ -39,9 +57,7 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
 
   it('@regression spies on JavaScript bundle requests during page load', () => {
     cy.intercept('GET', '**/*.js').as('jsBundle');
-    // Hard reload (true) bypasses the disk cache — Vite's immutable-hashed
-    // ES modules would otherwise be served from cache without a network request.
-    cy.reload(true);
+    cy.reload();
     cy.wait('@jsBundle').then((interception) => {
       expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
     });
@@ -80,10 +96,9 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
       });
     }).as('jsWithHeader');
 
-    // Navigate back to / from inventory, then hard-reload to force JS
-    // re-fetch — Vite's immutable-hashed bundles are cached aggressively.
+    // Navigate back to / from inventory — cache is disabled via CDP so
+    // JS bundles will be re-fetched on every navigation.
     cy.visit('/');
-    cy.reload(true);
 
     cy.wait('@jsWithHeader').then((interception) => {
       expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
