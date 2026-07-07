@@ -15,6 +15,7 @@ A Retrieval-Augmented Generation (RAG) pipeline that loads the monorepo's own `.
 | **Multi-source document loader** | `rag/loader.py` — walks monorepo, skips noise dirs |
 | **Conversation history** | `rag/chain.py` — `RunnableWithMessageHistory` + `InMemoryHistory` |
 | **Cost-efficient models** | `gpt-4o-mini` + `text-embedding-3-small` (< $0.01 per demo run) |
+| **Langfuse observability** | `rag/observability.py` — LLM tracing, token/cost tracking, retriever spans |
 
 ---
 
@@ -24,7 +25,7 @@ A Retrieval-Augmented Generation (RAG) pipeline that loads the monorepo's own `.
 cd langchain-rag
 pip install -r requirements.txt
 
-# Add your OpenAI key
+# Add your OpenAI key (required) + optional Langfuse keys for tracing
 cp .env.example .env
 # edit .env and set OPENAI_API_KEY=sk-...
 
@@ -64,17 +65,43 @@ chain_with_history = RunnableWithMessageHistory(
 
 ---
 
+## Observability (Langfuse)
+
+When `LANGFUSE_SECRET_KEY` and `LANGFUSE_PUBLIC_KEY` are set in `.env`, every chain invocation is traced to [Langfuse](https://langfuse.com). Tracing is disabled gracefully when the keys are absent.
+
+**What gets traced:**
+
+| Span | Data captured |
+|---|---|
+| Retriever | Query text, returned documents, latency |
+| LLM | Model, prompt tokens, completion tokens, cost, latency |
+| Chain | Full input/output at each LCEL step |
+
+**Setup:**
+1. Create a free account at [cloud.langfuse.com](https://cloud.langfuse.com)
+2. Create a project and copy the API keys
+3. Add to `.env`:
+   ```
+   LANGFUSE_SECRET_KEY=sk-lf-...
+   LANGFUSE_PUBLIC_KEY=pk-lf-...
+   LANGFUSE_HOST=https://cloud.langfuse.com
+   ```
+4. Run `python run.py --demo` — traces appear in the Langfuse dashboard
+
+---
+
 ## File layout
 
 ```
 langchain-rag/
 ├── run.py                  # CLI entry point
 ├── requirements.txt
-├── .env.example            # OPENAI_API_KEY template
+├── .env.example            # OPENAI_API_KEY + Langfuse keys template
 ├── rag/
 │   ├── loader.py           # Loads .md + .feature files from monorepo
 │   ├── vectorstore.py      # Chroma in-memory store builder
-│   └── chain.py            # LCEL RAG chain + conversation history
+│   ├── chain.py            # LCEL RAG chain + conversation history
+│   └── observability.py    # Langfuse tracing (opt-in via env vars)
 └── output/                 # (empty placeholder)
 ```
 

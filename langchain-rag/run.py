@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 
 from rag.chain import build_chain
 from rag.loader import load_corpus
+from rag.observability import get_langfuse_handler
 from rag.vectorstore import build_vectorstore
 
 DEMO_QUESTIONS = [
@@ -28,12 +29,12 @@ DEMO_QUESTIONS = [
 ]
 
 
-def ask(chain, question: str, session_id: str) -> str:
+def ask(chain, question: str, session_id: str, callbacks=None) -> str:
     """Invoke the chain and return the answer string."""
-    return chain.invoke(
-        {"question": question},
-        config={"configurable": {"session_id": session_id}},
-    )
+    config = {"configurable": {"session_id": session_id}}
+    if callbacks:
+        config["callbacks"] = callbacks
+    return chain.invoke({"question": question}, config=config)
 
 
 def main() -> None:
@@ -62,18 +63,24 @@ def main() -> None:
     print("[3/3] Compiling LCEL chain with RunnableWithMessageHistory…\n", flush=True)
     chain = build_chain(retriever)
 
+    # Langfuse tracing (enabled when LANGFUSE_SECRET_KEY + LANGFUSE_PUBLIC_KEY are set)
+    langfuse = get_langfuse_handler()
+    callbacks = [langfuse] if langfuse else None
+    if langfuse:
+        print("[tracing] Langfuse enabled — traces at", os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"), "\n")
+
     session_id = str(uuid.uuid4())
 
     if args.demo:
         for i, q in enumerate(DEMO_QUESTIONS, 1):
             print(f"{'─' * 60}")
             print(f"Q{i}: {q}")
-            answer = ask(chain, q, session_id)
+            answer = ask(chain, q, session_id, callbacks)
             print(f"A{i}: {answer}\n")
 
     elif args.question:
         print(f"Q: {args.question}")
-        answer = ask(chain, args.question, session_id)
+        answer = ask(chain, args.question, session_id, callbacks)
         print(f"A: {answer}\n")
 
     elif args.interactive:
@@ -88,7 +95,7 @@ def main() -> None:
                 break
             if not q:
                 continue
-            answer = ask(chain, q, session_id)
+            answer = ask(chain, q, session_id, callbacks)
             print(f"Bot: {answer}\n")
 
     else:

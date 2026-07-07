@@ -4,5 +4,6 @@ langchain-community==0.3.24
 langchain-chroma==0.2.4
 openai==1.77.0
 tiktoken==0.9.0
+langfuse>=2.51.0
 python-dotenv==1.1.0
 ruff==0.11.7

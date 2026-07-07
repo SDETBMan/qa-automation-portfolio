@@ -43,7 +43,7 @@ A monorepo housing twenty-one independent, production-grade frameworks spanning 
 | [`coding-agent`](./coding-agent/) | Python | Anthropic Claude · AgentOps · Python 3.11 | [→](./coding-agent/README.md) |
 | [`fastapi-service`](./fastapi-service/) | Python · JavaScript | FastAPI · Redis · Pytest · k6 · Python 3.11 | [→](./fastapi-service/README.md) |
 | [`terraform`](./terraform/) | HCL | Terraform ≥ 1.6 · AWS · DataDog | [→](./terraform/README.md) |
-| [`langchain-rag`](./langchain-rag/) | Python | LangChain 0.3 · LCEL · Chroma · OpenAI `gpt-4o-mini` · Python 3.11 | [→](./langchain-rag/README.md) |
+| [`langchain-rag`](./langchain-rag/) | Python | LangChain 0.3 · LCEL · Chroma · OpenAI `gpt-4o-mini` · Langfuse · Python 3.11 | [→](./langchain-rag/README.md) |
 | [`langgraph-agent`](./langgraph-agent/) | Python | LangGraph 0.4 · LangChain Anthropic · `claude-haiku-4-5` · Python 3.11 | [→](./langgraph-agent/README.md) |
 | [`dspy-optimizer`](./dspy-optimizer/) | Python | DSPy 2.6 · BootstrapFewShot · OpenAI `gpt-4o-mini` · Python 3.11 | [→](./dspy-optimizer/README.md) |
 | [`dspy-vertex`](./dspy-vertex/) | Python | DSPy 2.6 · BootstrapFewShot · Vertex AI Gemini 1.5 · Python 3.11 | [→](./dspy-vertex/README.md) |
@@ -98,6 +98,7 @@ A monorepo housing twenty-one independent, production-grade frameworks spanning 
 | **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — | — | — | — | — |
 | **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — | — | — | — | — | — |
 | **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom GAUGE metrics | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility (JUnit XML) | ✅ Custom metrics · run counts · latency |
+| **AI observability (Langfuse)** | — | — | — | — | — | — | — | — | — |
 | **RAG pipeline (LCEL)** | — | — | — | — | — | — | — | — | — |
 | **Stateful multi-agent graph** | — | — | — | — | — | — | — | — | — |
 | **Conditional edges + cycles** | — | — | — | — | — | — | — | — | — |
