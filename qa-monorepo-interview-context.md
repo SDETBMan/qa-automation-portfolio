@@ -74,7 +74,7 @@ Bachelor of Science | Expected Completion: 2026
 ## Portfolio: qa-automation-portfolio (GitHub Monorepo)
 
 **Repo:** github.com/SDETBMan/qa-automation-portfolio
-**Structure:** 11 independent, production-grade frameworks in a single monorepo.
+**Structure:** 14 independent, production-grade frameworks in a single monorepo.
 Each framework has its own CI workflow, dependencies, and DataDog integration.
 All run nightly on GitHub Actions.
 
@@ -394,6 +394,62 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 
 ---
 
+### Framework 12: `pact-consumer` — Consumer-Driven Contract Testing
+**Stack:** TypeScript · Pact v13 (pact-js) · Vitest · pact-python provider verifier
+**What it does:** Validates the contract between a TypeScript API consumer and the FastAPI provider using Pact's consumer-driven approach.
+
+**Consumer contracts (8 interactions):**
+- `GET /health` → 200 `{ status: "ok" }`
+- `GET /products` → 200 array of Product
+- `GET /products/{id}` → 200 single Product; 404 when not found
+- `POST /products` → 201 + Product with `id`
+- `GET /users` → 200 array of User
+- `GET /users/{id}` → 200 single User; 404 when not found
+
+**Provider verification:** `fastapi-service/tests/test_pact_provider.py` launches the FastAPI app, points the Pact verifier at consumer pact files, and verifies all interactions pass against the real provider.
+
+**CI (`pact.yml`):** Two-job workflow — consumer tests generate pact files, provider job downloads and verifies them. Triggers on push/PR to `pact-consumer/**` or `fastapi-service/**`.
+
+---
+
+### Framework 13: `flakiness-detector` — Flaky Test Detection & Quarantine
+**Stack:** Python 3.11 · JUnit XML · Click · DataDog
+**What it does:** Parses JUnit XML test results across multiple CI runs, computes per-test flakiness scores, and generates a severity-ranked report with quarantine recommendations.
+
+**Architecture:**
+- `parser.py` — Parse JUnit XML files using `xml.etree.ElementTree` (stdlib)
+- `analyzer.py` — Aggregate outcomes, compute `flakiness_score = min(passes, failures) / total_non_skipped`
+- `reporter.py` — Generate markdown with QUARANTINE/MONITOR recommendations
+- `datadog.py` — Send `flakiness.score`, `flakiness.quarantined_count`, `flakiness.total_flaky` metrics
+
+**CLI:** `python run.py --xml-dir ./results/ --threshold 0.20 --output report.md`
+
+**CI (`flakiness-detector.yml`):** Runs tests and demo analysis on push/PR to `flakiness-detector/**`.
+
+---
+
+### Framework 14: `vulnerability-aggregator` — Unified Security Scanning
+**Stack:** Python 3.11 · GitHub API (gh CLI) · Dependabot · CodeQL · OWASP ZAP
+**What it does:** Aggregates vulnerability findings from Dependabot, CodeQL, and ZAP into a unified severity-prioritized markdown report.
+
+**Security scanning setup:**
+- `dependabot.yml` — Weekly pip/npm/GitHub Actions dependency updates across all projects
+- `codeql.yml` — Weekly CodeQL analysis for Python and JavaScript/TypeScript
+- 5 existing ZAP workflows updated to export JSON reports (`-J zap-report.json`)
+
+**CI:** Dependabot and CodeQL run automatically. Aggregator can be run manually via `make vuln-report`.
+
+---
+
+### k6 SLO Thresholds (Enhancement to `fastapi-service`)
+The existing k6 load tests now use declarative SLO configuration:
+- `k6/slo.json` — Single source of truth for all performance thresholds
+- Dynamic threshold generation — `load-test.js` reads `slo.json` instead of hardcoding values
+- `handleSummary(data)` — Produces a per-scenario pass/fail SLO report (`k6-slo-report.json`)
+- `k6/datadog-summary.js` — Sends `k6.slo.pass`, `k6.slo.margin_ms`, `k6.slo.error_rate` metrics to DataDog
+
+---
+
 ## DataDog Observability (All Frameworks)
 
 **Two DataDog features run across all frameworks:**
@@ -440,6 +496,9 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | `coding-agent.yml` | push · PR · workflow_dispatch | demo number (1-5 or all) |
 | `k6-load-test.yml` | nightly 11:00 UTC · workflow_dispatch | — |
 | `claims-diff.yml` | push · PR (paths: `claims-diff/**`) · `workflow_dispatch` | — |
+| `pact.yml` | push · PR (paths: `pact-consumer/**`, `fastapi-service/**`) | consumer → provider verification |
+| `flakiness-detector.yml` | push · PR (paths: `flakiness-detector/**`) · `workflow_dispatch` | — |
+| `codeql.yml` | push to main · weekly Monday 14:00 UTC | Python, JavaScript/TypeScript |
 | `k8s.yml` | workflow_dispatch only | framework (selenium-java · cucumber) |
 
 **Secrets required:**

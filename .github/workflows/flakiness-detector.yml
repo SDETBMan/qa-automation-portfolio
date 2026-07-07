@@ -1,0 +1,46 @@
+name: Flakiness Detector
+
+on:
+  push:
+    branches: [main]
+    paths: ['flakiness-detector/**']
+  pull_request:
+    branches: [main]
+    paths: ['flakiness-detector/**']
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flakiness-detector
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: flakiness-detector/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+      - name: Run flakiness analysis (demo)
+        run: python run.py --xml-dir fixtures/ --output flakiness-report.md
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      - name: Upload flakiness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flakiness-report
+          path: flakiness-detector/flakiness-report.md
+          retention-days: 30

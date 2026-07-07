@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test clean
+.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report clean
 
 # Print help when `make` is called with no target
 help:
@@ -54,6 +54,11 @@ help:
 	@echo "  make terraform-clean      Remove .terraform/ and state files"
 	@echo "  make claims-diff          Run claims-diff engine (diff default datasets)"
 	@echo "  make claims-diff-test     Run claims-diff pytest suite with coverage"
+	@echo "  make pact-consumer        Run Pact consumer contract tests"
+	@echo "  make pact-verify          Verify FastAPI provider against pact files"
+	@echo "  make flakiness-detector   Run flakiness analysis on sample fixtures"
+	@echo "  make flakiness-detector-test  Run flakiness-detector pytest suite"
+	@echo "  make vuln-report          Generate unified vulnerability report (requires gh CLI)"
 	@echo "  make clean                Remove build artefacts from all frameworks"
 	@echo ""
 	@echo "  Prerequisites:"
@@ -70,6 +75,10 @@ help:
 	@echo "    dspy-optimizer   — Python 3.11+ · OPENAI_API_KEY in dspy-optimizer/.env"
 	@echo "    fastapi-service  — Python 3.11+"
 	@echo "    claims-diff      — Python 3.11+"
+	@echo "    pact-consumer    — Node.js 20+"
+	@echo "    pact-verify      — Python 3.11+ (pact-python)"
+	@echo "    flakiness-detector — Python 3.11+"
+	@echo "    vuln-report      — Python 3.11+ · gh CLI authenticated"
 	@echo "    cypress          — Node.js 20+"
 	@echo "    k8s              — kubectl · running cluster or Kind (kind.sigs.k8s.io)"
 	@echo "    terraform        — Terraform >= 1.6 · AWS credentials · DataDog API/App keys"
@@ -240,6 +249,54 @@ k8s-status:
 	@echo ">>> [k8s] Pod status in selenium-grid namespace:"
 	@echo ""
 	kubectl get pods -n selenium-grid
+	@echo ""
+
+# ── Pact Contract Testing ─────────────────────────────────────────────────────
+
+pact-consumer:
+	@echo ""
+	@echo ">>> [pact-consumer] Running Pact consumer contract tests..."
+	cd pact-consumer && npm install && npm test
+	@echo ""
+	@echo ">>> [pact-consumer] Done. Pact files in pact-consumer/pacts/"
+	@echo ""
+
+pact-verify:
+	@echo ""
+	@echo ">>> [pact-verify] Verifying FastAPI provider against pact files..."
+	cd fastapi-service && pip install -r requirements.txt -q && \
+		pytest tests/test_pact_provider.py -v
+	@echo ""
+	@echo ">>> [pact-verify] Done."
+	@echo ""
+
+# ── Flakiness Detector ────────────────────────────────────────────────────────
+
+flakiness-detector:
+	@echo ""
+	@echo ">>> [flakiness-detector] Running flakiness analysis on sample fixtures..."
+	cd flakiness-detector && pip install -r requirements.txt -q && \
+		python run.py --xml-dir fixtures/
+	@echo ""
+	@echo ">>> [flakiness-detector] Done."
+	@echo ""
+
+flakiness-detector-test:
+	@echo ""
+	@echo ">>> [flakiness-detector] Running tests..."
+	cd flakiness-detector && pip install -r requirements.txt -q pytest -q && \
+		pytest tests/ -v
+	@echo ""
+
+# ── Vulnerability Aggregator ─────────────────────────────────────────────────
+
+vuln-report:
+	@echo ""
+	@echo ">>> [vuln-report] Generating unified vulnerability report..."
+	cd vulnerability-aggregator && pip install -r requirements.txt -q && \
+		python run.py --repo SDETBMan/qa-automation-portfolio
+	@echo ""
+	@echo ">>> [vuln-report] Done."
 	@echo ""
 
 ## ── Terraform ────────────────────────────────────────────────────────────────

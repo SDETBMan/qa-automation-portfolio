@@ -18,8 +18,11 @@
 [![langgraph-agent CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langgraph-agent.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/langgraph-agent.yml)
 [![dspy-optimizer CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/dspy-optimizer.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/dspy-optimizer.yml)
 [![claims-diff CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/claims-diff.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/claims-diff.yml)
+[![pact CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/pact.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/pact.yml)
+[![flakiness-detector CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/flakiness-detector.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/flakiness-detector.yml)
+[![CodeQL](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml)
 
-A monorepo housing eighteen independent, production-grade frameworks spanning test automation, AI agents, API services, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
+A monorepo housing twenty-one independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, vulnerability aggregation, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
 
 ---
 
@@ -45,6 +48,9 @@ A monorepo housing eighteen independent, production-grade frameworks spanning te
 | [`dspy-optimizer`](./dspy-optimizer/) | Python | DSPy 2.6 · BootstrapFewShot · OpenAI `gpt-4o-mini` · Python 3.11 | [→](./dspy-optimizer/README.md) |
 | [`dspy-vertex`](./dspy-vertex/) | Python | DSPy 2.6 · BootstrapFewShot · Vertex AI Gemini 1.5 · Python 3.11 | [→](./dspy-vertex/README.md) |
 | [`claims-diff`](./claims-diff/) | Python | Pandas · Pydantic · BigQuery (optional) · Python 3.11 | [→](./claims-diff/README.md) |
+| [`pact-consumer`](./pact-consumer/) | TypeScript | Pact v13 · Vitest · pact-python provider verifier · Python 3.11 | [→](./pact-consumer/README.md) |
+| [`flakiness-detector`](./flakiness-detector/) | Python | JUnit XML · Click · DataDog · Python 3.11 | [→](./flakiness-detector/README.md) |
+| [`vulnerability-aggregator`](./vulnerability-aggregator/) | Python | GitHub API (gh CLI) · Dependabot · CodeQL · ZAP · Python 3.11 | [→](./vulnerability-aggregator/README.md) |
 
 ---
 
@@ -84,6 +90,10 @@ A monorepo housing eighteen independent, production-grade frameworks spanning te
 | **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — | — | — | — | — | — |
 | **Database validation** | ✅ dbClient + dbAssertions (MySQL · PostgreSQL) | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — | — | — | — | — | — |
 | **Security testing (OWASP)** | ✅ 4 test cases | ✅ 4 test cases | ✅ 3 BDD scenarios | — | — | — | — | — | — |
+| **Consumer-driven contracts (Pact)** | — | — | — | — | — | — | — | — | — |
+| **Flaky test detection** | — | — | — | — | — | — | — | — | — |
+| **Vulnerability aggregation** | — | — | — | — | — | — | — | — | — |
+| **k6 SLO thresholds** | — | — | — | — | — | — | — | — | — |
 | **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — | — | — | — | — |
 | **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — | — | — | — | — |
 | **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — | — | — | — | — | — |
@@ -624,6 +634,18 @@ qa-automation-portfolio/
 │   ├── tests/                          # 28 tests: model validation, diff logic, CSV loading
 │   ├── pytest.ini                      # pytest-xdist parallel config (-n auto --dist=loadscope)
 │   └── run.py                          # CLI: structured JSON diff report
+├── pact-consumer/                      # TypeScript · Pact v13 · Vitest
+│   ├── src/                            # api-client.ts (typed HTTP client) + Pact consumer tests
+│   └── pacts/                          # Generated pact JSON files
+├── flakiness-detector/                 # Python · JUnit XML · Click · DataDog
+│   ├── flakiness/                      # parser · analyzer · reporter · datadog
+│   ├── fixtures/                       # Sample JUnit XML files simulating flaky patterns
+│   ├── tests/                          # Unit tests for parser and analyzer
+│   └── run.py                          # CLI: --xml-dir · --threshold · --output
+├── vulnerability-aggregator/           # Python · GitHub API (gh CLI)
+│   ├── aggregator/                     # github_api (Dependabot + CodeQL + ZAP) · reporter
+│   ├── tests/                          # Reporter tests + sample fixture JSONs
+│   └── run.py                          # CLI: --repo · --zap-report · --output
 ├── Makefile                            # One-command runner for all suites
 ├── .gitignore
 └── README.md
@@ -656,6 +678,9 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `langgraph-agent.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
 | `dspy-optimizer.yml` | push · PR (lint only, free) · `workflow_dispatch` (compare run) | — |
 | `claims-diff.yml` | push · PR (paths: `claims-diff/**`) · `workflow_dispatch` | — |
+| `pact.yml` | push · PR (paths: `pact-consumer/**`, `fastapi-service/**`) | consumer tests → provider verification |
+| `flakiness-detector.yml` | push · PR (paths: `flakiness-detector/**`) · `workflow_dispatch` | — |
+| `codeql.yml` | push to main · weekly Monday 14:00 UTC | Python, JavaScript/TypeScript |
 | `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright-dotnet/**`) | Chromium-only @smoke gate, 5-min timeout, fail-fast |
 | `azure-pipelines.yml` | PR (Azure DevOps) | ADO YAML equivalent of GHA smoke gate (playwright-dotnet) |
 | `deploy-validate-rollback.yml` | `workflow_dispatch` · `workflow_call` | deployment URL · Vercel project ID · auto-rollback toggle |

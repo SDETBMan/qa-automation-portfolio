@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="test_login" tests="3" failures="0" errors="0" time="2.3">
+    <testcase classname="tests.test_login" name="test_valid_login" time="0.7"/>
+    <testcase classname="tests.test_login" name="test_invalid_credentials" time="0.5"/>
+    <testcase classname="tests.test_login" name="test_locked_user" time="1.1"/>
+  </testsuite>
+  <testsuite name="test_inventory" tests="3" failures="1" errors="0" time="3.5">
+    <testcase classname="tests.test_inventory" name="test_add_to_cart" time="1.5">
+      <failure message="TimeoutError: element not clickable">Add to cart button not interactable after 10s</failure>
+    </testcase>
+    <testcase classname="tests.test_inventory" name="test_sort_products" time="1.0"/>
+    <testcase classname="tests.test_inventory" name="test_product_count" time="1.0"/>
+  </testsuite>
+  <testsuite name="test_api" tests="2" failures="0" errors="0" time="0.3">
+    <testcase classname="tests.test_api" name="test_health_endpoint" time="0.1"/>
+    <testcase classname="tests.test_api" name="test_products_list" time="0.2"/>
+  </testsuite>
+</testsuites>

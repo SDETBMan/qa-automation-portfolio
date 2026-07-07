@@ -1,0 +1,24 @@
+{
+  "slos": {
+    "health_baseline": {
+      "p95_ms": 100,
+      "p99_ms": 150,
+      "error_rate": 0.01
+    },
+    "read_heavy": {
+      "p95_ms": 250,
+      "p99_ms": 350,
+      "error_rate": 0.05
+    },
+    "crud_workflow": {
+      "p95_ms": 300,
+      "p99_ms": 500,
+      "error_rate": 0.05
+    }
+  },
+  "global": {
+    "p95_ms": 200,
+    "error_rate": 0.05,
+    "checks_pass_rate": 0.95
+  }
+}

@@ -93,7 +93,16 @@ jobs:
         with:
           target: 'https://www.saucedemo.com'
           allow_issue_writing: false
-          cmd_options: '-I'
+          cmd_options: '-I -J zap-report.json'
+
+      - name: Upload ZAP JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-zap-report
+          path: zap-report.json
+          retention-days: 30
+          if-no-files-found: ignore
 
       # ── DataDog CI Visibility ───────────────────────────────────────────────
       - name: Upload test results to Datadog CI Visibility

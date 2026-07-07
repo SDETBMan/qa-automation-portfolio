@@ -17,6 +17,8 @@
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend } from 'k6/metrics';
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.1.0/index.js';
+import { sendToDataDog } from './datadog-summary.js';
 
 // ── Custom metrics (per-scenario p95/p99) ────────────────────────────────────
 const healthDuration = new Trend('health_req_duration', true);
@@ -25,6 +27,9 @@ const crudDuration   = new Trend('crud_req_duration', true);
 
 // ── Configuration ────────────────────────────────────────────────────────────
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8001';
+
+// ── SLO Configuration ──────────────────────────────────────────────────────
+const sloConfig = JSON.parse(open('./slo.json'));
 
 // Seed data IDs matching fastapi-service's in-memory store
 const PRODUCT_IDS = [1, 2, 3, 4, 5, 6];
@@ -37,12 +42,12 @@ http.setResponseCallback(http.expectedStatuses(200, 201, 204, 404));
 // ── Thresholds ───────────────────────────────────────────────────────────────
 export const options = {
   thresholds: {
-    http_req_duration:     ['p(95)<200'],   // Global: 95th percentile < 200ms
-    http_req_failed:       ['rate<0.05'],   // Global: < 5% failure rate
-    checks:                ['rate>0.95'],   // Global: > 95% checks pass
-    health_req_duration:   ['p(95)<100', 'p(99)<150'],
-    read_req_duration:     ['p(95)<250', 'p(99)<350'],
-    crud_req_duration:     ['p(95)<300', 'p(99)<500'],
+    http_req_duration:     [`p(95)<${sloConfig.global.p95_ms}`],
+    http_req_failed:       [`rate<${sloConfig.global.error_rate}`],
+    checks:                [`rate>${sloConfig.global.checks_pass_rate}`],
+    health_req_duration:   [`p(95)<${sloConfig.slos.health_baseline.p95_ms}`, `p(99)<${sloConfig.slos.health_baseline.p99_ms}`],
+    read_req_duration:     [`p(95)<${sloConfig.slos.read_heavy.p95_ms}`, `p(99)<${sloConfig.slos.read_heavy.p99_ms}`],
+    crud_req_duration:     [`p(95)<${sloConfig.slos.crud_workflow.p95_ms}`, `p(99)<${sloConfig.slos.crud_workflow.p99_ms}`],
   },
 
   // ── Scenarios ──────────────────────────────────────────────────────────────
@@ -237,4 +242,54 @@ export function errorHandling() {
   });
 
   sleep(0.5);
+}
+
+// ── SLO Summary Report ────────────────────────────────────────────────────
+export function handleSummary(data) {
+  const scenarioMetrics = {
+    health_baseline: { trend: 'health_req_duration', slo: sloConfig.slos.health_baseline },
+    read_heavy:      { trend: 'read_req_duration',   slo: sloConfig.slos.read_heavy },
+    crud_workflow:   { trend: 'crud_req_duration',   slo: sloConfig.slos.crud_workflow },
+  };
+
+  const sloResults = [];
+
+  for (const [scenario, { trend, slo }] of Object.entries(scenarioMetrics)) {
+    const metric = data.metrics[trend];
+    if (!metric) continue;
+
+    const p95Actual = metric.values['p(95)'] || 0;
+    const p99Actual = metric.values['p(99)'] || 0;
+
+    const p95Pass = p95Actual <= slo.p95_ms;
+    const p99Pass = p99Actual <= slo.p99_ms;
+    const passed = p95Pass && p99Pass;
+
+    sloResults.push({
+      scenario,
+      passed,
+      p95_actual: Math.round(p95Actual * 100) / 100,
+      p95_target: slo.p95_ms,
+      p99_actual: Math.round(p99Actual * 100) / 100,
+      p99_target: slo.p99_ms,
+      error_rate: slo.error_rate,
+    });
+  }
+
+  // Build text summary table
+  const header = '| Scenario | p95 (ms) | Target | p99 (ms) | Target | Result |';
+  const sep =    '|----------|----------|--------|----------|--------|--------|';
+  const rows = sloResults.map((r) =>
+    `| ${r.scenario} | ${r.p95_actual} | ${r.p95_target} | ${r.p99_actual} | ${r.p99_target} | ${r.passed ? 'PASS' : 'FAIL'} |`
+  );
+
+  const sloTable = ['\n── SLO Results ──', header, sep, ...rows, ''].join('\n');
+
+  // Send to DataDog
+  sendToDataDog(sloResults);
+
+  return {
+    stdout: textSummary(data, { indent: '  ', enableColors: true }) + sloTable,
+    'k6-slo-report.json': JSON.stringify({ slo_results: sloResults, generated_at: new Date().toISOString() }, null, 2),
+  };
 }

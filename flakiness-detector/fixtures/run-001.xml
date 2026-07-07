@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="test_login" tests="3" failures="0" errors="0" time="2.5">
+    <testcase classname="tests.test_login" name="test_valid_login" time="0.8"/>
+    <testcase classname="tests.test_login" name="test_invalid_credentials" time="0.6"/>
+    <testcase classname="tests.test_login" name="test_locked_user" time="1.1"/>
+  </testsuite>
+  <testsuite name="test_inventory" tests="3" failures="1" errors="0" time="3.2">
+    <testcase classname="tests.test_inventory" name="test_add_to_cart" time="1.0"/>
+    <testcase classname="tests.test_inventory" name="test_sort_products" time="1.2">
+      <failure message="AssertionError: sort order mismatch">Expected A-Z but got random order</failure>
+    </testcase>
+    <testcase classname="tests.test_inventory" name="test_product_count" time="1.0"/>
+  </testsuite>
+  <testsuite name="test_api" tests="2" failures="0" errors="0" time="0.4">
+    <testcase classname="tests.test_api" name="test_health_endpoint" time="0.1"/>
+    <testcase classname="tests.test_api" name="test_products_list" time="0.3"/>
+  </testsuite>
+</testsuites>
