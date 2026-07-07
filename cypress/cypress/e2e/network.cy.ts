@@ -1,24 +1,26 @@
 /**
  * network.cy.ts — cy.intercept() showcase
  *
- * SauceDemo is a React SPA. All post-login navigation (e.g., to /inventory.html)
- * is handled client-side by React Router — the browser never issues a new HTTP
- * GET for those URLs. Likewise, the login form is handled by JavaScript, not an
- * HTML form POST. Intercepting those routes will therefore never fire.
+ * SauceDemo is a React SPA built with Vite. All post-login navigation (e.g.,
+ * to /inventory.html) is handled client-side by React Router — the browser
+ * never issues a new HTTP GET for those URLs. Likewise, the login form is
+ * handled by JavaScript, not an HTML form POST. Intercepting those routes
+ * will therefore never fire.
  *
  * Real HTTP requests the browser DOES make:
  *   1. GET /                    — initial HTML page
- *   2. GET /static/js/...       — JavaScript bundles (on every page load)
- *   3. GET /static/media/...    — product images (when inventory renders)
- *   4. GET /static/js/...       — JS bundles (response modifier demo)
+ *   2. GET /assets/index-*.js   — JavaScript bundle (ES module, on page load)
+ *   3. GET /assets/*.jpg        — product images (when inventory renders)
+ *   4. GET /assets/index-*.js   — JS bundle (response modifier demo)
  *
- * Note: SauceDemo uses CSS-in-JS — no .css files are requested over the network.
+ * Note: SauceDemo ships a separate CSS file (/assets/index-*.css).
  * These four patterns drive the four cy.intercept() scenarios below.
  *
  * testIsolation is disabled so all tests share a single browser session.
  * Test 1 performs the only cold page load, priming the browser cache.
- * Subsequent tests use cy.reload() or SPA form navigation so JS bundles are
- * served from cache (HTTP 304), avoiding saucedemo.com rate limiting in CI.
+ * Subsequent tests use cy.reload(true) (hard reload) to bypass the browser's
+ * disk cache for Vite's immutable-hashed ES module bundles, ensuring network
+ * requests are always issued for cy.intercept() to observe.
  */
 
 describe('Network — cy.intercept() showcase', { testIsolation: false, retries: 0 }, () => {
@@ -37,9 +39,9 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
 
   it('@regression spies on JavaScript bundle requests during page load', () => {
     cy.intercept('GET', '**/*.js').as('jsBundle');
-    // cy.reload() reuses the warm browser cache — JS assets return 304
-    // immediately so the load event fires without hitting the CDN again.
-    cy.reload();
+    // Hard reload (true) bypasses the disk cache — Vite's immutable-hashed
+    // ES modules would otherwise be served from cache without a network request.
+    cy.reload(true);
     cy.wait('@jsBundle').then((interception) => {
       expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
     });
@@ -49,7 +51,8 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
 
   it('@regression stubs product images on inventory page with 404', () => {
     // Set up stub BEFORE login so it fires when inventory renders images.
-    cy.intercept('GET', '**/static/media/**', {
+    // SauceDemo (Vite) serves product images from /assets/ with content hashes.
+    cy.intercept('GET', '/assets/*.jpg', {
       statusCode: 404,
       body: '',
     }).as('blockedImages');
@@ -77,9 +80,10 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
       });
     }).as('jsWithHeader');
 
-    // Navigate back to / from inventory — warm cache means JS bundles return
-    // 304 instantly and the load event fires without stalling on the CDN.
+    // Navigate back to / from inventory, then hard-reload to force JS
+    // re-fetch — Vite's immutable-hashed bundles are cached aggressively.
     cy.visit('/');
+    cy.reload(true);
 
     cy.wait('@jsWithHeader').then((interception) => {
       expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
