@@ -9,7 +9,6 @@ points the Pact verifier at the generated pact JSON files.
 """
 
 import multiprocessing
-import os
 import time
 from pathlib import Path
 
@@ -60,17 +59,9 @@ def provider_server():
 )
 def test_provider_satisfies_pact(provider_server):
     """Verify the FastAPI provider against all consumer pact files."""
-    verifier = Verifier(
-        provider="fastapi-service",
-        provider_base_url=PROVIDER_URL,
+    verifier = (
+        Verifier("fastapi-service")
+        .add_transport(url=PROVIDER_URL)
+        .add_source(str(PACT_DIR))
     )
-
-    pact_files = [str(p) for p in PACT_DIR.glob("*.json")]
-
-    success, logs = verifier.verify_pacts(
-        *pact_files,
-        verbose=True,
-        enable_pending=False,
-    )
-
-    assert success == 0, f"Pact verification failed:\n{logs}"
+    verifier.verify()
