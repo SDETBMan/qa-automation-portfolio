@@ -31,7 +31,7 @@ jobs:
           cache-dependency-path: pact-consumer/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run consumer contract tests
         run: npm test
