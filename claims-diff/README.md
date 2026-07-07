@@ -68,6 +68,29 @@ The `differ/loader.py` module includes a `load_from_bigquery()` function that lo
 2. Configure GCP credentials
 3. Update `.env` with your project/dataset/table
 
+## Data Generation
+
+The `datasets/generate.py` utility creates synthetic claim datasets at any scale with controlled diff injection — useful for load testing, exploratory QA, or seeding test environments.
+
+```bash
+python datasets/generate.py                          # 100 claims, 10 diffs
+python datasets/generate.py --count 500 --diffs 25   # custom sizes
+python datasets/generate.py --seed 42                # reproducible output
+
+# Run the diff engine against generated data
+python run.py --baseline datasets/baseline_generated.csv --current datasets/current_generated.csv
+```
+
+Generated files (`baseline_generated.csv`, `current_generated.csv`) are written to `datasets/` and never overwrite the hand-crafted originals.
+
+## Parallel Execution
+
+The test suite runs in parallel via `pytest-xdist`. The `pytest.ini` configures `-n auto --dist=loadscope` — auto-detecting CPU cores and grouping tests by class to match the existing class-organised structure. No test changes required; the suite has no global state or autouse fixtures.
+
+```bash
+pytest tests/ -v -n auto --dist=loadscope --cov=differ
+```
+
 ## Dataset
 
 The `datasets/` directory contains two synthetic CSV files with 20 claims each. The current file has 5 intentional differences (2 amount changes, 1 status change, 1 added, 1 removed) to demonstrate the diff engine.

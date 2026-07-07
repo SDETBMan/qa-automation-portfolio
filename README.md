@@ -331,8 +331,11 @@ pip install -r requirements.txt
 # Demo 2 — HTTP validation script (default, no browser needed)
 python run_demo.py --demo 2
 
-# All demos (1–4)
-python run_demo.py --demo all
+# Demo 5 — AI Test Generator (manual QA description → runnable pytest)
+python run_demo.py --demo 5
+
+# All demos (1–5)
+python run_demo.py --all
 ```
 
 ### fastapi-service
@@ -464,7 +467,7 @@ python run.py --mode optimized
 ```bash
 # From the repo root
 make claims-diff           # run diff against default datasets
-make claims-diff-test      # run pytest suite (28 tests) with coverage
+make claims-diff-test      # run pytest suite (28 tests) with coverage + parallel execution
 
 # Or manually
 cd claims-diff
@@ -473,7 +476,11 @@ pip install -r requirements.txt
 # Run diff against included synthetic datasets
 python run.py
 
-# Run test suite
+# Generate synthetic datasets at scale
+python datasets/generate.py --count 500 --diffs 25 --seed 42
+python run.py --baseline datasets/baseline_generated.csv --current datasets/current_generated.csv
+
+# Run test suite (parallel via pytest-xdist)
 pytest tests/ -v --cov=differ --cov-report=term-missing
 ```
 
@@ -575,9 +582,9 @@ qa-automation-portfolio/
 │   ├── utils/                          # driver_manager · config_reader · tasks · datadog_utils
 │   └── config.ini
 ├── coding-agent/                       # Python · Anthropic Claude · multi-demo AI coding agent
-│   ├── agents/                         # agent loop · tool implementations
+│   ├── agents/                         # agent loop · tool implementations (5 demos)
 │   ├── shared/                         # shared utilities
-│   └── run_demo.py                     # CLI entry: python run_demo.py --demo 2
+│   └── run_demo.py                     # CLI entry: python run_demo.py --demo {1-5}
 ├── fastapi-service/                    # Python · FastAPI · Redis · Pytest · k6
 │   ├── app/                            # FastAPI application + Redis cache layer
 │   ├── tests/                          # 37 tests: CRUD, contract, cache (fakeredis)
@@ -613,8 +620,9 @@ qa-automation-portfolio/
 │   └── run.py                          # CLI: --mode baseline|optimized|compare
 ├── claims-diff/                        # Python · Pandas · Pydantic · BigQuery (optional)
 │   ├── differ/                         # models · loader · diff_engine
-│   ├── datasets/                       # baseline_claims.csv · current_claims.csv
+│   ├── datasets/                       # baseline/current CSVs + generate.py data generator
 │   ├── tests/                          # 28 tests: model validation, diff logic, CSV loading
+│   ├── pytest.ini                      # pytest-xdist parallel config (-n auto --dist=loadscope)
 │   └── run.py                          # CLI: structured JSON diff report
 ├── Makefile                            # One-command runner for all suites
 ├── .gitignore
@@ -639,7 +647,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `postman-newman.yml` | push · PR · nightly 08:00 UTC | folder filter (Smoke · Users · Posts · Integration Flow) |
 | `job-agent.yml` | nightly 09:00 UTC · `workflow_dispatch` | role_filter keyword (e.g. SDET · QA Lead) |
 | `cucumber-python.yml` | push · PR · nightly 05:00 UTC | execution mode (local · grid · browserstack) · browser · tag filter |
-| `coding-agent.yml` | push · PR · `workflow_dispatch` | demo number (1–4 or all) |
+| `coding-agent.yml` | push · PR · `workflow_dispatch` | demo number (1–5 or all) |
 | `fastapi-service.yml` | nightly 10:00 UTC · `workflow_dispatch` | — |
 | `k6-load-test.yml` | nightly 11:00 UTC · `workflow_dispatch` | k6 load test against fastapi-service (4 scenarios) |
 | `terraform.yml` | push · PR · `workflow_dispatch` (paths: `terraform/**`) | plan on PR · apply on merge to main · OIDC AWS auth |

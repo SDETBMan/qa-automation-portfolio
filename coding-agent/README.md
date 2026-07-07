@@ -17,6 +17,7 @@ engineering pattern — from simple tool use to multi-agent orchestration.
 | 2 | Code Execution Feedback Loop | Writes a Python script, runs it, reads stdout/stderr, and iterates until all assertions pass |
 | 3 | Git & PR Automation | Creates a branch, makes a purposeful commit, dry-runs push, and drafts a full PR description |
 | 4 | Multi-Agent: Planner → Executor → Validator | Three specialised agents with role-scoped tools collaborate through clean context handoff |
+| 5 | AI Test Generator (Manual QA → pytest) | Translates a plain-English test description into a runnable pytest test using existing project patterns |
 
 ---
 
@@ -41,7 +42,8 @@ coding-agent/
 │   ├── demo1_codebase_rewriter.py
 │   ├── demo2_code_execution.py
 │   ├── demo3_git_pr.py
-│   └── demo4_multi_agent.py
+│   ├── demo4_multi_agent.py
+│   └── demo5_test_generator.py
 │
 └── output/                  # Agent-generated files written here (git-ignored)
 ```
@@ -87,7 +89,8 @@ python run_demo.py --demo 2          # Recommended first run — no side effects
 python run_demo.py --demo 1          # Requires cucumber_python/ to be present
 python run_demo.py --demo 3          # Reads + modifies feature files (git tracked)
 python run_demo.py --demo 4          # Runs all three agents sequentially
-python run_demo.py --all             # All four demos
+python run_demo.py --demo 5          # AI Test Generator — manual QA → pytest
+python run_demo.py --all             # All five demos
 
 # Quiet mode (summaries only, no streaming)
 python run_demo.py --demo 4 --quiet
@@ -101,6 +104,7 @@ python run_demo.py --demo 4 --quiet
 | 2    | Nothing beyond `ANTHROPIC_API_KEY` |
 | 3    | `cucumber_python/` + git configured; `gh` CLI optional |
 | 4    | `cucumber_python/` + `behave` installed (`pip install behave`) |
+| 5    | `claims-diff/` in the monorepo (reads tests + source for pattern learning) |
 
 ---
 
@@ -154,6 +158,24 @@ Three agents collaborate with role-scoped tools:
 The orchestrator (`demo4_multi_agent.py`) passes the Planner's full text output
 as the Executor's task, and the Executor's summary as the Validator's input —
 a clean, auditable context handoff chain.
+
+### Demo 5 — AI Test Generator (Manual QA → pytest)
+
+A manual QA engineer provides a plain-English test description, and the agent
+generates a production-quality pytest test by learning from existing project
+patterns.  The agent:
+
+1. Reads `claims-diff/tests/` to learn class structure, fixture usage, and
+   assertion style
+2. Reads `claims-diff/differ/` to understand the code under test
+3. Generates `output/generated_test.py` following all discovered conventions
+4. Validates with `python -m py_compile` and runs `pytest -v`
+5. Iterates on failures until the test is green
+
+This demonstrates the core capability of **AI-assisted test authoring** —
+enabling manual QA testers to produce automated tests by describing what they
+want to verify, while the agent enforces project conventions and ensures the
+output is indistinguishable from hand-written tests.
 
 ---
 

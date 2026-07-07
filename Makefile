@@ -209,7 +209,7 @@ claims-diff:
 
 claims-diff-test:
 	@echo ""
-	@echo ">>> [claims-diff] Running tests..."
+	@echo ">>> [claims-diff] Running tests (parallel via pytest-xdist)..."
 	cd claims-diff && pip install -r requirements.txt -q && \
 		pytest tests/ -v --cov=differ --cov-report=term-missing
 	@echo ""

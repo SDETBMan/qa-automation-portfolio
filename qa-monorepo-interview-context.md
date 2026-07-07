@@ -276,7 +276,7 @@ All run nightly on GitHub Actions.
 **Stack:** Python 3.11 · Anthropic Claude (`claude-opus-4-6`) · `@beta_tool` decorator · `tool_runner` agentic loop
 **What it does:** Demonstrates four coding-agent capabilities — codebase rewriting, code execution feedback loops, git/PR automation, and multi-agent orchestration — all targeting the SauceDemo test suite in this monorepo.
 
-**Four demos:**
+**Five demos:**
 
 1. **Codebase Reader & Rewriter (`demo1`)** — Explores `cucumber_python/steps/` and `pages/`, identifies Page Object architecture violations in `auth_steps.py` (inline Selenium, magic strings), produces a compliant rewrite at `output/auth_steps_rewritten.py`, and validates it with `python -m py_compile`. Iterates on any compile error.
 
@@ -289,6 +289,8 @@ All run nightly on GitHub Actions.
    - **Executor**: `read_file` + `write_file` + `run_bash` — implements the plan, runs `py_compile` on modified files
    - **Validator**: `run_bash` only — runs `behave --dry-run` + `grep`, issues `VERDICT: PASS | FAIL` with evidence
    - Orchestrator passes each agent's output as the next agent's input — clean, auditable context handoff
+
+5. **AI Test Generator (`demo5`)** — Translates a manual QA tester's plain-English test description into a runnable pytest test. The agent reads existing tests (`claims-diff/tests/`) and source code (`claims-diff/differ/`) to learn project patterns (class structure, factory fixtures, assertion style), generates a test file, and iterates through compile + pytest until the test passes. Demonstrates the core value proposition of AI tooling for QA — enabling manual testers to generate automated tests by describing what they want to verify.
 
 **Architecture:**
 - `@beta_tool` decorator — auto-generates JSON schemas from function signatures + Google-style docstrings; no manual schema maintenance
@@ -303,7 +305,7 @@ All run nightly on GitHub Actions.
 - `git_tools.py`: `git_status`, `git_diff`, `git_create_branch`, `git_add_and_commit`, `git_push`
 - `github_tools.py`: `gh_create_pr`, `gh_list_pr_comments`, `gh_reply_to_pr`, `gh_pr_status`
 
-**CLI:** `python run_demo.py --demo {1-4}` or `--all`; `--quiet` for summary-only output
+**CLI:** `python run_demo.py --demo {1-5}` or `--all`; `--quiet` for summary-only output
 
 **CI (`coding-agent.yml`):**
 - Lint + import smoke test on every push to `coding-agent/**` (no API calls)
@@ -368,6 +370,18 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 - `test_diff_engine.py` (12 tests) — core diff logic: added/removed/modified detection, multi-field changes, empty datasets, real CSV integration test
 - `test_loader.py` (6 tests) — CSV loading: field types, missing columns, empty files, non-numeric values, file-not-found
 
+**Data generation utility (`datasets/generate.py`):**
+- CLI tool generating synthetic claim datasets at configurable scale (`--count 500 --diffs 25 --seed 42`)
+- Realistic data: weighted CPT code distribution, payer discount chains (billed → allowed → paid), weighted status distribution (75% paid, 15% denied, 10% pending)
+- Controlled diff injection: ~40% amount reprocessing, ~20% status changes, ~20% new claims (late filing), ~20% removed claims (voided/reversed)
+- Outputs `baseline_generated.csv` / `current_generated.csv` — never overwrites hand-crafted datasets
+- Demonstrates "data engineering for QA" — complex data generation utilities for test environments
+
+**Parallel test execution:**
+- `pytest-xdist` with `-n auto --dist=loadscope` configured in `pytest.ini`
+- Auto-detects CPU cores, groups tests by class (matches existing class-organised structure)
+- No global state or autouse fixtures — the suite is an ideal candidate for parallel execution
+
 **Key architecture decisions:**
 - `conftest.py` factory fixtures: `sample_claim()` with keyword overrides, `tmp_csv()` for temp file generation
 - Frozen Pydantic models with `extra="forbid"` — immutable records, no silent data corruption
@@ -423,7 +437,7 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | `agent-eval.yml` | push · PR · nightly 07:00 UTC | pytest marker (smoke · regression) |
 | `postman-newman.yml` | push · PR · nightly 08:00 UTC | folder filter |
 | `job-agent.yml` | nightly 09:00 UTC · workflow_dispatch | role_filter keyword |
-| `coding-agent.yml` | push · PR · workflow_dispatch | demo number (1-4 or all) |
+| `coding-agent.yml` | push · PR · workflow_dispatch | demo number (1-5 or all) |
 | `k6-load-test.yml` | nightly 11:00 UTC · workflow_dispatch | — |
 | `claims-diff.yml` | push · PR (paths: `claims-diff/**`) · `workflow_dispatch` | — |
 | `k8s.yml` | workflow_dispatch only | framework (selenium-java · cucumber) |

@@ -6,7 +6,8 @@ USAGE:
     python run_demo.py --demo 2   # Code Execution Feedback Loop
     python run_demo.py --demo 3   # Git & PR Automation
     python run_demo.py --demo 4   # Multi-Agent: Planner → Executor → Validator
-    python run_demo.py --all      # Run all four demos sequentially
+    python run_demo.py --demo 5   # AI Test Generator (Manual QA → pytest)
+    python run_demo.py --all      # Run all five demos sequentially
 
 PREREQUISITES:
     1. Copy .env.example → .env and set ANTHROPIC_API_KEY
@@ -38,6 +39,7 @@ DEMOS = {
     2: ("Code Execution Feedback Loop",          "agents.demo2_code_execution"),
     3: ("Git & PR Automation",                   "agents.demo3_git_pr"),
     4: ("Multi-Agent: Planner → Executor → Validator", "agents.demo4_multi_agent"),
+    5: ("AI Test Generator (Manual QA → pytest)", "agents.demo5_test_generator"),
 }
 
 
@@ -61,13 +63,13 @@ def main() -> None:
         "--demo",
         type=int,
         choices=DEMOS.keys(),
-        metavar="{1-4}",
-        help="Demo number to run (1-4)",
+        metavar="{1-5}",
+        help="Demo number to run (1-5)",
     )
     group.add_argument(
         "--all",
         action="store_true",
-        help="Run all four demos sequentially",
+        help="Run all five demos sequentially",
     )
     parser.add_argument(
         "--quiet",
