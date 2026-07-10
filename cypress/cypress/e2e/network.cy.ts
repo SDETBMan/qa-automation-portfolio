@@ -21,15 +21,20 @@
  *   Vite's immutable-hashed ES module bundles are aggressively cached by Chrome
  *   — even cy.reload(true) won't trigger a network request (the forceReload
  *   parameter to location.reload() was deprecated in Chrome 94+).
- *   We disable the HTTP cache via Chrome DevTools Protocol for this suite so
- *   cy.intercept() can observe all network requests reliably.
+ *   We disable the disk cache via --disk-cache-size=1 at browser launch
+ *   (cypress.config.ts) and clear any existing cache via CDP before the suite
+ *   so cy.intercept() can observe all network requests reliably.
  */
 
 describe('Network — cy.intercept() showcase', { testIsolation: false, retries: 0 }, () => {
-  // Disable HTTP cache via CDP so cy.intercept() can observe Vite's
-  // immutable-hashed ES module bundles, which would otherwise be served
-  // from disk cache without any network request.
+  // Clear any existing browser cache and disable future caching via CDP.
+  // The primary cache disable is --disk-cache-size=1 at browser launch
+  // (cypress.config.ts); this is a secondary guarantee.
   before(() => {
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Network.clearBrowserCache',
+      params: {},
+    });
     Cypress.automation('remote:debugger:protocol', {
       command: 'Network.setCacheDisabled',
       params: { cacheDisabled: true },
@@ -57,8 +62,10 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
 
   it('@regression spies on JavaScript bundle requests during page load', () => {
     cy.intercept('GET', '**/*.js').as('jsBundle');
-    cy.reload();
-    cy.wait('@jsBundle').then((interception) => {
+    // Use cy.visit() instead of cy.reload() — reload has known issues with
+    // cache bypass even when CDP cache is disabled.
+    cy.visit('/');
+    cy.wait('@jsBundle', { timeout: 10000 }).then((interception) => {
       expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
     });
   });
@@ -100,7 +107,7 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
     // JS bundles will be re-fetched on every navigation.
     cy.visit('/');
 
-    cy.wait('@jsWithHeader').then((interception) => {
+    cy.wait('@jsWithHeader', { timeout: 10000 }).then((interception) => {
       expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
       expect(interception.response?.headers?.['x-cypress-intercepted']).to.eq(
         'true',

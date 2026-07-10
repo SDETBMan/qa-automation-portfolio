@@ -55,9 +55,14 @@ export default defineConfig({
       // Register the merged task map once
       on('task', tasks);
 
-      // ── Lighthouse — prime Chrome with the DevTools flags the audit needs ───
-      on('before:browser:launch', (_browser, launchOptions) => {
+      // ── Browser launch flags ────────────────────────────────────────────────
+      on('before:browser:launch', (browser, launchOptions) => {
         prepareAudit(launchOptions);
+        // Disable disk cache so cy.intercept() reliably observes Vite's
+        // immutable content-hashed bundles in network.cy.ts.
+        if (browser.family === 'chromium') {
+          launchOptions.args.push('--disk-cache-size=1');
+        }
         return launchOptions;
       });
 
