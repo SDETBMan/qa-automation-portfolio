@@ -77,6 +77,25 @@ describe('Network — cy.intercept() showcase (shared session)', { testIsolation
 // gets a fresh tab with an empty memory cache.
 describe('Network — cy.intercept() showcase (JS bundles)', { retries: 0 }, () => {
 
+  // Clear Chrome's HTTP cache (disk + memory) via CDP before each test.
+  // cy.wrap() ensures the CDP promise resolves before the test proceeds.
+  beforeEach(() => {
+    cy.wrap(
+      Cypress.automation('remote:debugger:protocol', {
+        command: 'Network.clearBrowserCache',
+        params: {},
+      }),
+      { log: false },
+    );
+    cy.wrap(
+      Cypress.automation('remote:debugger:protocol', {
+        command: 'Network.setCacheDisabled',
+        params: { cacheDisabled: true },
+      }),
+      { log: false },
+    );
+  });
+
   // ── @regression: spy on JavaScript bundle requests ────────────────────────
 
   it('@regression spies on JavaScript bundle requests during page load', () => {

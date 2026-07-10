@@ -12,11 +12,11 @@ export default defineConfig({
     // before the other specs have a chance to trigger saucedemo.com rate limiting.
     specPattern: [
       'cypress/e2e/performance.cy.ts',
+      'cypress/e2e/network.cy.ts',
       'cypress/e2e/accessibility.cy.ts',
       'cypress/e2e/checkout.cy.ts',
       'cypress/e2e/inventory.cy.ts',
       'cypress/e2e/login.cy.ts',
-      'cypress/e2e/network.cy.ts',
     ],
     supportFile: 'cypress/support/e2e.ts',
     video: true,
