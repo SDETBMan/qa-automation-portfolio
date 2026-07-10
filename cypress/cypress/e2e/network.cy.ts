@@ -17,36 +17,23 @@
  * These four patterns drive the four cy.intercept() scenarios below.
  *
  * CACHING STRATEGY:
- *   testIsolation is disabled so all tests share a single browser session.
  *   Vite's immutable-hashed ES module bundles are aggressively cached by Chrome
- *   — even cy.reload(true) won't trigger a network request (the forceReload
- *   parameter to location.reload() was deprecated in Chrome 94+).
- *   We disable the disk cache via --disk-cache-size=1 at browser launch
- *   (cypress.config.ts) and clear any existing cache via CDP before the suite
- *   so cy.intercept() can observe all network requests reliably.
+ *   in both disk AND memory cache. Disk cache is disabled at browser launch via
+ *   --disk-cache-size=1 (cypress.config.ts). Memory cache, however, persists
+ *   for the lifetime of a browser tab — once a JS bundle is loaded, Chrome
+ *   serves it from memory without any network request, making cy.intercept()
+ *   invisible to it. For this reason:
+ *
+ *   - Tests that spy on/modify JS bundles use testIsolation: true so each
+ *     test gets a fresh browser context with an empty memory cache.
+ *   - Tests that spy on HTML or product images (which are always fetched fresh
+ *     during login/navigation) use testIsolation: false for shared state.
  */
 
-describe('Network — cy.intercept() showcase', { testIsolation: false, retries: 0 }, () => {
-  // Clear any existing browser cache and disable future caching via CDP.
-  // The primary cache disable is --disk-cache-size=1 at browser launch
-  // (cypress.config.ts); this is a secondary guarantee.
-  before(() => {
-    Cypress.automation('remote:debugger:protocol', {
-      command: 'Network.clearBrowserCache',
-      params: {},
-    });
-    Cypress.automation('remote:debugger:protocol', {
-      command: 'Network.setCacheDisabled',
-      params: { cacheDisabled: true },
-    });
-  });
-
-  after(() => {
-    Cypress.automation('remote:debugger:protocol', {
-      command: 'Network.setCacheDisabled',
-      params: { cacheDisabled: false },
-    });
-  });
+// ── Tests that rely on shared session state ─────────────────────────────────
+// HTML page load and image stubbing don't hit the memory cache problem because
+// cy.visit() always fetches HTML, and product images load fresh after login.
+describe('Network — cy.intercept() showcase (shared session)', { testIsolation: false, retries: 0 }, () => {
 
   // ── @regression: spy on initial HTML request ───────────────────────────────
 
@@ -55,18 +42,6 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
     cy.visit('/');
     cy.wait('@homePage').then((interception) => {
       expect(interception.response?.statusCode).to.eq(200);
-    });
-  });
-
-  // ── @regression: spy on JavaScript bundle requests ────────────────────────
-
-  it('@regression spies on JavaScript bundle requests during page load', () => {
-    cy.intercept('GET', '**/*.js').as('jsBundle');
-    // Use cy.visit() instead of cy.reload() — reload has known issues with
-    // cache bypass even when CDP cache is disabled.
-    cy.visit('/');
-    cy.wait('@jsBundle', { timeout: 10000 }).then((interception) => {
-      expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
     });
   });
 
@@ -80,8 +55,8 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
       body: '',
     }).as('blockedImages');
 
-    // Fill the login form directly — no cy.visit() needed since we are already
-    // on the login page from the previous test's reload.
+    // Fill the login form — we are already on the login page from the
+    // previous test's cy.visit('/').
     cy.fixture('users').then((users) => {
       cy.get('#user-name').type(users.standard.username);
       cy.get('#password').type(users.standard.password);
@@ -91,6 +66,24 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
 
     cy.wait('@blockedImages').then((interception) => {
       expect(interception.response?.statusCode).to.eq(404);
+    });
+  });
+});
+
+// ── Tests that require fresh browser context ────────────────────────────────
+// JS bundle intercepts require testIsolation: true. Chrome's memory cache
+// serves previously loaded JS bundles without any network request, so
+// cy.intercept('**/*.js') never fires in a shared session. Each test here
+// gets a fresh tab with an empty memory cache.
+describe('Network — cy.intercept() showcase (JS bundles)', { retries: 0 }, () => {
+
+  // ── @regression: spy on JavaScript bundle requests ────────────────────────
+
+  it('@regression spies on JavaScript bundle requests during page load', () => {
+    cy.intercept('GET', '**/*.js').as('jsBundle');
+    cy.visit('/');
+    cy.wait('@jsBundle', { timeout: 10000 }).then((interception) => {
+      expect(interception.response?.statusCode).to.be.oneOf([200, 304]);
     });
   });
 
@@ -103,8 +96,6 @@ describe('Network — cy.intercept() showcase', { testIsolation: false, retries:
       });
     }).as('jsWithHeader');
 
-    // Navigate back to / from inventory — cache is disabled via CDP so
-    // JS bundles will be re-fetched on every navigation.
     cy.visit('/');
 
     cy.wait('@jsWithHeader', { timeout: 10000 }).then((interception) => {
