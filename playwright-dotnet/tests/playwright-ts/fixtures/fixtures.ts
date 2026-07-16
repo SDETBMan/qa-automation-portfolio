@@ -21,6 +21,19 @@ import { DbAssertions } from '../utils/dbAssertions';
  * in most fixtures. The `authenticatedPage` fixture demonstrates setup + yield
  * with an implicit teardown handled by the framework.
  *
+ * Fixture scoping:
+ * ─────────────────────────────────────────────────────────────────────────────
+ * | Scope   | Lifetime                           | Use for                   |
+ * |---------|------------------------------------|---------------------------|
+ * | test    | Created fresh per test             | Pages, mutable data       |
+ * | worker  | Shared across tests in one worker  | DB pools, API contexts    |
+ *
+ * dbClient is worker-scoped: one connection pool per worker process, shared
+ * across all tests in that worker. This prevents pool exhaustion on shared CI
+ * databases (5 connections × N workers, not 5 × N tests). dbAssertions wraps
+ * the worker-scoped dbClient but is test-scoped itself so each test gets a
+ * clean assertion context.
+ *
  * C# equivalent comparison:
  * ─────────────────────────────────────────────────────────────────────────────
  * | Concept    | TypeScript                          | C#                          |
@@ -30,7 +43,10 @@ import { DbAssertions } from '../utils/dbAssertions';
  * | Teardown   | code after await use(...)           | [TearDown] OnTearDown()     |
  * | Guard      | await page.waitForURL(/inventory/)  | Assert.That(Page.Url, ...)  |
  * | Page obj   | new InventoryPage(page)             | new InventoryPage(Page)     |
+ * | Worker fix | { scope: 'worker' }                 | [OneTimeSetUp] (NUnit)      |
  */
+
+/** Test-scoped fixtures — created fresh for each test. */
 type AppFixtures = {
   /** Login page object; browser is at baseURL (login screen). */
   loginPage: LoginPage;
@@ -52,19 +68,12 @@ type AppFixtures = {
   authenticatedPage: InventoryPage;
 
   /**
-   * Database client for querying backend state during E2E tests.
-   * SETUP:    creates a DbClient with connection pool from env vars (DB_HOST, DB_PORT, etc.)
-   * YIELD:    delivers DbClient to the test
-   * TEARDOWN: closes the connection pool
-   *
-   * C# equivalent: DatabaseUtils.ExecuteQueryAsync() / ExecuteNonQueryAsync()
-   */
-  dbClient: DbClient;
-
-  /**
-   * Fluent database-to-UI assertion helpers.
-   * Wraps a DbClient and provides methods like scalarMatchesText(),
+   * Fluent database-to-UI assertion helpers (test-scoped).
+   * Wraps the worker-scoped dbClient and provides methods like scalarMatchesText(),
    * rowCountMatchesLocatorCount(), fieldMatchesText(), etc.
+   *
+   * Test-scoped so each test gets a clean assertion context, even though the
+   * underlying DbClient pool is shared across the worker.
    *
    * No C# equivalent — this is a TypeScript-only addition that bridges
    * database verification with Playwright's auto-retrying expect() API.
@@ -93,7 +102,25 @@ type AppFixtures = {
   graphqlClient: GraphQLClient;
 };
 
-export const test = base.extend<AppFixtures>({
+/** Worker-scoped fixtures — shared across all tests in a single worker process. */
+type WorkerFixtures = {
+  /**
+   * Database client with connection pooling (worker-scoped).
+   * SETUP:    creates a DbClient with connection pool from env vars (DB_HOST, DB_PORT, etc.)
+   * YIELD:    delivers DbClient — shared across all tests in this worker
+   * TEARDOWN: closes the connection pool when the worker shuts down
+   *
+   * Worker-scoped because:
+   *   - Connection pools are expensive to create/destroy per test
+   *   - Pool cap (5 connections) × workers is the right concurrency model
+   *   - The pool itself is stateless — test isolation comes from test data, not connections
+   *
+   * C# equivalent: DatabaseUtils.ExecuteQueryAsync() / ExecuteNonQueryAsync()
+   */
+  dbClient: DbClient;
+};
+
+export const test = base.extend<AppFixtures, WorkerFixtures>({
   loginPage: async ({ page }, use) => {
     await use(new LoginPage(page));
   },
@@ -108,12 +135,10 @@ export const test = base.extend<AppFixtures>({
 
   authenticatedPage: async ({ page }, use) => {
     // ── SETUP ────────────────────────────────────────────────────────────────
-    await page.goto('/');
-    await new LoginPage(page).loginAs(
-      process.env['APP_USERNAME'] ?? 'standard_user',
-      process.env['APP_PASSWORD'] ?? 'secret_sauce',
-    );
-    // Fixture guard: fail fast if login did not land on inventory.
+    // Browser projects depend on the 'setup' project which saves storageState
+    // after login. The page arrives pre-authenticated — just navigate.
+    await page.goto('/inventory.html');
+    // Fixture guard: fail fast if auth state is missing or expired.
     await page.waitForURL(/inventory/, { timeout: 10_000 });
 
     // ── YIELD — test body executes here ──────────────────────────────────────
@@ -122,22 +147,24 @@ export const test = base.extend<AppFixtures>({
     // ── TEARDOWN — Playwright auto-disposes the page; nothing to clean up ────
   },
 
-  dbClient: async ({}, use) => {
+  dbClient: [async ({}, use) => {
     // ── SETUP ────────────────────────────────────────────────────────────────
     // DbClient reads DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_TYPE
     // from environment variables. Defaults to MySQL on localhost:3306/testdb.
+    // Worker-scoped: one pool per process, shared across all tests in this worker.
     const client = new DbClient();
 
-    // ── YIELD — test body receives a ready-to-use DbClient ─────────────────
+    // ── YIELD — all tests in this worker share this DbClient instance ────────
     await use(client);
 
-    // ── TEARDOWN — release connection pool ─────────────────────────────────
+    // ── TEARDOWN — release connection pool when the worker shuts down ────────
     await client.close();
-  },
+  }, { scope: 'worker' }],
 
   dbAssertions: async ({ dbClient }, use) => {
     // ── SETUP ────────────────────────────────────────────────────────────────
-    // Wraps the dbClient fixture for a fluent assertion API.
+    // Test-scoped wrapper over the worker-scoped dbClient.
+    // Each test gets its own DbAssertions instance, but they share the pool.
     await use(new DbAssertions(dbClient));
     // ── TEARDOWN — nothing to clean up; dbClient fixture handles pool close ─
   },

@@ -1,4 +1,8 @@
+import dotenv from 'dotenv';
+import path from 'path';
 import { defineConfig, devices } from '@playwright/test';
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 /**
  * Playwright configuration for the TypeScript test suite.
@@ -35,7 +39,8 @@ export default defineConfig({
 
   use: {
     baseURL: process.env['BASE_URL'] ?? 'https://www.saucedemo.com',
-    trace: 'retain-on-failure',             // ← Trace Viewer: saves on failure only
+    testIdAttribute: 'data-test',            // SauceDemo uses data-test, not data-testid
+    trace: 'retain-on-failure',              // ← Trace Viewer: saves on failure only
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     actionTimeout: 10_000,
@@ -43,17 +48,48 @@ export default defineConfig({
   },
 
   projects: [
+    /**
+     * Auth setup project — runs once before all browser projects.
+     *
+     * Logs in as standard_user, saves cookies/localStorage to a JSON file.
+     * Browser projects depend on this and reuse the saved state, so tests
+     * start authenticated without per-test UI login.
+     *
+     * Why: Login-per-test adds seconds × hundreds of tests = minutes of CI.
+     * For MFA-protected apps (e.g. Juniper Square), it's the difference
+     * between one auth ceremony and hundreds.
+     */
+    {
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
+    },
+
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'test-results/.auth/user.json',
+      },
+      dependencies: ['setup'],
+      testIgnore: ['**/shopify/**'],
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        storageState: 'test-results/.auth/user.json',
+      },
+      dependencies: ['setup'],
+      testIgnore: ['**/shopify/**'],
     },
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: {
+        ...devices['Desktop Safari'],
+        storageState: 'test-results/.auth/user.json',
+      },
+      dependencies: ['setup'],
+      testIgnore: ['**/shopify/**'],
     },
 
     /**

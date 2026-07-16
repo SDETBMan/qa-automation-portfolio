@@ -1,29 +1,38 @@
-import { Page } from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
 import { BasePage } from './basePage';
 
 /**
  * CartPage — wraps SauceDemo shopping cart interactions.
- * Selectors mirror C# CartPage.cs.
+ *
+ * Locator strategy:
+ *   - Checkout button: getByTestId — data-test='checkout'
+ *   - Cart items: scoped CSS — no data-test on the container
+ *   - Item name: scoped CSS within cart item — structural but stable
+ *
+ * C# equivalent: CartPage.cs
  */
 export class CartPage extends BasePage {
-  private readonly cartItems      = '.cart_item';
-  private readonly checkoutButton = '#checkout';
-  private readonly itemName       = '.cart_item .inventory_item_name';
+  readonly cartItems: Locator;
+  readonly checkoutButton: Locator;
+  readonly itemName: Locator;
 
   constructor(page: Page) {
     super(page);
+    this.cartItems = page.locator('.cart_item');
+    this.checkoutButton = page.getByTestId('checkout');
+    this.itemName = page.locator('.cart_item .inventory_item_name');
   }
 
   async clickCheckout(): Promise<void> {
-    await this.click(this.checkoutButton);
+    await this.checkoutButton.click();
   }
 
   async getCartItemCount(): Promise<number> {
-    return await this.page.locator(this.cartItems).count();
+    return await this.cartItems.count();
   }
 
   async getFirstItemName(): Promise<string> {
-    return await this.getText(this.itemName);
+    return await this.itemName.first().innerText();
   }
 
   async isOnCartPage(): Promise<boolean> {

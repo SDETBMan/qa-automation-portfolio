@@ -58,14 +58,15 @@ export async function expectDbValueMatchesText(
     ? options.transformDb(dbValue)
     : String(dbValue ?? '');
 
-  const expectedText = options?.transformUi
-    ? expect(locator).toHaveText(/.*/,) // get text first for transform
-    : undefined;
-
-  // Use Playwright's auto-retrying toHaveText to handle UI render lag gracefully.
+  // Use Playwright's auto-retrying assertions to handle UI render lag gracefully.
   if (options?.transformUi) {
-    const uiText = options.transformUi(await locator.innerText());
-    expect(uiText, options?.message ?? `DB value "${dbText}" should match UI`).toBe(dbText);
+    // transformUi requires reading raw text then comparing — use expect.poll
+    // so the read+transform retries until match or timeout, just like toHaveText.
+    const transform = options.transformUi;
+    await expect.poll(
+      async () => transform(await locator.innerText()),
+      { message: options?.message ?? `DB value "${dbText}" should match transformed UI text` },
+    ).toBe(dbText);
   } else {
     await expect(
       locator,
@@ -116,8 +117,11 @@ export async function expectDbFieldMatchesText(
     : String(rawValue ?? '');
 
   if (options?.transformUi) {
-    const uiText = options.transformUi(await locator.innerText());
-    expect(uiText, options?.message ?? `DB column "${column}" should match UI`).toBe(dbText);
+    const transform = options.transformUi;
+    await expect.poll(
+      async () => transform(await locator.innerText()),
+      { message: options?.message ?? `DB column "${column}" should match transformed UI text` },
+    ).toBe(dbText);
   } else {
     await expect(
       locator,

@@ -57,8 +57,9 @@ function readConfig(): DbConfig {
  *   - executeQuery(sql, params?)  → SELECT → DbRow[]
  *   - executeNonQuery(sql, params?) → INSERT/UPDATE/DELETE → affected row count
  *
- * Instantiate once per test worker via the `dbClient` fixture (see fixtures.ts).
- * Call `close()` in teardown to release pool connections cleanly.
+ * Worker-scoped via the `dbClient` fixture (see fixtures.ts) — one instance per
+ * worker process, shared across all tests in that worker. The fixture teardown
+ * calls `close()` when the worker shuts down to release pool connections cleanly.
  */
 export class DbClient {
   private mysqlPool: Pool | null = null;
