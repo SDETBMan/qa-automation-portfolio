@@ -130,7 +130,7 @@ jobs:
 
       - name: Run TypeScript Playwright tests
         working-directory: playwright-dotnet/tests/playwright-ts
-        run: npx playwright test --project=chromium
+        run: npx playwright test --project=setup --project=chromium
         env:
           CI: 'true'
           APP_USERNAME: standard_user
@@ -140,7 +140,7 @@ jobs:
         if: always()
         continue-on-error: true   # First run will fail (no baselines yet). Use visual-regression-update workflow to generate them.
         working-directory: playwright-dotnet/tests/playwright-ts
-        run: npx playwright test --grep "@visual" --project=chromium
+        run: npx playwright test --grep "@visual" --project=setup --project=chromium
         env:
           CI: 'true'
           APP_USERNAME: standard_user

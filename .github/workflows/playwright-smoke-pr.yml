@@ -89,7 +89,7 @@ jobs:
         run: >
           npx playwright test
           --grep "@smoke"
-          --project=chromium
+          --project=setup --project=chromium
           --retries=0
           --reporter=github,list,html
         env:
