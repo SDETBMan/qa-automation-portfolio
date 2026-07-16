@@ -1,5 +1,5 @@
 import { test as setup } from '@playwright/test';
-import { LoginPage } from './pages/loginPage';
+import { LoginPage } from '../pages/loginPage';
 
 /**
  * Global auth setup — runs once before all browser projects.
