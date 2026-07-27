@@ -20,7 +20,7 @@ Feature: Data-Driven Testing
       | 2      | Ervin Howell         | Shanna@melissa.tv          |
       | 3      | Clementine Bauch     | Nathan@yesenia.net         |
       | 4      | Patricia Lebsack     | Julianne.OConner@kory.org  |
-      | 5      | Chelsey Dietrich     | Lucio_Hettinger@annie.name |
+      | 5      | Chelsey Dietrich     | Lucio_Hettinger@annie.ca   |
 
   Scenario Outline: Create posts with different payloads
     Given path '/posts'

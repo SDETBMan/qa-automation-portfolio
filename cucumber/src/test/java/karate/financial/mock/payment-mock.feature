@@ -34,21 +34,24 @@ Feature: Payment Processing Mock Server
 
   Scenario: pathMatches('/api/transactions/{id}/authorize') && methodIs('post')
     * def txn = transactions[pathParams.id]
-    * if (txn == null) { def responseStatus = 404; def response = { error: 'Transaction not found' } }
-    * if (txn != null && txn.status != 'PENDING') { def responseStatus = 409; def response = { error: 'Invalid state transition', currentStatus: txn.status } }
-    * if (txn != null && txn.status == 'PENDING') { eval txn.status = 'AUTHORIZED'; def responseStatus = 200; def response = txn }
+    * def result = {}
+    * eval if (txn == null) { result.status = 404; result.body = { error: 'Transaction not found' } } else if (txn.status != 'PENDING') { result.status = 409; result.body = { error: 'Invalid state transition', currentStatus: txn.status } } else { txn.status = 'AUTHORIZED'; result.status = 200; result.body = txn }
+    * def responseStatus = result.status
+    * def response = result.body
 
   Scenario: pathMatches('/api/transactions/{id}/capture') && methodIs('post')
     * def txn = transactions[pathParams.id]
-    * if (txn == null) { def responseStatus = 404; def response = { error: 'Transaction not found' } }
-    * if (txn != null && txn.status != 'AUTHORIZED') { def responseStatus = 409; def response = { error: 'Invalid state transition', currentStatus: txn.status } }
-    * if (txn != null && txn.status == 'AUTHORIZED') { eval txn.status = 'CAPTURED'; def responseStatus = 200; def response = txn }
+    * def result = {}
+    * eval if (txn == null) { result.status = 404; result.body = { error: 'Transaction not found' } } else if (txn.status != 'AUTHORIZED') { result.status = 409; result.body = { error: 'Invalid state transition', currentStatus: txn.status } } else { txn.status = 'CAPTURED'; result.status = 200; result.body = txn }
+    * def responseStatus = result.status
+    * def response = result.body
 
   Scenario: pathMatches('/api/transactions/{id}/refund') && methodIs('post')
     * def txn = transactions[pathParams.id]
-    * if (txn == null) { def responseStatus = 404; def response = { error: 'Transaction not found' } }
-    * if (txn != null && txn.status != 'CAPTURED') { def responseStatus = 409; def response = { error: 'Invalid state transition', currentStatus: txn.status } }
-    * if (txn != null && txn.status == 'CAPTURED') { eval txn.status = 'REFUNDED'; def responseStatus = 200; def response = txn }
+    * def result = {}
+    * eval if (txn == null) { result.status = 404; result.body = { error: 'Transaction not found' } } else if (txn.status != 'CAPTURED') { result.status = 409; result.body = { error: 'Invalid state transition', currentStatus: txn.status } } else { txn.status = 'REFUNDED'; result.status = 200; result.body = txn }
+    * def responseStatus = result.status
+    * def response = result.body
 
   # ── Pricing Endpoints ──────────────────────────────────────────────
 
