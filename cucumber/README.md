@@ -2,10 +2,11 @@
 
 ![Java](https://img.shields.io/badge/Language-Java-orange)
 ![Cucumber](https://img.shields.io/badge/BDD-Cucumber-brightgreen)
+![Karate](https://img.shields.io/badge/API-Karate-purple)
 ![JaCoCo](https://img.shields.io/badge/Coverage-JaCoCo-blue)
 ![Mockito](https://img.shields.io/badge/Mocks-Mockito-yellow)
 
-A production-grade, thread-safe BDD testing framework built from scratch to demonstrate modern SDET architecture. Designed for high scalability, this framework leverages **Java**, **Selenium 4**, and **Cucumber 7** with **TestNG** for parallel execution across web, mobile, and cloud platforms.
+A production-grade, thread-safe BDD testing framework built from scratch to demonstrate modern SDET architecture. Designed for high scalability, this framework leverages **Java**, **Selenium 4**, and **Cucumber 7** with **TestNG** for parallel execution across web, mobile, and cloud platforms. Includes a **Karate 1.5** API testing layer with 13 feature files covering CRUD operations, schema validation, mock servers, and financial domain workflows.
 
 [![cucumber CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml)
 
@@ -34,7 +35,8 @@ A production-grade, thread-safe BDD testing framework built from scratch to demo
 | Browser Automation | Selenium WebDriver 4.21 |
 | Mobile Automation | Appium 9.3 (Android + iOS) |
 | Self-Healing | Healenium 3.4.8 |
-| API Testing | RestAssured 5.4 |
+| API Testing (UI steps) | RestAssured 5.4 |
+| API Testing (standalone) | Karate 1.5.2 |
 | Database | MySQL Connector 9.0 |
 | Performance | JMeter (Maven Plugin 3.8) |
 | Reporting | Allure 2.27 + Extent Reports 5.1 |
@@ -152,6 +154,54 @@ The CI pipeline also runs an **OWASP ZAP Baseline Scan** after every test run (`
 
 ---
 
+## Karate API Testing
+
+A standalone API testing layer using **Karate 1.5.2** that coexists with Cucumber in the same Maven project. Karate runs via JUnit5 under a dedicated Maven profile — `mvn test` continues to run only Cucumber, while `mvn test -Pkarate` runs only Karate.
+
+### Karate Feature Coverage
+
+| Category | Feature File | Scenarios |
+|---|---|---|
+| **Core API** | `users-crud.feature` | GET all/single, POST, PUT, PATCH, DELETE (7) |
+| **Core API** | `posts.feature` | GET all/filtered, POST, read-modify-write (4) |
+| **Core API** | `comments.feature` | Nested resources, query filtering, request chaining (3) |
+| **Advanced** | `schema-validation.feature` | Type markers, each keyword, optional fields, regex (4) |
+| **Advanced** | `data-driven.feature` | Scenario Outline + Examples, dynamic data (3) |
+| **Advanced** | `headers-auth.feature` | Custom headers, Bearer token, cookies, configure (5) |
+| **Advanced** | `error-handling.feature` | 404s, empty body, large payload, retry (6) |
+| **Financial** | `transaction-lifecycle.feature` | PENDING→AUTHORIZED→CAPTURED→REFUNDED state machine (4) |
+| **Financial** | `pricing-calculations.feature` | Tax rates, discount + tax combined (2 outlines) |
+| **Infra** | `performance-hooks.feature` | Response time SLAs, parallel calls, auth helper (4) |
+| | **Reusable (@ignore)** | `common.feature`, `auth.feature`, `payment-mock.feature` |
+
+**Total: 13 runnable feature files, ~42 scenarios**
+
+### How to Run Karate
+
+```bash
+# All Karate tests
+mvn clean test -Pkarate
+
+# Target a specific environment
+mvn clean test -Pkarate -Dkarate.env=staging
+
+# Run only smoke-tagged features
+mvn clean test -Pkarate -Dkarate.options="--tags @smoke"
+
+# Run only financial domain features
+mvn clean test -Pkarate -Dkarate.options="--tags @financial"
+```
+
+### Karate Reports
+
+| Report | Location |
+|---|---|
+| Karate HTML Summary | `target/karate-reports/karate-summary.html` |
+| Surefire XML | `target/surefire-reports/TEST-karate.KarateRunner.xml` |
+| Karate Log | `target/karate.log` |
+
+---
+
 ## Project Structure
 
 ```
@@ -162,37 +212,62 @@ src/
 │       ├── AnnotationTransformer.java # Globally applies RetryAnalyzer to every scenario
 │       ├── RetryAnalyzer.java         # Auto-retries flaky tests up to retry.max times
 │       ├── SlackUtils.java            # Posts suite summary to Slack via webhook
-│       └── DatabaseUtils.java         # JDBC helpers for backend data validation
-├── test/java/com/saucedemo/
-│   ├── pages/
-│   │   ├── BasePage.java              # Fluent wrapper methods (click, sendKeys, waits)
-│   │   ├── LoginPage.java
-│   │   ├── DashboardPage.java
-│   │   ├── InventoryPage.java
-│   │   ├── CartPage.java
-│   │   └── ProductsPage.java
-│   ├── stepDefinitions/
-│   │   ├── LoginSteps.java
-│   │   ├── DashboardSteps.java
-│   │   ├── InventorySteps.java
-│   │   ├── CartSteps.java
-│   │   ├── ApiSteps.java
-│   │   ├── SecuritySteps.java         # OWASP step defs: error leakage, XSS title, response headers
-│   │   └── Hooks.java                 # Screenshot on failure, driver teardown
-│   ├── runners/
-│   │   └── TestRunner.java            # Parallel DataProvider, Allure + Extent plugins
-│   ├── listeners/
-│   │   └── TestListener.java          # Slack notification on suite finish
-│   └── utils/
-│       └── DriverManager.java         # ThreadLocal factory: local/grid/BS/android/iOS + Healenium
+│       ├── DatabaseUtils.java         # JDBC helpers for backend data validation
+│       └── DataDogUtils.java          # Sends test metrics to DataDog v2 API
+├── test/java/
+│   ├── karate-config.js               # Karate env switching, base URLs, timeouts
+│   ├── com/saucedemo/
+│   │   ├── pages/
+│   │   │   ├── BasePage.java          # Fluent wrapper methods (click, sendKeys, waits)
+│   │   │   ├── LoginPage.java
+│   │   │   ├── DashboardPage.java
+│   │   │   ├── InventoryPage.java
+│   │   │   ├── CartPage.java
+│   │   │   └── ProductsPage.java
+│   │   ├── stepDefinitions/
+│   │   │   ├── LoginSteps.java
+│   │   │   ├── DashboardSteps.java
+│   │   │   ├── InventorySteps.java
+│   │   │   ├── CartSteps.java
+│   │   │   ├── ApiSteps.java
+│   │   │   ├── SecuritySteps.java     # OWASP step defs
+│   │   │   └── Hooks.java            # Screenshot on failure, driver teardown
+│   │   ├── runners/
+│   │   │   └── TestRunner.java        # Cucumber + TestNG parallel runner
+│   │   ├── listeners/
+│   │   │   └── TestListener.java      # Slack + DataDog on suite finish
+│   │   └── utils/
+│   │       └── DriverManager.java     # ThreadLocal factory: local/grid/BS/android/iOS
+│   └── karate/                        # ── Karate API Testing ──
+│       ├── KarateRunner.java          # JUnit5 runner (active with -Pkarate)
+│       ├── logback-test.xml           # Karate logging config
+│       ├── helpers/
+│       │   └── DataDogHook.java       # Karate → DataDog metrics bridge
+│       ├── api/
+│       │   ├── users/users-crud.feature
+│       │   ├── posts/posts.feature
+│       │   └── comments/comments.feature
+│       ├── advanced/
+│       │   ├── schema/schema-validation.feature
+│       │   ├── data-driven/data-driven.feature
+│       │   ├── headers/headers-auth.feature
+│       │   └── error-handling/error-handling.feature
+│       ├── financial/
+│       │   ├── mock/payment-mock.feature        # @ignore — mock server
+│       │   ├── transactions/transaction-lifecycle.feature
+│       │   └── pricing/pricing-calculations.feature
+│       └── infra/
+│           ├── reusable/common.feature          # @ignore — shared helpers
+│           ├── reusable/auth.feature            # @ignore — auth helper
+│           └── performance/performance-hooks.feature
 └── test/resources/
-    ├── features/
+    ├── features/                      # ── Cucumber features ──
     │   ├── login.feature
     │   ├── dashboard.feature
     │   ├── inventory.feature
     │   ├── cart.feature
     │   ├── api.feature
-    │   └── security.feature           # @security: SQL injection, XSS, response headers
+    │   └── security.feature
     ├── config.properties
     ├── extent.properties
     └── healenium.properties

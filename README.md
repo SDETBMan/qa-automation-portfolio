@@ -3,6 +3,7 @@
 [![playwright-dotnet CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright-dotnet.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright-dotnet.yml)
 [![selenium-java CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/selenium-java.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/selenium-java.yml)
 [![cucumber CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml)
+[![karate CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/karate.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/karate.yml)
 [![cypress CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cypress.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cypress.yml)
 [![ai-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/ai-eval.yml)
 [![conv-eval CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/conv-eval.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/conv-eval.yml)
@@ -20,9 +21,10 @@
 [![claims-diff CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/claims-diff.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/claims-diff.yml)
 [![pact CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/pact.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/pact.yml)
 [![flakiness-detector CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/flakiness-detector.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/flakiness-detector.yml)
+[![site-monitor CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml)
 [![CodeQL](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml)
 
-A monorepo housing twenty-one independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, vulnerability aggregation, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
+A monorepo housing twenty-two independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
 
 ---
 
@@ -35,7 +37,7 @@ A monorepo housing twenty-one independent, production-grade frameworks spanning 
 | [`agent-eval`](./agent-eval/) | Python | DeepEval · Pytest · OpenAI · Pydantic · Python 3.11 | [→](./agent-eval/README.md) |
 | [`playwright-dotnet`](./playwright-dotnet/) | C# · TypeScript | Playwright 1.44 · NUnit · .NET 8 · TypeScript 5.4 | [→](./playwright-dotnet/README.md) |
 | [`selenium-java`](./selenium-java/) | Java | Selenium 4 · TestNG · Maven · Java 17 | [→](./selenium-java/README.md) |
-| [`cucumber`](./cucumber/) | Java | Cucumber 7 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
+| [`cucumber`](./cucumber/) | Java | Cucumber 7 · Karate 1.5 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
 | [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
 | [`job-agent`](./job-agent/) | Python | Anthropic Claude · Tavily · AgentOps · Python 3.11 | [→](./job-agent/README.md) |
 | [`cypress`](./cypress/) | TypeScript | Cypress 13 · React 18 · Vite · Node.js 20 | [→](./cypress/README.md) |
@@ -51,6 +53,7 @@ A monorepo housing twenty-one independent, production-grade frameworks spanning 
 | [`pact-consumer`](./pact-consumer/) | TypeScript | Pact v13 · Vitest · pact-python provider verifier · Python 3.11 | [→](./pact-consumer/README.md) |
 | [`flakiness-detector`](./flakiness-detector/) | Python | JUnit XML · Click · DataDog · Python 3.11 | [→](./flakiness-detector/README.md) |
 | [`vulnerability-aggregator`](./vulnerability-aggregator/) | Python | GitHub API (gh CLI) · Dependabot · CodeQL · ZAP · Python 3.11 | [→](./vulnerability-aggregator/README.md) |
+| [`site-monitor`](./site-monitor/) | Python | BeautifulSoup · Click · DataDog · Requests · Python 3.11 | [→](./site-monitor/README.md) |
 
 ---
 
@@ -63,7 +66,7 @@ A monorepo housing twenty-one independent, production-grade frameworks spanning 
 | **Network interception** | ✅ `page.route()` mock/stub | — | — | ✅ `cy.intercept()` spy + stub + failure sim | — | — | — | — | — |
 | **Component testing** | — | — | — | ✅ React `ProductCard` via Cypress component runner | — | — | — | — | — |
 | **Parallel execution** | ✅ `[Parallelizable]` · `fullyParallel` | ✅ `ThreadLocal` · `parallel="tests"` | ✅ `ThreadLocal` · `@DataProvider(parallel=true)` | ✅ `--parallel` (Cypress Cloud) | — | — | — | — | — |
-| **Fixtures / base classes** | ✅ `AuthenticatedTest` · `test.extend<>` | ✅ `BaseTest` | ✅ Cucumber `Hooks` | ✅ `BasePage` abstract class · JSON fixtures | ✅ `conftest.py` session fixtures | ✅ `conftest.py` session + function fixtures | ✅ `conftest.py` session + function fixtures | — | — |
+| **Fixtures / base classes** | ✅ `AuthenticatedTest` · `test.extend<AppFixtures, WorkerFixtures>` · `storageState` auth · worker-scoped DB | ✅ `BaseTest` | ✅ Cucumber `Hooks` | ✅ `BasePage` abstract class · JSON fixtures | ✅ `conftest.py` session fixtures | ✅ `conftest.py` session + function fixtures | ✅ `conftest.py` session + function fixtures | — | — |
 | **Retry on failure** | ✅ `[Retry]` · `retries: 2` in CI | ✅ `RetryAnalyzer` + `AnnotationTransformer` | ✅ `RetryAnalyzer` + `AnnotationTransformer` | ✅ `retries: { runMode: 2 }` | — | — | — | — | — |
 | **Cross-browser** | ✅ Chromium · Firefox · WebKit | ✅ Chrome · Firefox · Edge | ✅ Chrome · Firefox · Edge | ✅ Chrome · Firefox · Edge · Electron | — | — | — | — | — |
 | **Screenshot/video on failure** | ✅ Trace Viewer | — | — | ✅ `screenshotOnRunFailure` · `video: true` | — | — | — | — | — |
@@ -71,11 +74,11 @@ A monorepo housing twenty-one independent, production-grade frameworks spanning 
 | **Data-driven tests** | ✅ `[TestCaseSource]` | ✅ `@DataProvider` | ✅ Scenario Outline | ✅ `cy.fixture()` JSON datasets | ✅ `golden_dataset.json` · `@pytest.mark.parametrize` | ✅ `conversations.json` · `@pytest.mark.parametrize` | ✅ `agent_scenarios.json` · `@pytest.mark.parametrize` | ✅ pre-request scripts · collection variables | — |
 | **Visual regression** | ✅ `toHaveScreenshot()` · snapshot baselines · CI update workflow | — | — | — | — | — | — | — | — |
 | **GraphQL API testing** | ✅ Playwright `request` fixture · 5 patterns (query, variables, mock, error, auditing) | — | — | — | — | — | — | — | — |
-| **Database-to-UI assertions** | ✅ 5 patterns: scalar match, row count, field match, pre-fill, column values | — | — | — | — | — | — | — | — |
+| **Database-to-UI assertions** | ✅ 5 patterns: scalar match, row count, field match, pre-fill, column values · worker-scoped pool · `expect.poll()` retry | — | — | — | — | — | — | — | — |
 | **Shopify E2E testing** | ✅ 8 storefront tests · 4 visual baselines · Page Objects | — | — | — | — | — | — | — | — |
 | **Deploy validation + rollback** | ✅ Vercel health-check → Playwright smoke → auto-rollback pipeline | — | — | — | — | — | — | — | — |
-| **REST API testing** | ✅ `HttpClient` · Playwright `request` | ✅ RestAssured | ✅ RestAssured | — | — | — | — | ✅ Newman CLI · 10 requests · 4 test groups | — |
-| **Mocking & Service Virtualization** | ✅ 4 patterns: block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | — | ✅ `cy.intercept()` response stub + failure sim | — | — | — | — | — |
+| **REST API testing** | ✅ `HttpClient` · Playwright `request` | ✅ RestAssured | ✅ RestAssured · Karate 1.5 (13 features, ~42 scenarios) | — | — | — | — | ✅ Newman CLI · 10 requests · 4 test groups | — |
+| **Mocking & Service Virtualization** | ✅ 4 patterns: block assets, mock API responses, inject headers, simulate failures · enables UI testing independent of backend readiness | — | ✅ Karate mock server (stateful payment gateway + pricing engine) | ✅ `cy.intercept()` response stub + failure sim | — | — | — | — | — |
 | **Observability & Analytics** | ✅ Allure · GitHub Pages · Trace Viewer (`retain-on-failure`): DOM snapshots, screenshots, network calls for fast MTTR | ✅ Allure | ✅ Allure · GitHub Pages | ✅ JUnit XML · videos · screenshots | — | — | — | ✅ JUnit XML · htmlextra HTML report | — |
 | **AI/ML Self-Healing Locators** | — | ✅ Healenium 3.4.8 | ✅ Healenium 3.4.8 | — | — | — | — | — | — |
 | **LLM Evaluation (RAG pipeline)** | — | — | — | — | ✅ Answer Relevancy · Faithfulness · Hallucination · Safety · Bias · JSON Schema | — | — | — | — |
@@ -84,7 +87,7 @@ A monorepo housing twenty-one independent, production-grade frameworks spanning 
 | **Function-calling agent** | — | — | — | — | — | — | ✅ Multi-step tool orchestration · deterministic tool implementations | — | — |
 | **Agentic tool-use loop** | — | — | — | — | — | — | — | — | ✅ Claude claude-sonnet-4-6 · 5 tools · max 30 iterations · Tavily web search |
 | **Automated job search** | — | — | — | — | — | — | — | — | ✅ 5 role queries · score_job_fit · draft_cover_letter · save_results |
-| **JSON schema validation** | — | — | — | — | ✅ `JsonCorrectnessMetric` · Pydantic `BaseModel` schemas | — | — | — | — |
+| **JSON schema validation** | — | — | ✅ Karate schema markers (`#string`, `#number`, `#regex`, `#present`) | — | ✅ `JsonCorrectnessMetric` · Pydantic `BaseModel` schemas | — | — | — | — |
 | **Cost & latency tracking** | — | — | — | — | ✅ per-call tokens · `latency_ms` → DataDog | ✅ per-turn tokens · `latency_ms` → DataDog | ✅ per-step tokens · `latency_ms` → DataDog | — | ✅ `latency_ms` · run counts → DataDog |
 | **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS | — | — | — | — | — | — |
 | **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — | — | — | — | — | — |
@@ -97,7 +100,7 @@ A monorepo housing twenty-one independent, production-grade frameworks spanning 
 | **OWASP ZAP passive scan** | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | ✅ CI pipeline | — | — | — | — | — |
 | **Containerized infra** | — | ✅ Docker Compose · K8s | ✅ Docker Compose · K8s | — | — | — | — | — | — |
 | **Slack notifications** | — | ✅ Webhook | ✅ Webhook | — | — | — | — | — | — |
-| **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom GAUGE metrics | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility (JUnit XML) | ✅ Custom metrics · run counts · latency |
+| **DataDog observability** | ✅ CI Visibility (TRX) | ✅ CI Visibility · Custom metrics | ✅ CI Visibility · Custom metrics (Cucumber + Karate) | ✅ CI Visibility · Custom GAUGE metrics | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility · LLM eval scores | ✅ CI Visibility (JUnit XML) | ✅ Custom metrics · run counts · latency |
 | **AI observability (Langfuse)** | — | — | — | — | — | — | — | — | — |
 | **RAG pipeline (LCEL)** | — | — | — | — | — | — | — | — | — |
 | **Stateful multi-agent graph** | — | — | — | — | — | — | — | — | — |
@@ -253,6 +256,13 @@ mvn clean test -Dtarget=grid -Dheadless=true
 
 # Performance tests
 mvn jmeter:jmeter
+
+# Karate API tests (all 13 features)
+mvn clean test -Pkarate
+
+# Karate with environment and tag filter
+mvn clean test -Pkarate -Dkarate.env=staging
+mvn clean test -Pkarate -Dkarate.options="--tags @smoke"
 ```
 
 ### postman (Newman API tests)
@@ -495,6 +505,31 @@ python run.py --baseline datasets/baseline_generated.csv --current datasets/curr
 pytest tests/ -v --cov=differ --cov-report=term-missing
 ```
 
+### site-monitor
+
+**Prerequisites:** [Python 3.11+](https://python.org)
+
+```bash
+# From the repo root
+make site-monitor
+
+# Or manually
+cd site-monitor
+pip install -r requirements.txt
+
+# Generate initial baseline
+python run.py --update-baseline
+
+# Run drift check
+python run.py
+
+# Run with report output
+python run.py --output drift-report.md
+
+# Run tests
+pytest tests/ -v
+```
+
 ---
 
 ## Repo Structure
@@ -521,6 +556,7 @@ qa-automation-portfolio/
 │       ├── langgraph-agent.yml     # push/PR lint (free) · workflow_dispatch demo (< $0.02)
 │       ├── dspy-optimizer.yml      # push/PR lint (free) · workflow_dispatch compare (~$0.02)
 │       ├── claims-diff.yml        # push/PR paths: claims-diff/** · workflow_dispatch
+│       ├── site-monitor.yml      # daily 06:00 UTC · push/PR paths: site-monitor/**
 │       ├── playwright-smoke-pr.yml # PR gate: @smoke Chromium only, 5-min timeout, fail-fast
 │       ├── k6-load-test.yml       # nightly k6 load test against fastapi-service
 │       ├── deploy-validate-rollback.yml  # Vercel health-check → smoke → auto-rollback
@@ -559,10 +595,17 @@ qa-automation-portfolio/
 │   ├── src/test/java/              # Tests, listeners, unit tests
 │   ├── testng.xml                  # Web · API · Unit suites
 │   └── testng_mobile.xml           # Android & iOS Appium suites
-├── cucumber/                       # Cucumber 7 · TestNG · Selenium 4 · Java
-│   ├── src/main/java/              # Utilities: ConfigReader, RetryAnalyzer, SlackUtils
-│   ├── src/test/java/              # Step definitions, runners, page objects
-│   ├── src/test/resources/features/  # login · dashboard · inventory · cart · api · security
+├── cucumber/                       # Cucumber 7 · Karate 1.5 · TestNG · Selenium 4 · Java
+│   ├── src/main/java/              # Utilities: ConfigReader, RetryAnalyzer, SlackUtils, DataDogUtils
+│   ├── src/test/java/
+│   │   ├── com/saucedemo/          # Cucumber: step definitions, runners, page objects
+│   │   ├── karate-config.js        # Karate env switching + base URLs
+│   │   └── karate/                 # Karate API tests (13 features, ~42 scenarios)
+│   │       ├── api/                # users-crud · posts · comments
+│   │       ├── advanced/           # schema-validation · data-driven · headers-auth · error-handling
+│   │       ├── financial/          # mock server · transaction-lifecycle · pricing-calculations
+│   │       └── infra/              # reusable helpers · performance-hooks
+│   ├── src/test/resources/features/  # Cucumber: login · dashboard · inventory · cart · api · security
 │   └── docker-compose.yaml
 ├── cypress/                            # Cypress 13 · TypeScript · React 18 · Vite · Node.js 20
 │   ├── cypress/
@@ -647,6 +690,12 @@ qa-automation-portfolio/
 │   ├── aggregator/                     # github_api (Dependabot + CodeQL + ZAP) · reporter
 │   ├── tests/                          # Reporter tests + sample fixture JSONs
 │   └── run.py                          # CLI: --repo · --zap-report · --output
+├── site-monitor/                       # Python · BeautifulSoup · Click · DataDog
+│   ├── monitor/                        # fetcher · extractor · comparator · reporter · datadog
+│   ├── tests/                          # Unit tests for extractor and comparator
+│   ├── selectors.json                  # Monitored selector registry (30+ selectors × 5 frameworks)
+│   ├── baseline.json                   # Committed selector baseline (auto-generated)
+│   └── run.py                          # CLI: --url · --baseline · --update-baseline · --auto-issue
 ├── Makefile                            # One-command runner for all suites
 ├── .gitignore
 └── README.md
@@ -663,6 +712,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `playwright-dotnet.yml` | push · PR · nightly 02:00 UTC | execution mode · browser · JMeter toggle |
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | execution mode · browser · JMeter toggle |
+| `karate.yml` | push · PR · nightly 04:00 UTC | karate_env (dev · staging) · karate_tags filter |
 | `cypress.yml` | push · PR · nightly 05:00 UTC | browser (chrome · firefox · edge · electron) · test type (e2e · component · all) |
 | `ai-eval.yml` | push · PR · nightly 05:00 UTC | pytest marker filter (smoke · regression · safety) |
 | `conv-eval.yml` | push · PR · nightly 06:00 UTC | pytest marker filter (smoke · regression · safety · retention) |
@@ -681,6 +731,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `claims-diff.yml` | push · PR (paths: `claims-diff/**`) · `workflow_dispatch` | — |
 | `pact.yml` | push · PR (paths: `pact-consumer/**`, `fastapi-service/**`) | consumer tests → provider verification |
 | `flakiness-detector.yml` | push · PR (paths: `flakiness-detector/**`) · `workflow_dispatch` | — |
+| `site-monitor.yml` | daily 06:00 UTC · push · PR (paths: `site-monitor/**`) · `workflow_dispatch` | auto-issue on drift |
 | `codeql.yml` | push to main · weekly Monday 14:00 UTC | Python, JavaScript/TypeScript |
 | `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright-dotnet/**`) | Chromium-only @smoke gate, 5-min timeout, fail-fast |
 | `azure-pipelines.yml` | PR (Azure DevOps) | ADO YAML equivalent of GHA smoke gate (playwright-dotnet) |

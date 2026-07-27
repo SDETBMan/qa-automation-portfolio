@@ -23,7 +23,7 @@ letter review, or job-fit analysis.
 
 - **Languages:** Java (primary), Python, C#, TypeScript, JavaScript
 - **UI Automation:** Selenium WebDriver, Playwright (C# + TypeScript), Cucumber/BDD
-- **API Testing:** REST Assured, Postman/Newman, pytest
+- **API Testing:** REST Assured, Karate 1.5, Postman/Newman, pytest
 - **AI / LLM Testing:** DeepEval, Anthropic Claude (tool-use, agentic loops, `@beta_tool` auto-schema, multi-agent orchestration), OpenAI function-calling, ChromaDB, RAG evaluation, conversation evaluation, agent evaluation
 - **CI/CD:** GitHub Actions, Azure DevOps Pipelines, Jenkins, Docker, Kubernetes (k8s health checks)
 - **Performance Testing:** k6 (load testing with scenario executors), JMeter (Maven plugin)
@@ -203,11 +203,11 @@ All run nightly on GitHub Actions.
 
 ---
 
-### Framework 6: `cucumber` — BDD Feature Tests
-**Stack:** Java 17 · Cucumber 7 · TestNG · Selenium 4 · Maven
-**What it does:** BDD-style feature coverage of SauceDemo with Gherkin scenarios.
+### Framework 6: `cucumber` — BDD Feature Tests + Karate API Testing
+**Stack:** Java 17 · Cucumber 7 · Karate 1.5.2 · TestNG · Selenium 4 · Maven
+**What it does:** BDD-style feature coverage of SauceDemo with Gherkin scenarios, plus a standalone Karate API testing layer with 13 feature files (~42 scenarios).
 
-**Key features:**
+**Key features (Cucumber):**
 - 6 feature files, 19+ scenarios: login, dashboard, inventory, cart, API, security
 - Scenario Outline for data-driven BDD cases
 - Parallel execution via `@DataProvider(parallel=true)` and `ThreadLocal` driver management
@@ -218,6 +218,25 @@ All run nightly on GitHub Actions.
 - OWASP security scenarios (`@security` tag)
 - Allure reporting + GitHub Pages
 - DataDog CI Visibility + custom metrics
+
+**Key features (Karate 1.5.2):**
+- 13 feature files, ~42 scenarios across 4 domains:
+  - **Core API** (3 features): Full CRUD on /users, /posts, /comments with nested resources, query filtering, request chaining
+  - **Advanced patterns** (4 features): JSON schema validation with type markers (`#string`, `#number`, `#regex`), Scenario Outline + Examples for data-driven tests, header/auth/cookie management, error handling with retry logic
+  - **Financial domain** (3 features): Stateful mock payment gateway (PENDING→AUTHORIZED→CAPTURED→REFUNDED state machine), pricing engine with tax/discount calculations
+  - **Infrastructure** (3 features): Reusable callable features (`@ignore`), auth helper, response time SLAs, parallel API calls
+- Karate's built-in mock server for financial domain tests (no external dependencies)
+- Maven profile coexistence: `mvn test` runs only Cucumber, `mvn test -Pkarate` runs only Karate
+- JUnit5 runner (`KarateRunner.java`) with karate-config.js for env switching
+- DataDog integration via `DataDogHook.java` (reuses existing `DataDogUtils`)
+
+**Run commands:**
+- `mvn clean test` — Cucumber only (unchanged)
+- `mvn clean test -Pkarate` — all Karate tests
+- `mvn clean test -Pkarate -Dkarate.env=staging` — Karate against staging
+- `mvn clean test -Pkarate -Dkarate.options="--tags @smoke"` — tagged subset
+
+**CI:** Two workflows — `cucumber.yml` (Cucumber, nightly 04:00 UTC) and `karate.yml` (Karate, same triggers + dispatch inputs for `karate_env` and `karate_tags`). Both upload to DataDog CI Visibility with distinct `framework:` tags.
 
 ---
 
@@ -468,7 +487,7 @@ The existing k6 load tests now use declarative SLO configuration:
 | `conv-eval` | test suite + tokens + API latency |
 | `agent-eval` | test suite + tokens + API latency |
 | `selenium-java` | test suite results + duration |
-| `cucumber` | test suite results + duration |
+| `cucumber` | test suite results + duration (Cucumber + Karate) |
 | `cucumber-python` | test suite results + duration |
 | `playwright-dotnet` | test suite results + duration |
 | `job-agent` | jobs_found · jobs_scored · cover_letters_drafted · duration · latency |
@@ -487,6 +506,7 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | `playwright-dotnet.yml` | push · PR · nightly 02:00 UTC | browser · execution mode · JMeter toggle |
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | browser · execution mode · JMeter toggle |
+| `karate.yml` | push · PR · nightly 04:00 UTC | karate_env (dev · staging) · karate_tags filter |
 | `cucumber-python.yml` | push · PR · nightly 05:00 UTC | execution_mode · browser · test_tags |
 | `ai-eval.yml` | push · PR · nightly 05:00 UTC | pytest marker (smoke · regression · safety) |
 | `conv-eval.yml` | push · PR · nightly 06:00 UTC | pytest marker (smoke · regression · safety · retention) |

@@ -1,0 +1,114 @@
+name: karate CI
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'cucumber/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'cucumber/**' ]
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    inputs:
+      karate_env:
+        description: 'Karate environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+      karate_tags:
+        description: 'Karate tags filter (e.g. @smoke)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: cucumber
+
+    env:
+      DD_API_KEY: ${{ secrets.DD_API_KEY }}
+      DD_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # ── Karate API Tests ─────────────────────────────────────────────
+      - name: Run Karate Tests
+        run: |
+          KARATE_ENV="${{ github.event.inputs.karate_env || 'dev' }}"
+          KARATE_TAGS="${{ github.event.inputs.karate_tags || '' }}"
+          MVN_CMD="mvn clean test -Pkarate -Dkarate.env=${KARATE_ENV}"
+          if [ -n "$KARATE_TAGS" ]; then
+            MVN_CMD="$MVN_CMD -Dkarate.options=\"--tags ${KARATE_TAGS}\""
+          fi
+          eval $MVN_CMD
+
+      # ── DataDog CI Visibility ────────────────────────────────────────
+      - name: Upload test results to Datadog CI Visibility
+        if: always()
+        continue-on-error: true
+        run: |
+          curl -fsSL "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" \
+            --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
+          datadog-ci junit upload --service qa-automation-portfolio \
+            --tags framework:karate \
+            target/surefire-reports/TEST-*.xml
+        env:
+          DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
+          DATADOG_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      # ── Artifacts & Reporting ────────────────────────────────────────
+      - name: Upload Karate HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: karate-reports
+          path: cucumber/target/karate-reports/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload Surefire Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: karate-surefire-reports
+          path: cucumber/target/surefire-reports/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      # ── Notifications ──────────────────────────────────────────────
+      - name: Send Email Notification on Failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "Karate Test Failure: ${{ github.repository }}"
+          to: brian.padgett11@outlook.com
+          from: ${{ secrets.EMAIL_USERNAME }}
+          body: |
+            Karate API Tests Failed
+
+            Commit: ${{ github.sha }}
+            View logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}

@@ -36,6 +36,9 @@
 
         <!-- Mocking -->
         <mockito.version>5.12.0</mockito.version>
+
+        <!-- Karate API Testing -->
+        <karate.version>1.5.2</karate.version>
     </properties>
 
     <dependencies>
@@ -171,9 +174,31 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- ── Karate API Testing ─────────────────────────────────────── -->
+        <dependency>
+            <groupId>io.karatelabs</groupId>
+            <artifactId>karate-junit5</artifactId>
+            <version>${karate.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
+
+        <!-- Make .feature and .js files from src/test/java available on classpath (Karate convention) -->
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+            <testResource>
+                <directory>src/test/java</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </testResource>
+        </testResources>
+
         <plugins>
 
             <plugin>
@@ -313,6 +338,28 @@
             <properties>
                 <target>ios</target>
             </properties>
+        </profile>
+
+        <profile>
+            <id>karate</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <configuration>
+                            <includes>
+                                <include>karate/KarateRunner.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/runners/TestRunner.java</exclude>
+                                <exclude>**/unit/*Test.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
 
     </profiles>
