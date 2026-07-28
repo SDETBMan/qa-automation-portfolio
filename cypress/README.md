@@ -2,7 +2,7 @@
 
 [![cypress CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cypress.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cypress.yml)
 
-Cypress 13 · TypeScript 5 · React 18 · Vite · Node.js 20
+Cypress 13 · TypeScript 5 · React 18 · Vite · Node.js 20 · Claude AI Test Generator
 
 End-to-end tests against [SauceDemo](https://www.saucedemo.com/) plus isolated
 React component tests, all in TypeScript.
@@ -19,6 +19,48 @@ React component tests, all in TypeScript.
 | **Page Object Model** | Abstract `BasePage` + 4 concrete pages |
 | **DataDog GAUGE metrics** | TypeScript port of the Python reporter; posts 4 metrics after every run |
 | **JUnit XML** | `mocha-junit-reporter` for DataDog CI Visibility upload |
+| **AI test generator** | CLI tool that takes a plain-English user story and produces a runnable `.cy.ts` file using Claude, with full framework context (page objects, commands, fixtures) as RAG input |
+
+---
+
+## AI Test Generator
+
+A CLI tool that bridges AI and test automation: give it a user story in plain English, and it produces a production-ready Cypress test file that follows every convention in the framework.
+
+### How it works
+
+1. **Reads framework context** — all 5 page objects, custom commands, fixtures, and 3 example tests
+2. **Builds a RAG prompt** — injects the full codebase context into Claude's system prompt with explicit pattern rules
+3. **Generates a `.cy.ts` file** — output follows existing conventions: `testIsolation: false`, POM imports, fixture-driven data, `@smoke`/`@regression` tags
+
+### Usage
+
+```bash
+# Set your API key
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# Generate a test file from a user story
+npm run ai:generate "User adds multiple items to cart and verifies the cart badge updates"
+
+# Preview without writing a file
+npm run ai:dry-run "User sorts products by price low to high and verifies order"
+
+# Custom output file name
+npm run ai:generate -- --story "User completes checkout with valid info" --name happy-path-checkout
+```
+
+Generated tests are written to `cypress/e2e/generated/` and can be run immediately:
+
+```bash
+npx cypress run --spec "cypress/e2e/generated/user-adds-multiple-items.cy.ts"
+```
+
+### Why this matters
+
+- Demonstrates **AI + test automation integration** — the key skill gap in modern QA
+- Uses **retrieval-augmented generation (RAG)** — the LLM doesn't hallucinate selectors because it sees real page objects
+- Produces **framework-consistent output** — generated tests are indistinguishable from hand-written ones
+- **Zero-shot generation** — no fine-tuning, no training data; the framework context is the only input
 
 ---
 
@@ -26,10 +68,13 @@ React component tests, all in TypeScript.
 
 ```
 cypress/
+├── ai-generator/
+│   └── generate-test.ts             # AI test generator (Claude + RAG)
 ├── cypress/
 │   ├── component/
 │   │   └── ProductCard.cy.tsx       # React component tests
 │   ├── e2e/
+│   │   ├── generated/               # AI-generated test output directory
 │   │   ├── login.cy.ts              # @smoke + @regression
 │   │   ├── inventory.cy.ts          # @smoke + @regression
 │   │   ├── checkout.cy.ts           # @regression
@@ -155,6 +200,8 @@ cy.clearCart();
 | `BASE_URL` | `https://www.saucedemo.com` | Cypress `baseUrl` |
 | `DD_API_KEY` | — | DataDog metrics (skipped when absent) |
 | `DD_SITE` | `datadoghq.com` | DataDog regional endpoint |
+| `ANTHROPIC_API_KEY` | — | AI test generator (required for `npm run ai:generate`) |
+| `MODEL` | `claude-sonnet-4-20250514` | AI model override for test generation |
 
 Copy `.env.example` → `.env` and fill in values (never committed).
 

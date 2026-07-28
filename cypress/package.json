@@ -13,11 +13,17 @@
     "test:component":     "cypress run --component",
     "test:browserstack":  "browserstack-cypress run --sync",
     "test:headed":        "cypress open",
-    "report":             "open cypress/reports/index.html"
+    "report":             "open cypress/reports/index.html",
+    "ai:generate":        "tsx ai-generator/generate-test.ts",
+    "ai:dry-run":         "tsx ai-generator/generate-test.ts --dry-run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk":              "^0.39.0"
   },
   "devDependencies": {
     "cypress":                        "^13.0.0",
     "typescript":                     "^5.4.0",
+    "tsx":                            "^4.19.0",
     "react":                          "^18.0.0",
     "react-dom":                      "^18.0.0",
     "@types/react":                   "^18.0.0",

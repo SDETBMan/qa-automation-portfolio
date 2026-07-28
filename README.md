@@ -40,7 +40,7 @@ A monorepo housing twenty-two independent, production-grade frameworks spanning 
 | [`cucumber`](./cucumber/) | Java | Cucumber 7 · Karate 1.5 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
 | [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
 | [`job-agent`](./job-agent/) | Python | Anthropic Claude · Tavily · AgentOps · Python 3.11 | [→](./job-agent/README.md) |
-| [`cypress`](./cypress/) | TypeScript | Cypress 13 · React 18 · Vite · Node.js 20 | [→](./cypress/README.md) |
+| [`cypress`](./cypress/) | TypeScript | Cypress 13 · React 18 · Vite · Claude AI Test Generator · Node.js 20 | [→](./cypress/README.md) |
 | [`cucumber-python`](./cucumber_python/) | Python | Behave · Selenium 4 · Python 3.11 | [→](./cucumber_python/README.md) |
 | [`coding-agent`](./coding-agent/) | Python | Anthropic Claude · AgentOps · Python 3.11 | [→](./coding-agent/README.md) |
 | [`fastapi-service`](./fastapi-service/) | Python · JavaScript | FastAPI · Redis · Pytest · k6 · Python 3.11 | [→](./fastapi-service/README.md) |
@@ -63,6 +63,7 @@ A monorepo housing twenty-two independent, production-grade frameworks spanning 
 |---|---|---|---|---|---|---|---|---|---|
 | **Page Object Model** | ✅ C# + TypeScript | ✅ Java | ✅ Java | ✅ TypeScript | — | — | — | — | — |
 | **Custom commands** | — | — | — | ✅ `cy.login()` · `cy.addToCart()` · `cy.clearCart()` | — | — | — | — | — |
+| **AI test generation** | — | — | — | ✅ Claude-powered: user story → `.cy.ts` file (RAG with page objects + commands) | — | — | — | — | — |
 | **Network interception** | ✅ `page.route()` mock/stub | — | — | ✅ `cy.intercept()` spy + stub + failure sim | — | — | — | — | — |
 | **Component testing** | — | — | — | ✅ React `ProductCard` via Cypress component runner | — | — | — | — | — |
 | **Parallel execution** | ✅ `[Parallelizable]` · `fullyParallel` | ✅ `ThreadLocal` · `parallel="tests"` | ✅ `ThreadLocal` · `@DataProvider(parallel=true)` | ✅ `--parallel` (Cypress Cloud) | — | — | — | — | — |
@@ -192,6 +193,10 @@ npm run test:component
 
 # Interactive Cypress Test Runner
 npm run test:headed
+
+# AI Test Generator — user story → runnable .cy.ts file
+export ANTHROPIC_API_KEY=sk-ant-...
+npm run ai:generate "User adds two items to cart and verifies badge count"
 ```
 
 ### playwright-dotnet (C# + TypeScript)
@@ -607,10 +612,13 @@ qa-automation-portfolio/
 │   │       └── infra/              # reusable helpers · performance-hooks
 │   ├── src/test/resources/features/  # Cucumber: login · dashboard · inventory · cart · api · security
 │   └── docker-compose.yaml
-├── cypress/                            # Cypress 13 · TypeScript · React 18 · Vite · Node.js 20
+├── cypress/                            # Cypress 13 · TypeScript · React 18 · Vite · Claude AI · Node.js 20
+│   ├── ai-generator/                   # AI test generator (user story → .cy.ts via Claude RAG)
+│   │   └── generate-test.ts
 │   ├── cypress/
 │   │   ├── component/                  # ProductCard.cy.tsx — React component tests
 │   │   ├── e2e/                        # login · inventory · checkout · network (cy.intercept)
+│   │   │   └── generated/              # AI-generated test output directory
 │   │   ├── fixtures/                   # users.json · products.json
 │   │   ├── pages/                      # BasePage · LoginPage · InventoryPage · CartPage · CheckoutPage
 │   │   └── support/                    # commands.ts (cy.login · cy.addToCart · cy.clearCart) · e2e.ts
@@ -740,7 +748,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
 
-> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, `agent-eval.yml`, `langchain-rag.yml`, and `dspy-optimizer.yml`. `ANTHROPIC_API_KEY` and `TAVILY_API_KEY` are required for `job-agent.yml`; `ANTHROPIC_API_KEY` alone is required for `langgraph-agent.yml`. `dspy-vertex` requires GCP credentials (`GOOGLE_APPLICATION_CREDENTIALS` or `gcloud auth`). `VERCEL_TOKEN` is required for `deploy-validate-rollback.yml`. `SHOPIFY_STORE_URL` is required for Shopify E2E tests. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it. The three new AI framework workflows (`langchain-rag`, `langgraph-agent`, `dspy-optimizer`) only call APIs on `workflow_dispatch` — lint runs for free on every push/PR.
+> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, `agent-eval.yml`, `langchain-rag.yml`, and `dspy-optimizer.yml`. `ANTHROPIC_API_KEY` and `TAVILY_API_KEY` are required for `job-agent.yml`; `ANTHROPIC_API_KEY` alone is required for `langgraph-agent.yml` and the cypress AI test generator (`npm run ai:generate`). `dspy-vertex` requires GCP credentials (`GOOGLE_APPLICATION_CREDENTIALS` or `gcloud auth`). `VERCEL_TOKEN` is required for `deploy-validate-rollback.yml`. `SHOPIFY_STORE_URL` is required for Shopify E2E tests. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it. The three new AI framework workflows (`langchain-rag`, `langgraph-agent`, `dspy-optimizer`) only call APIs on `workflow_dispatch` — lint runs for free on every push/PR.
 
 ### DataDog Observability
 

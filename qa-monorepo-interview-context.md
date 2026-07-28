@@ -24,7 +24,7 @@ letter review, or job-fit analysis.
 - **Languages:** Java (primary), Python, C#, TypeScript, JavaScript
 - **UI Automation:** Selenium WebDriver, Playwright (C# + TypeScript), Cucumber/BDD
 - **API Testing:** REST Assured, Karate 1.5, Postman/Newman, pytest
-- **AI / LLM Testing:** DeepEval, Anthropic Claude (tool-use, agentic loops, `@beta_tool` auto-schema, multi-agent orchestration), OpenAI function-calling, ChromaDB, RAG evaluation, conversation evaluation, agent evaluation
+- **AI / LLM Testing:** DeepEval, Anthropic Claude (tool-use, agentic loops, `@beta_tool` auto-schema, multi-agent orchestration, AI test generation for Cypress), OpenAI function-calling, ChromaDB, RAG evaluation, conversation evaluation, agent evaluation
 - **CI/CD:** GitHub Actions, Azure DevOps Pipelines, Jenkins, Docker, Kubernetes (k8s health checks)
 - **Performance Testing:** k6 (load testing with scenario executors), JMeter (Maven plugin)
 - **Monitoring / Observability:** DataDog (custom metrics via v2 API, CI Visibility, dashboard JSON, Allure reporting)
@@ -74,7 +74,7 @@ Bachelor of Science | Expected Completion: 2026
 ## Portfolio: qa-automation-portfolio (GitHub Monorepo)
 
 **Repo:** github.com/SDETBMan/qa-automation-portfolio
-**Structure:** 14 independent, production-grade frameworks in a single monorepo.
+**Structure:** 15 independent, production-grade frameworks in a single monorepo.
 Each framework has its own CI workflow, dependencies, and DataDog integration.
 All run nightly on GitHub Actions.
 
@@ -457,6 +457,39 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 - 5 existing ZAP workflows updated to export JSON reports (`-J zap-report.json`)
 
 **CI:** Dependabot and CodeQL run automatically. Aggregator can be run manually via `make vuln-report`.
+
+---
+
+### Framework 15: `cypress` — TypeScript E2E + Component Testing + AI Test Generator
+**Stack:** TypeScript · Cypress 13 · React 18 · Vite · Anthropic Claude (AI test generator) · Node.js 20
+**What it does:** End-to-end tests against SauceDemo plus isolated React component tests, all in TypeScript. Includes an AI test generator that takes plain-English user stories and produces runnable `.cy.ts` files using Claude with full framework context as RAG input.
+
+**Key features:**
+- Page Object Model: abstract `BasePage` + 4 concrete pages (Login, Inventory, Cart, Checkout)
+- Custom commands: `cy.login()`, `cy.addToCart()`, `cy.clearCart()` with TypeScript type declarations
+- `cy.intercept()` patterns: spy, stub, failure simulation (network.cy.ts)
+- React component testing: `ProductCard.cy.tsx` via Cypress component runner
+- Accessibility testing: `cypress-axe` WCAG 2.1 AA checks
+- Lighthouse performance audits (Chrome only)
+- `testIsolation: false` strategy for external site rate-limiting
+- DataDog GAUGE metrics + JUnit XML CI Visibility
+- 25 E2E + 4 component = 29 tests
+
+**AI Test Generator (`ai-generator/generate-test.ts`):**
+- CLI tool: `npm run ai:generate "User story here"` → writes `cypress/e2e/generated/<name>.cy.ts`
+- Reads 5 page objects, custom commands, 2 fixtures, and 3 example tests at runtime
+- Builds a RAG prompt injecting full codebase context into Claude's system prompt
+- Generated tests follow exact framework conventions: POM imports, `testIsolation: false`, fixture-driven data, `@smoke`/`@regression` tags
+- `--dry-run` flag for preview without file creation
+- Demonstrates AI + test automation integration — the bridge between manual QA descriptions and automated test coverage
+
+**Run commands:**
+- `npm test` — all E2E tests (headless Chrome)
+- `npm run test:smoke` — smoke tests only
+- `npm run test:component` — React component tests
+- `npm run ai:generate "user story"` — AI-generated test from plain English
+
+**CI (`cypress.yml`):** push · PR · nightly 05:00 UTC. Dispatch inputs: browser, test type.
 
 ---
 
