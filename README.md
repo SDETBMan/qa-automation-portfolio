@@ -28,6 +28,18 @@ A monorepo housing twenty-two independent, production-grade frameworks spanning 
 
 ---
 
+## Standalone Projects
+
+Three additional repositories outside this monorepo, focused on adversarial AI testing and financial domain QA:
+
+| Project | Stack | What It Does |
+|---|---|---|
+| [`legal-funding-qa-agent`](https://github.com/SDETBMan/legal-funding-qa-agent) | Python · LangGraph · DSPy · Hypothesis · Claude | Autonomous adversarial QA agent that attacks 12 financial/legal invariants in a pre-settlement funding API. Produces auditable JSON reports with a severity-tiered **BLOCK/WARN/PASS release gate** for CI/CD. DSPy-optimized judge, integer-cents money model, Presidio PII redaction, mock API with 8 seeded bugs. |
+| [`agentic-p2p-auditor`](https://github.com/SDETBMan/agentic-p2p-auditor) | Python · Claude (tool use) · Decimal math | Three-agent pipeline (Exploration → Adversarial → Judge) for auditing financial controls across two domains: Purchase-to-Pay (6 controls) and Medical Lien (6 controls). Pluggable domain architecture, evidence-grounded verdicts, live HTTP adapter for real APIs. |
+| [`ai-pr-reviewer`](https://github.com/SDETBMan/ai-pr-reviewer) | JavaScript · Claude · promptfoo · Docker | AI code reviewer for test automation PRs. 22-rule catalog across 7 categories (Locator, Wait, POM, Isolation, Assertion, Fixture, Migration). promptfoo eval harness: 11 cases × 2 models = 22 evals, 100% pass. Dual-audience output for engineers + offshore QA. *(Private repo)* |
+
+---
+
 ## Frameworks
 
 | Framework | Language | Stack | README |
