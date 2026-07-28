@@ -78,6 +78,8 @@ Bachelor of Science | Expected Completion: 2026
 Each framework has its own CI workflow, dependencies, and DataDog integration.
 All run nightly on GitHub Actions.
 
+**Standalone repos:** 3 additional projects outside the monorepo — `legal-funding-qa-agent` (adversarial QA + BLOCK/WARN/PASS release gate), `agentic-p2p-auditor` (three-agent financial controls auditor), `ai-pr-reviewer` (AI code reviewer with promptfoo eval).
+
 ---
 
 ### Framework 1: `ai-eval` — RAG Pipeline Quality Evaluation
@@ -594,6 +596,104 @@ The `k8s.yml` workflow (workflow_dispatch only) spins up a Kind cluster, deploys
 All browser and AI eval frameworks use **SauceDemo** (saucedemo.com) — a purpose-built e-commerce demo with stable, publicly documented test credentials. No backend setup required.
 
 Test coverage: Login · Dashboard · Inventory · Cart · API · Security
+
+---
+
+## Standalone Repos (Outside the Monorepo)
+
+These three repos live outside `qa-automation-portfolio` as independent public projects. They demonstrate adversarial AI agent architecture, domain-specific financial QA, and AI-powered code review.
+
+---
+
+### Standalone 1: `legal-funding-qa-agent` — Adversarial QA Agent with BLOCK/WARN/PASS Release Gate
+**Repo:** github.com/SDETBMan/legal-funding-qa-agent
+**Stack:** Python 3.11 · LangGraph · DSPy · Hypothesis · Anthropic Claude · FastAPI · Pydantic v2 · Presidio (PII) · AgentOps
+**What it does:** An autonomous adversarial QA agent that attacks 12 financial and legal invariants in a pre-settlement funding API. Produces an auditable JSON report and a severity-tiered BLOCK/WARN/PASS release gate signal for CI/CD. Not a test suite — an agent that reasons about why a payoff calculation is wrong and explains it.
+
+**Architecture:** Explorer → Adversarial Agent → Judge Agent → Report + Release Gate
+
+**12 invariants under attack:**
+- INV-01: No duplicate active funding on same case (HIGH)
+- INV-04: Interest accrues from disbursement_date, not application_date (CRITICAL)
+- INV-06: Jurisdiction usury rate cap enforced — 51 state caps in basis points (CRITICAL)
+- INV-07: Medicare/Medicaid super-priority in settlement waterfall (CRITICAL)
+- INV-09: Plaintiff remainder >= 0 after waterfall (CRITICAL)
+- INV-11: All money fields are integer cents — never floats (CRITICAL)
+- Plus 6 more covering attorney acknowledgment, lien caps, capacity release, day count basis
+
+**Release gate tiers:**
+| Tier | CI impact |
+|---|---|
+| CRITICAL | Hard block — deploy does not proceed |
+| HIGH | Block unless overridden with ticket |
+| MEDIUM | Warning — deploy proceeds, alert created |
+| EVAL | Logged — quality dashboard, no block |
+
+**Key technical decisions:**
+- DSPy-optimized judge module with float-money guardrail (INV-17)
+- Integer cents throughout (`money.py` — `validate_cents()` rejects floats)
+- Presidio PII redaction strips SSN/email before LLM context
+- Mock API with 8 intentionally seeded invariant violations
+- SHA-256 versioned prompt templates
+- Structured JSON logging via structlog (no `print()`)
+
+**Demo output:** 8 breaches detected, 4 invariants held. Exit code 1 (BLOCK).
+
+**CI:** `qa-pipeline.yml` — runs all 12 attacks against mock API, produces `artifacts/report.json`
+
+---
+
+### Standalone 2: `agentic-p2p-auditor` — Three-Agent Financial Controls Auditor
+**Repo:** github.com/SDETBMan/agentic-p2p-auditor
+**Stack:** Python 3.11 · Anthropic Claude (tool use) · Decimal math · AgentOps
+**What it does:** A domain-agnostic three-agent QA pipeline for auditing financial and compliance systems. Exploration agent runs happy-path workflow, adversarial agent attacks declared control rules, judge agent reads both transcripts and emits a structured JSON verdict grounded in tool evidence.
+
+**Two production domains:**
+
+*P2P (Purchase-to-Pay) — 6 control rules:*
+- Overpayment protection, 3-way match gate, partial receipt flag, inactive vendor gate, GL balance, duplicate invoice detection
+
+*Medical Lien — 6 control rules:*
+- Lien priority enforcement (federal super-priority), balance cap, duplicate lien detection, provider status gate, settlement waterfall order, reduction negotiation cap
+
+**Key architecture:**
+- Pluggable domain packages: add `domains/your_domain/` with tools, prompts, mock store, controls
+- `DomainSpec` interface contract for adding new audit domains without changing the framework
+- Live HTTP adapter: `--live` flag to run against real API instead of mock
+- Decimal-based money — float contamination is a control violation, not a rounding error
+- Evidence-grounded verdicts: judge validates HELD/BREACHED claims against actual tool response JSON
+- Wall-clock and iteration limits prevent runaway agent loops
+
+**Run:** `python run_pipeline.py --mode full --domain p2p --output-dir pipeline_output`
+
+---
+
+### Standalone 3: `ai-pr-reviewer` — AI Code Reviewer for Test Automation PRs
+**Repo:** github.com/SDETBMan/ai-pr-reviewer (Private)
+**Stack:** JavaScript · Anthropic Claude · promptfoo · Docker · FastAPI (ephemeral env)
+**What it does:** Framework-agnostic AI code reviewer for test automation pull requests. Uses Claude as the reasoning engine, a 22-rule catalog to enforce QA engineering best practices, and promptfoo as the eval harness to measure reviewer accuracy.
+
+**Supported frameworks:** Playwright (TypeScript, C#), Cypress (TypeScript), Selenium (Java, C#, Python)
+
+**22 rules across 7 categories:**
+- Locator Strategy (LOC-01–03): non-semantic selectors, locator leaks, index fragility
+- Wait Strategy (WAIT-01–03): unjustified hard waits, manual polling, silent timeouts
+- Page Object Model (POM-01–04): raw element exposure, assertions in POs, naming, constructors
+- Test Isolation (ISO-01–03): order dependency, shared mutable state, unreliable cleanup
+- Assertion Patterns (ASRT-01–03): snapshot vs retrying, weak messages, assertion sprawl
+- Fixture/Data (FIX/DATA): duplicated setup, hard-coded data, UI-based data creation
+- Migration Fidelity (MIG-01–04): contract drift, carried-over anti-patterns, dropped tests
+
+**Eval suite:** 11 test cases x 2 models = 22 evaluations. 100% pass rate. Categories: true positives (3), true negatives (2), false positive traps (2), migration fidelity (3), judgment calls (1).
+
+**Key design decisions:**
+- Hybrid: static analysis (ESLint, Semgrep) handles deterministic checks; AI handles judgment calls
+- Dual-audience output: technical `findings[]` for engineers + plain-English `verification_checklist` for offshore QA testers
+- Calibrated confidence: below 0.6 phrased as questions, below 0.4 omitted entirely
+- Ephemeral PR environments: Docker Compose spins up PostgreSQL + FastAPI per PR, torn down on merge
+- Silence is acceptable: `findings: []` on clean PRs (false positives erode trust faster than missed issues)
+
+**CI:** `eval-reviewer.yml` runs promptfoo eval on prompt/corpus changes; `pr-environment.yml` manages ephemeral environments
 
 ---
 
