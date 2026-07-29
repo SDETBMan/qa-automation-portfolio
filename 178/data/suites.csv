@@ -1,7 +1,0 @@
-"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"","","Oops...we found an error preparing this test file: checkout.cy.ts","","","broken","","","checkout.cy.ts","",""
-"","","Oops...we found an error preparing this test file: inventory.cy.ts","","","broken","","","inventory.cy.ts","",""
-"","","Oops...we found an error preparing this test file: performance.cy.ts","","","broken","","","performance.cy.ts","",""
-"","","Oops...we found an error preparing this test file: network.cy.ts","","","broken","","","network.cy.ts","",""
-"","","Oops...we found an error preparing this test file: login.cy.ts","","","broken","","","login.cy.ts","",""
-"","","Oops...we found an error preparing this test file: accessibility.cy.ts","","","broken","","","accessibility.cy.ts","",""
