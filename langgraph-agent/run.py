@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
+from langfuse.callback import CallbackHandler as LangfuseCallbackHandler
 
 from graph.pipeline import build_graph
 
@@ -23,7 +24,17 @@ DEMO_FEATURE = "User can add products to cart and proceed to checkout"
 DIVIDER = "─" * 60
 
 
-def run_pipeline(feature_desc: str) -> dict:
+def _init_langfuse() -> LangfuseCallbackHandler | None:
+    """Create Langfuse callback handler if keys are set, else return None."""
+    if os.getenv("LANGFUSE_SECRET_KEY") and os.getenv("LANGFUSE_PUBLIC_KEY"):
+        handler = LangfuseCallbackHandler()
+        print("[tracing] Langfuse enabled")
+        return handler
+    print("[tracing] Langfuse disabled (no keys)")
+    return None
+
+
+def run_pipeline(feature_desc: str, langfuse_handler: LangfuseCallbackHandler | None = None) -> dict:
     """Execute the full graph and return the final state."""
     graph = build_graph()
 
@@ -40,9 +51,11 @@ def run_pipeline(feature_desc: str) -> dict:
     print(f"Feature: {feature_desc}")
     print(DIVIDER)
 
+    config = {"callbacks": [langfuse_handler]} if langfuse_handler else {}
+
     # Stream node events so the user sees progress in real time
     final_state = None
-    for event in graph.stream(initial_state):
+    for event in graph.stream(initial_state, config=config):
         for node_name, node_output in event.items():
             print(f"\n[node: {node_name}]")
             if node_name == "parse_requirements":
@@ -117,7 +130,12 @@ def main() -> None:
         parser.print_help()
         sys.exit(1)
 
-    final_state = run_pipeline(feature)
+    langfuse_handler = _init_langfuse()
+
+    final_state = run_pipeline(feature, langfuse_handler)
+
+    if langfuse_handler:
+        langfuse_handler.flush()
 
     out_path = save_output(final_state)
     print(f"\n{DIVIDER}")

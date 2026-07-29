@@ -1,6 +1,6 @@
 # langgraph-agent — Test Case Generator Pipeline
 
-> **Stack:** LangGraph 0.4 · LangChain Anthropic · `claude-haiku-4-5` · StateGraph · Conditional edges
+> **Stack:** LangGraph 0.4 · LangChain Anthropic · `claude-haiku-4-5` · StateGraph · Conditional edges · Langfuse tracing
 
 A stateful multi-agent graph that turns a plain-English feature description into reviewed, production-quality BDD Gherkin scenarios — with an automated review/revise cycle.
 
@@ -16,6 +16,7 @@ A stateful multi-agent graph that turns a plain-English feature description into
 | **Cycle with bounded iterations** | `review_quality → revise_tests → review_quality` (max 2 revisions) |
 | **Provider-agnostic LLM** | `ChatAnthropic` — shows LangGraph works beyond OpenAI |
 | **Real-time streaming** | `graph.stream()` in `run.py` prints node-by-node progress |
+| **LLM observability (Langfuse)** | `run.py` — span-per-node tracing with graceful-skip pattern |
 
 ---
 
@@ -84,6 +85,31 @@ langgraph-agent/
 │   └── pipeline.py         # build_graph() → compiled StateGraph
 └── output/                 # Generated .md files (git-ignored)
 ```
+
+---
+
+## Observability (Langfuse)
+
+Langfuse provides **span-level tracing** for every LangGraph node execution. When enabled, each node (`parse_requirements`, `generate_tests`, `review_quality`, `revise_tests`) appears as a separate span in the Langfuse dashboard with:
+
+- **Input/output state** — what the node received and what it produced
+- **Latency** — per-node wall-clock time
+- **Token usage** — prompt and completion tokens per LLM call
+- **Cost tracking** — automatic cost calculation per trace
+
+### How to enable
+
+Set the Langfuse environment variables in your `.env` file:
+
+```bash
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com
+```
+
+### Graceful-skip pattern
+
+If the Langfuse keys are not set, the pipeline prints `[tracing] Langfuse disabled (no keys)` and runs normally without any tracing overhead. CI stays green without Langfuse credentials — observability never blocks execution.
 
 ---
 
