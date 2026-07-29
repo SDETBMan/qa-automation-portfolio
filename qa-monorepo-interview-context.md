@@ -92,6 +92,9 @@ All run nightly on GitHub Actions.
 - Hallucination (lower is better)
 - Safety / toxicity
 - JSON Schema Correctness (Pydantic models)
+- Contextual Precision (0.7 threshold) — retrieval chunk relevance
+- Contextual Recall (0.7 threshold) — retrieval context coverage
+- Contextual Relevancy (0.7 threshold) — retrieval-to-query alignment
 
 **Key architecture decisions:**
 - `conftest.py` session fixtures: ChromaDB embedded once per session, shared across all tests
@@ -101,7 +104,7 @@ All run nightly on GitHub Actions.
 - `--reruns 5 --reruns-delay 60` handles transient OpenAI API timeouts
 
 **DataDog metrics sent:**
-- `llm.eval.answer_relevancy`, `llm.eval.faithfulness`, `llm.eval.hallucination`, `llm.eval.safety`, `llm.eval.json_correctness`
+- `llm.eval.answer_relevancy`, `llm.eval.faithfulness`, `llm.eval.hallucination`, `llm.eval.safety`, `llm.eval.json_correctness`, `llm.eval.contextual_precision`, `llm.eval.contextual_recall`, `llm.eval.contextual_relevancy`
 - `llm.api.latency_ms`, `llm.api.prompt_tokens`, `llm.api.completion_tokens`, `llm.api.total_tokens`
 - `test.suite.passed`, `test.suite.failed`, `test.suite.skipped`, `test.suite.duration_ms`
 
@@ -648,13 +651,16 @@ These three repos live outside `qa-automation-portfolio` as independent public p
 **Stack:** Python 3.11 · Anthropic Claude (tool use) · Decimal math · AgentOps
 **What it does:** A domain-agnostic three-agent QA pipeline for auditing financial and compliance systems. Exploration agent runs happy-path workflow, adversarial agent attacks declared control rules, judge agent reads both transcripts and emits a structured JSON verdict grounded in tool evidence.
 
-**Two production domains:**
+**Three production domains:**
 
 *P2P (Purchase-to-Pay) — 6 control rules:*
 - Overpayment protection, 3-way match gate, partial receipt flag, inactive vendor gate, GL balance, duplicate invoice detection
 
 *Medical Lien — 6 control rules:*
 - Lien priority enforcement (federal super-priority), balance cap, duplicate lien detection, provider status gate, settlement waterfall order, reduction negotiation cap
+
+*Private Markets (PE Distribution Waterfall) — 6 control rules:*
+- Waterfall sequence enforcement, hurdle rate gate, overcall protection, recycling cap, LP/GP split accuracy, management fee offset
 
 **Key architecture:**
 - Pluggable domain packages: add `domains/your_domain/` with tools, prompts, mock store, controls
