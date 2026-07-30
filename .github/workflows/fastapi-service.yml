@@ -12,6 +12,17 @@ jobs:
       run:
         working-directory: fastapi-service
 
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -34,8 +45,9 @@ jobs:
         env:
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
           DD_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+          REDIS_URL:  redis://localhost:6379/0
 
-      # ── DataDog CI Visibility ─────────────────────────────────────────────
+      # -- DataDog CI Visibility -------------------------------------------
       - name: Upload test results to Datadog CI Visibility
         if: always()
         continue-on-error: true

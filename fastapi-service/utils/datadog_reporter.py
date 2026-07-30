@@ -81,3 +81,16 @@ def send_test_metrics(
         _gauge("test.suite.skipped",     skipped,     tags),
         _gauge("test.suite.duration_ms", duration_ms, tags),
     ])
+
+
+def send_cache_metrics(
+    hits:      int,
+    misses:    int,
+    framework: str = "fastapi-service",
+) -> None:
+    """Send cache hit/miss counts to DataDog."""
+    tags = [f"framework:{framework}"] + _COMMON_TAGS
+    _post([
+        _gauge("cache.hits",   hits,   tags),
+        _gauge("cache.misses", misses, tags),
+    ])
