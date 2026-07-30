@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report clean
+.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report site-monitor site-monitor-baseline clean
 
 # Print help when `make` is called with no target
 help:
@@ -59,6 +59,8 @@ help:
 	@echo "  make flakiness-detector   Run flakiness analysis on sample fixtures"
 	@echo "  make flakiness-detector-test  Run flakiness-detector pytest suite"
 	@echo "  make vuln-report          Generate unified vulnerability report (requires gh CLI)"
+	@echo "  make site-monitor         Run site drift detector against saucedemo.com"
+	@echo "  make site-monitor-baseline  Generate fresh selector baseline"
 	@echo "  make clean                Remove build artefacts from all frameworks"
 	@echo ""
 	@echo "  Prerequisites:"
@@ -79,6 +81,7 @@ help:
 	@echo "    pact-verify      — Python 3.11+ (pact-python)"
 	@echo "    flakiness-detector — Python 3.11+"
 	@echo "    vuln-report      — Python 3.11+ · gh CLI authenticated"
+	@echo "    site-monitor     — Python 3.11+"
 	@echo "    cypress          — Node.js 20+"
 	@echo "    k8s              — kubectl · running cluster or Kind (kind.sigs.k8s.io)"
 	@echo "    terraform        — Terraform >= 1.6 · AWS credentials · DataDog API/App keys"
@@ -297,6 +300,26 @@ vuln-report:
 		python run.py --repo SDETBMan/qa-automation-portfolio
 	@echo ""
 	@echo ">>> [vuln-report] Done."
+	@echo ""
+
+# ── Site Drift Detector ──────────────────────��──────────────────────────────
+
+site-monitor:
+	@echo ""
+	@echo ">>> [site-monitor] Running site drift detector..."
+	cd site-monitor && pip install -r requirements.txt -q && \
+		python run.py
+	@echo ""
+	@echo ">>> [site-monitor] Done."
+	@echo ""
+
+site-monitor-baseline:
+	@echo ""
+	@echo ">>> [site-monitor] Generating fresh selector baseline..."
+	cd site-monitor && pip install -r requirements.txt -q && \
+		python run.py --update-baseline
+	@echo ""
+	@echo ">>> [site-monitor] Done. Baseline written to site-monitor/baseline.json"
 	@echo ""
 
 ## ── Terraform ────────────────────────────────────────────────────────────────
