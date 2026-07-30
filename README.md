@@ -24,7 +24,7 @@
 [![site-monitor CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml)
 [![CodeQL](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml)
 
-A monorepo housing twenty-two independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
+A monorepo housing twenty-four independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
 
 ---
 
@@ -66,6 +66,8 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`flakiness-detector`](./flakiness-detector/) | Python | JUnit XML · Click · DataDog · Python 3.11 | [→](./flakiness-detector/README.md) |
 | [`vulnerability-aggregator`](./vulnerability-aggregator/) | Python | GitHub API (gh CLI) · Dependabot · CodeQL · ZAP · Python 3.11 | [→](./vulnerability-aggregator/README.md) |
 | [`site-monitor`](./site-monitor/) | Python | BeautifulSoup · Click · DataDog · Requests · Python 3.11 | [→](./site-monitor/README.md) |
+| [`quality-dashboard`](./quality-dashboard/) | Python | JUnit XML · DataDog v2 API · GitHub Actions API · Python 3.11 | [→](./quality-dashboard/README.md) |
+| [`failure-triage`](./failure-triage/) | Python | Anthropic Claude (tool use) · JUnit XML · DataDog · Python 3.11 | [→](./failure-triage/README.md) |
 
 ---
 
@@ -716,6 +718,22 @@ qa-automation-portfolio/
 │   ├── selectors.json                  # Monitored selector registry (30+ selectors × 5 frameworks)
 │   ├── baseline.json                   # Committed selector baseline (auto-generated)
 │   └── run.py                          # CLI: --url · --baseline · --update-baseline · --auto-issue
+├── quality-dashboard/                  # Python · JUnit XML · DataDog v2 API · GitHub Actions API
+│   ├── kpi_calculator.py               # Core KPI computation engine (FrameworkKPI, AggregateKPI)
+│   ├── datadog_reporter.py             # Send KPI metrics to DataDog v2 API
+│   ├── github_actions.py               # Fetch workflow run history for MTTD via gh CLI
+│   ├── quality-kpi-dashboard.json      # DataDog dashboard JSON (import-ready)
+│   └── run.py                          # CLI: --xml-dir · --from-github · --output
+├── failure-triage/                     # Python · Anthropic Claude · tool-use agent
+│   ├── tools.py                        # 4 @beta_tool functions (read, search, inspect, write)
+│   ├── triage_agent.py                 # Agent loop using client.beta.messages.tool_runner
+│   ├── datadog_reporter.py             # Send triage metrics to DataDog
+│   └── run.py                          # CLI: --xml-dir · --output
+├── .claude/
+│   └── commands/                       # Claude Code custom slash commands
+│       ├── triage-failures.md          # /project:triage-failures — AI failure triage
+│       ├── review-tests.md            # /project:review-tests — QA best practice review
+│       └── gen-test.md                # /project:gen-test — AI test generation
 ├── Makefile                            # One-command runner for all suites
 ├── .gitignore
 └── README.md
@@ -780,8 +798,20 @@ Two DataDog features run across all frameworks:
 | `job-agent` | `llm.job_agent.jobs_found` · `llm.job_agent.jobs_scored` · `llm.job_agent.cover_letters_drafted` · `llm.job_agent.duration_ms` |
 | all four + job-agent | `llm.api.latency_ms` |
 | `fastapi-service` | `cache.hits` · `cache.misses` |
+| `quality-dashboard` | `kpi.pass_rate` · `kpi.failure_density` · `kpi.avg_duration_s` · `kpi.p95_duration_s` · `kpi.total_tests` · `kpi.suite_stability` · `kpi.flakiness_rate` · `kpi.mttd_seconds` |
+| `failure-triage` | `triage.total_failures` · `triage.cluster_count` · `triage.root_cause` (per category) |
 
 All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues, while the CI stays green.
+
+### GenAI Workflow (Claude Code)
+
+The `.claude/commands/` directory contains project-specific slash commands for daily QA workflow integration with Claude Code:
+
+| Command | What It Does |
+|---------|-------------|
+| `/project:triage-failures <xml-dir>` | Reads JUnit XML results, clusters failures by root cause (assertion, locator, timeout, setup, API, data), outputs severity-ranked triage report |
+| `/project:review-tests <test-dir>` | Reviews test files for QA best practices: POM violations, wait strategies, isolation, assertion quality, data management, fixture hygiene |
+| `/project:gen-test <description>` | Generates automated tests from plain-English descriptions, matching existing project conventions exactly |
 
 ---
 

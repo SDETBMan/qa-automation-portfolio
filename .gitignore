@@ -34,7 +34,8 @@ test-results/
 *.app
 
 # ── Claude Code local settings ────────────────────────────────────────────────
-.claude/
+.claude/*
+!.claude/commands/
 
 # ── Environment overrides (may contain secrets) ───────────────────────────────
 appsettings.local.json

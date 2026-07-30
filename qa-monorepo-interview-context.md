@@ -74,7 +74,7 @@ Bachelor of Science | Expected Completion: 2026
 ## Portfolio: qa-automation-portfolio (GitHub Monorepo)
 
 **Repo:** github.com/SDETBMan/qa-automation-portfolio
-**Structure:** 15 independent, production-grade frameworks in a single monorepo.
+**Structure:** 17 independent, production-grade frameworks in a single monorepo.
 Each framework has its own CI workflow, dependencies, and DataDog integration.
 All run nightly on GitHub Actions.
 
@@ -498,6 +498,56 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 
 ---
 
+### Framework 16: `quality-dashboard` — Portfolio-Wide Quality KPI Dashboard
+**Stack:** Python 3.11 · JUnit XML · DataDog v2 API · GitHub Actions API (gh CLI)
+**What it does:** Aggregates test results across all frameworks, computes derived quality KPIs (pass rate, failure density, MTTD, suite stability, flakiness rate), sends metrics to DataDog, and includes a VP-level dashboard JSON.
+
+**KPIs computed:**
+- Pass Rate — passed / total (primary quality signal)
+- Failure Density — failed / total (severity ranking)
+- Avg Duration / p95 Duration — test execution time tracking
+- Suite Stability — pass rate trend over last N runs
+- Flakiness Rate — from flakiness-detector data
+- MTTD (Mean Time to Detect) — seconds from code push to CI failure notification
+
+**Key architecture decisions:**
+- Reuses `flakiness-detector/flakiness/parser.py` for JUnit XML parsing — no duplication
+- GitHub Actions API via `gh api` subprocess (same pattern as vulnerability-aggregator)
+- DataDog dashboard JSON with conditional formatting (green/yellow/red thresholds)
+- Two modes: `--xml-dir` for local results, `--from-github` for CI history
+
+**DataDog metrics:** `kpi.pass_rate`, `kpi.failure_density`, `kpi.avg_duration_s`, `kpi.p95_duration_s`, `kpi.total_tests`, `kpi.suite_stability`, `kpi.flakiness_rate`, `kpi.mttd_seconds`
+
+**Run:** `python run.py --xml-dir ../flakiness-detector/fixtures/ --output report.json`
+
+---
+
+### Framework 17: `failure-triage` — AI-Powered Failure Root Cause Clustering
+**Stack:** Python 3.11 · Anthropic Claude (tool use, `@beta_tool`) · JUnit XML · DataDog
+**What it does:** An Anthropic tool-use agent that reads JUnit XML test results, uses Claude to cluster failures by root cause, and produces a structured triage report with severity rankings and suggested fix actions.
+
+**Root cause categories:** assertion_error, element_not_found, timeout, setup_failure, api_error, data_error, unknown
+
+**Key architecture decisions:**
+- 4 `@beta_tool`-decorated tools: read_test_results, search_failure_patterns, read_source_file, write_triage_report
+- `client.beta.messages.tool_runner` SDK-managed agent loop (same pattern as coding-agent)
+- Structured JSON output with severity levels (CRITICAL/HIGH/MEDIUM/LOW) and priority ordering
+- Reuses flakiness-detector's JUnit XML parser
+
+**DataDog metrics:** `triage.total_failures`, `triage.cluster_count`, `triage.root_cause` (per category)
+
+**Run:** `python run.py --xml-dir ../flakiness-detector/fixtures/ --output triage_report.json`
+
+---
+
+### GenAI Workflow: `.claude/commands/`
+Three Claude Code custom slash commands for daily QA workflow integration:
+- `/project:triage-failures <xml-dir>` — AI failure triage from JUnit XML
+- `/project:review-tests <test-dir>` — QA best practice review (POM, waits, isolation, assertions, data, fixtures)
+- `/project:gen-test <description>` — Generate tests matching project conventions from plain-English descriptions
+
+---
+
 ### k6 SLO Thresholds (Enhancement to `fastapi-service`)
 The existing k6 load tests now use declarative SLO configuration:
 - `k6/slo.json` — Single source of truth for all performance thresholds
@@ -530,6 +580,8 @@ The existing k6 load tests now use declarative SLO configuration:
 | `playwright-dotnet` | test suite results + duration |
 | `job-agent` | jobs_found · jobs_scored · cover_letters_drafted · duration · latency |
 | `coding-agent` | (no DataDog integration — demo artefacts written to `output/`) |
+| `quality-dashboard` | kpi.pass_rate · kpi.failure_density · kpi.avg_duration_s · kpi.p95_duration_s · kpi.total_tests · kpi.suite_stability · kpi.flakiness_rate · kpi.mttd_seconds |
+| `failure-triage` | triage.total_failures · triage.cluster_count · triage.root_cause (per category) |
 
 ---
 

@@ -1,0 +1,280 @@
+{
+  "title": "Quality KPIs: Portfolio-Wide Test Health",
+  "description": "VP-level quality KPIs aggregated across all frameworks — pass rate, failure density, MTTD, suite stability, flakiness rate, and execution duration trends  |  framework:aggregate + per-framework breakdown",
+  "layout_type": "ordered",
+  "template_variables": [
+    { "name": "env", "prefix": "env", "available_values": ["ci"], "default": "ci" },
+    { "name": "framework", "prefix": "framework", "available_values": [], "default": "*" }
+  ],
+  "widgets": [
+    {
+      "definition": {
+        "type": "note",
+        "content": "## Quality KPIs: Portfolio-Wide Test Health\nAggregated quality metrics across all test frameworks  |  Pass Rate · Failure Density · MTTD · Suite Stability · Flakiness  |  `framework:aggregate`",
+        "background_color": "vivid_blue",
+        "font_size": "14",
+        "text_align": "center",
+        "vertical_align": "center",
+        "show_tick": false
+      },
+      "layout": { "x": 0, "y": 0, "width": 12, "height": 1 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Overall Pass Rate",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": false,
+        "custom_unit": "%",
+        "precision": 1,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:kpi.pass_rate{framework:aggregate}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1 * 100" }],
+            "conditional_formats": [
+              { "comparator": ">=", "value": 95, "palette": "white_on_green" },
+              { "comparator": ">=", "value": 85, "palette": "white_on_yellow" },
+              { "comparator": "<", "value": 85, "palette": "white_on_red" }
+            ]
+          }
+        ]
+      },
+      "layout": { "x": 0, "y": 1, "width": 3, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Failure Density",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": false,
+        "custom_unit": "%",
+        "precision": 1,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:kpi.failure_density{framework:aggregate}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1 * 100" }],
+            "conditional_formats": [
+              { "comparator": "<=", "value": 5, "palette": "white_on_green" },
+              { "comparator": "<=", "value": 15, "palette": "white_on_yellow" },
+              { "comparator": ">", "value": 15, "palette": "white_on_red" }
+            ]
+          }
+        ]
+      },
+      "layout": { "x": 3, "y": 1, "width": 3, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Suite Stability",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": false,
+        "custom_unit": "%",
+        "precision": 1,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:kpi.suite_stability{framework:aggregate}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1 * 100" }],
+            "conditional_formats": [
+              { "comparator": ">=", "value": 90, "palette": "white_on_green" },
+              { "comparator": ">=", "value": 75, "palette": "white_on_yellow" },
+              { "comparator": "<", "value": 75, "palette": "white_on_red" }
+            ]
+          }
+        ]
+      },
+      "layout": { "x": 6, "y": 1, "width": 3, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "MTTD (seconds)",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": true,
+        "custom_unit": "s",
+        "precision": 0,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:kpi.mttd_seconds{framework:aggregate}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1" }],
+            "conditional_formats": [
+              { "comparator": "<=", "value": 300, "palette": "white_on_green" },
+              { "comparator": "<=", "value": 600, "palette": "white_on_yellow" },
+              { "comparator": ">", "value": 600, "palette": "white_on_red" }
+            ]
+          }
+        ]
+      },
+      "layout": { "x": 9, "y": 1, "width": 3, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "timeseries",
+        "title": "Pass Rate by Framework (Over Time)",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": true,
+        "requests": [
+          {
+            "response_format": "timeseries",
+            "queries": [
+              { "name": "pass_rate", "data_source": "metrics", "query": "avg:kpi.pass_rate{$framework} by {framework}" }
+            ],
+            "formulas": [
+              { "alias": "Pass Rate", "formula": "pass_rate * 100" }
+            ],
+            "display_type": "line",
+            "style": { "palette": "dog_classic", "line_type": "solid", "line_width": "normal" }
+          }
+        ],
+        "yaxis": { "include_zero": true, "min": "0", "max": "100", "label": "%" }
+      },
+      "layout": { "x": 0, "y": 3, "width": 12, "height": 3 }
+    },
+    {
+      "definition": {
+        "type": "timeseries",
+        "title": "Test Execution Duration — p95 (Over Time)",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": true,
+        "requests": [
+          {
+            "response_format": "timeseries",
+            "queries": [
+              { "name": "p95", "data_source": "metrics", "query": "avg:kpi.p95_duration_s{$framework} by {framework}" }
+            ],
+            "formulas": [
+              { "alias": "p95 Duration (s)", "formula": "p95" }
+            ],
+            "display_type": "line",
+            "style": { "palette": "warm", "line_type": "solid", "line_width": "normal" }
+          }
+        ],
+        "yaxis": { "include_zero": true, "label": "seconds" }
+      },
+      "layout": { "x": 0, "y": 6, "width": 12, "height": 3 }
+    },
+    {
+      "definition": {
+        "type": "toplist",
+        "title": "Frameworks by Failure Density (Worst First)",
+        "title_size": "16",
+        "title_align": "left",
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [
+              { "name": "fd", "data_source": "metrics", "query": "avg:kpi.failure_density{framework:*} by {framework}", "aggregator": "last" }
+            ],
+            "formulas": [
+              { "formula": "fd * 100", "limit": { "count": 10, "order": "desc" } }
+            ],
+            "conditional_formats": [
+              { "comparator": "<=", "value": 5, "palette": "white_on_green" },
+              { "comparator": "<=", "value": 15, "palette": "white_on_yellow" },
+              { "comparator": ">", "value": 15, "palette": "white_on_red" }
+            ]
+          }
+        ]
+      },
+      "layout": { "x": 0, "y": 9, "width": 6, "height": 3 }
+    },
+    {
+      "definition": {
+        "type": "heatmap",
+        "title": "Test Outcomes by Framework Over Time",
+        "title_size": "16",
+        "title_align": "left",
+        "requests": [
+          {
+            "response_format": "timeseries",
+            "queries": [
+              { "name": "total", "data_source": "metrics", "query": "avg:kpi.total_tests{$framework} by {framework}" }
+            ],
+            "formulas": [
+              { "formula": "total" }
+            ],
+            "style": { "palette": "dog_classic" }
+          }
+        ],
+        "yaxis": { "include_zero": true }
+      },
+      "layout": { "x": 6, "y": 9, "width": 6, "height": 3 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Flakiness Rate",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": false,
+        "custom_unit": "%",
+        "precision": 1,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:kpi.flakiness_rate{framework:aggregate}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1 * 100" }],
+            "conditional_formats": [
+              { "comparator": "<=", "value": 3, "palette": "white_on_green" },
+              { "comparator": "<=", "value": 10, "palette": "white_on_yellow" },
+              { "comparator": ">", "value": 10, "palette": "white_on_red" }
+            ]
+          }
+        ]
+      },
+      "layout": { "x": 0, "y": 12, "width": 4, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Total Tests",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": true,
+        "precision": 0,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:kpi.total_tests{framework:aggregate}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1" }]
+          }
+        ]
+      },
+      "layout": { "x": 4, "y": 12, "width": 4, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "timeseries",
+        "title": "MTTD Trend (Seconds)",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": false,
+        "requests": [
+          {
+            "response_format": "timeseries",
+            "queries": [
+              { "name": "mttd", "data_source": "metrics", "query": "avg:kpi.mttd_seconds{framework:aggregate}" }
+            ],
+            "formulas": [
+              { "formula": "mttd" }
+            ],
+            "display_type": "line",
+            "style": { "palette": "cool", "line_type": "solid", "line_width": "normal" }
+          }
+        ],
+        "yaxis": { "include_zero": true, "label": "seconds" }
+      },
+      "layout": { "x": 8, "y": 12, "width": 4, "height": 2 }
+    }
+  ]
+}
