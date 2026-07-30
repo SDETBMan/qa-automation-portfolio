@@ -42,6 +42,9 @@ __pycache__/
 *.pyc
 .coverage
 
+# ── Generated output ─────────────────────────────────────────────────────────
+claims-diff/output/
+
 # ── Environment overrides (may contain secrets) ───────────────────────────────
 appsettings.local.json
 .env
