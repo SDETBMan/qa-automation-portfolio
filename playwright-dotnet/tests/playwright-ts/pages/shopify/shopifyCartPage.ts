@@ -26,12 +26,14 @@ export class ShopifyCartPage extends BasePage {
       '.cart__title, h1:has-text("cart"), [data-cart-title]',
     ).first();
 
+    // Dawn uses .cart-item divs; Monochrome uses a <table> with <tr> rows (skip header row via tbody or :not(:first-child))
     this.cartItems = page.locator(
-      '.cart-item, .cart__item, [data-cart-item], tr.cart-item',
+      '.cart-item, .cart__item, [data-cart-item], table tr:has(td)',
     );
 
+    // Dawn uses .cart-item__name; Monochrome puts the product name in an h3 > a inside a table cell
     this.cartItemNames = page.locator(
-      '.cart-item__name, .cart-item__title a, [data-cart-item-name]',
+      '.cart-item__name, .cart-item__title a, [data-cart-item-name], table td h3 a',
     );
 
     this.cartItemPrices = page.locator(
@@ -42,9 +44,8 @@ export class ShopifyCartPage extends BasePage {
       '.totals__subtotal-value, .cart__subtotal, [data-cart-subtotal], .cart-subtotal',
     ).first();
 
-    this.checkoutButton = page.locator(
-      'button[name="checkout"], a[href*="/checkout"], [data-checkout-btn], .cart__checkout-button',
-    ).first();
+    // Dawn uses button[name="checkout"]; Monochrome uses a plain <button>Checkout</button>
+    this.checkoutButton = page.getByRole('button', { name: /checkout/i }).first();
 
     this.emptyCartMessage = page.locator(
       '.cart__empty-text, .cart--empty-message, [data-empty-cart]',
@@ -55,7 +56,7 @@ export class ShopifyCartPage extends BasePage {
     );
 
     this.removeButtons = page.locator(
-      '.cart-item a[href*="/cart/change"], cart-remove-button, [data-cart-remove]',
+      '.cart-item a[href*="/cart/change"], cart-remove-button, [data-cart-remove], a[href*="/cart/change"], a:has-text("Remove")',
     );
 
     this.continueShoppingLink = page.locator(

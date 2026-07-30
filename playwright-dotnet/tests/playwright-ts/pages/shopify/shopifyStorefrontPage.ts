@@ -31,7 +31,8 @@ export class ShopifyStorefrontPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
-    this.header = page.locator('header').first();
+    // Monochrome and minimal themes lack a <header> tag; fall back to nav or the top-level div containing the logo
+    this.header = page.locator('header, nav, [role="banner"]').first();
     this.mainNav = page.locator('nav').first();
 
     // Cart icon — multiple selectors for theme compatibility
@@ -104,7 +105,9 @@ export class ShopifyStorefrontPage extends BasePage {
   }
 
   async isHeaderVisible(): Promise<boolean> {
-    return await this.header.isVisible();
+    // Fall back to checking for the store logo link if no header/nav element exists
+    if (await this.header.isVisible().catch(() => false)) return true;
+    return await this.page.locator('a[href="/"] img').first().isVisible().catch(() => false);
   }
 
   async getCollectionTitle(): Promise<string> {

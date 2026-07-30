@@ -22,6 +22,7 @@ allure-report/
 
 # Environment overrides (may contain secrets)
 appsettings.local.json
+.env
 
 # TypeScript Playwright
 tests/playwright-ts/node_modules/

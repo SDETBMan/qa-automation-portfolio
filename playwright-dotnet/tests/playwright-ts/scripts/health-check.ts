@@ -20,7 +20,7 @@
  * Outputs JSON to stdout for audit trail consumption in CI.
  */
 
-import { chromium, Browser, Page } from 'playwright';
+import { chromium, Browser } from 'playwright';
 
 interface CheckResult {
   name: string;
@@ -38,8 +38,13 @@ interface HealthReport {
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
-/** Routes to check for HTTP 200 (relative to the deployment URL). */
-const ROUTES_TO_CHECK = ['/', '/inventory.html'];
+/** Routes to check for HTTP 200 (relative to the deployment URL).
+ *  Override with HEALTH_CHECK_ROUTES env var (comma-separated), e.g.:
+ *    HEALTH_CHECK_ROUTES=/,/collections/all npx ts-node scripts/health-check.ts <URL>
+ */
+const ROUTES_TO_CHECK = process.env['HEALTH_CHECK_ROUTES']
+  ? process.env['HEALTH_CHECK_ROUTES'].split(',').map((r) => r.trim())
+  : ['/'];
 
 /** Console message levels treated as critical errors. */
 const CRITICAL_CONSOLE_LEVELS = ['error'];

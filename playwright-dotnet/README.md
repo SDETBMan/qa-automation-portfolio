@@ -21,7 +21,9 @@ A professional Playwright + .NET 8 + NUnit test automation framework targeting [
 - **Trace Viewer**: `Context.Tracing` captures screenshots + DOM snapshots on failure; viewable via `playwright show-trace`
 - **Network interception**: `RouteAsync` patterns: block assets, mock responses, inject headers, simulate failures
 - **Fixtures (C#)**: `AuthenticatedTest` base class pre-logs in via NUnit `[SetUp]` chain; zero login boilerplate in tests
-- **Fixtures (TypeScript)**: `test.extend<AppFixtures>` with `authenticatedPage` fixture; setup/teardown via `use()` callback
+- **Fixtures (TypeScript)**: `test.extend<AppFixtures, WorkerFixtures>` with `authenticatedPage` (storageState) and worker-scoped `dbClient`; setup/teardown via `use()` callback
+- **storageState authentication**: global `auth.setup.ts` logs in once, saves cookies/localStorage; browser projects reuse the saved state — eliminates per-test login overhead
+- **Semantic locators**: page objects use Playwright's recommended priority: `getByRole` → `getByPlaceholder` / `getByText` → `getByTestId` (via `testIdAttribute: 'data-test'`) → scoped CSS
 - **TypeScript project**: full Playwright TypeScript suite in `tests/playwright-ts/` with strict mode, page objects, and fixtures
 - **Data-driven tests**: `[TestCaseSource]` for persona-based login scenarios
 - **AI-assisted test data**: OpenAI integration via `AiHelper`
@@ -214,14 +216,14 @@ cd tests/playwright-ts
 npm install
 npx playwright install chromium
 
-# Run all tests (Chromium)
-npx playwright test --project=chromium
+# Run all tests (Chromium — setup project runs auth first)
+npx playwright test --project=setup --project=chromium
 
 # Run smoke tests only
-npx playwright test --grep "@smoke" --project=chromium
+npx playwright test --grep "@smoke" --project=setup --project=chromium
 
 # Run headed (for debugging)
-npx playwright test --project=chromium --headed
+npx playwright test --project=setup --project=chromium --headed
 
 # Run all browsers (local only)
 npx playwright install
@@ -290,9 +292,9 @@ PlaywrightDotNetFramework/
 │   └── playwright-ts/                     # Playwright TypeScript project
 │       ├── package.json
 │       ├── tsconfig.json
-│       ├── playwright.config.ts           # 5 projects: chromium, firefox, webkit, api, shopify
+│       ├── playwright.config.ts           # 6 projects: setup, chromium, firefox, webkit, api, shopify
 │       ├── pages/
-│       │   ├── basePage.ts                # Abstract base: click, fill, getText helpers
+│       │   ├── basePage.ts                # Abstract base: protected page for child page objects
 │       │   ├── loginPage.ts
 │       │   ├── inventoryPage.ts
 │       │   ├── cartPage.ts
@@ -301,7 +303,7 @@ PlaywrightDotNetFramework/
 │       │       ├── shopifyProductPage.ts
 │       │       └── shopifyCartPage.ts
 │       ├── fixtures/
-│       │   ├── fixtures.ts                # test.extend — authenticatedPage fixture
+│       │   ├── fixtures.ts                # test.extend<AppFixtures, WorkerFixtures> — storageState auth + worker-scoped dbClient
 │       │   └── shopifyFixtures.ts         # Shopify test fixtures
 │       ├── utils/
 │       │   ├── dbClient.ts                # Async MySQL/PostgreSQL with connection pooling
@@ -314,6 +316,7 @@ PlaywrightDotNetFramework/
 │       ├── scripts/
 │       │   └── health-check.ts            # Deploy validation health-check script
 │       └── tests/
+│           ├── auth.setup.ts              # Global auth: login once → save storageState for all browser projects
 │           ├── login.spec.ts              # @smoke + @regression login tests
 │           ├── inventory.spec.ts          # @smoke + @regression cart tests (fixture)
 │           ├── network.spec.ts            # 4 network interception patterns
@@ -397,7 +400,7 @@ Override via `GRAPHQL_URL` env var for production targets.
 
 ## Database-to-UI Assertions
 
-The `dbClient.ts` utility provides async connection pooling for MySQL and PostgreSQL. The `dbAssertions.ts` module implements five reusable assertion patterns:
+The `dbClient.ts` utility provides async connection pooling for MySQL and PostgreSQL, worker-scoped via `test.extend` to share one pool per worker process. The `dbAssertions.ts` module implements five reusable assertion patterns with `expect.poll()` for auto-retry:
 
 | Pattern | What it validates |
 |---|---|
@@ -466,10 +469,12 @@ The fixture pattern is implemented identically in both languages, though the idi
 
 | Concept | C# | TypeScript |
 |---|---|---|
-| Fixture base | `AuthenticatedTest : BaseTest` | `test.extend<AppFixtures>` |
-| Setup | `[SetUp] LoginBeforeEach()` | `async ({ page }, use) => { /* setup */ await use(po); }` |
+| Fixture base | `AuthenticatedTest : BaseTest` | `test.extend<AppFixtures, WorkerFixtures>` |
+| Auth strategy | `[SetUp] LoginBeforeEach()` (per-test UI login) | `storageState` — global `auth.setup.ts` logs in once, browser projects reuse saved cookies |
+| Fixture scoping | NUnit `[SetUp]` / `[OneTimeSetUp]` | Test-scoped (page objects) + worker-scoped (`dbClient`) |
 | Teardown | `[TearDown]` inherited from `BaseTest` | Playwright disposes page automatically |
 | Guard | `Assert.That(Page.Url, Does.Contain("inventory"))` | `await page.waitForURL(/inventory/)` |
+| Locator strategy | CSS selectors via `BasePage` helpers | Semantic: `getByRole` → `getByPlaceholder` → `getByTestId` (`data-test`) |
 
 ---
 

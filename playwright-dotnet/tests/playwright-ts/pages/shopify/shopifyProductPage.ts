@@ -20,10 +20,13 @@ export class ShopifyProductPage extends BasePage {
   constructor(page: Page) {
     super(page);
 
+    // Dawn uses h1 with .product__title; Monochrome uses h2 — include both heading levels
     this.productTitle = page.locator(
-      '.product__title, h1.product-single__title, [data-product-title], h1',
+      '.product__title, h1.product-single__title, [data-product-title], h1, h2',
     ).first();
 
+    // Price — Dawn uses .price classes; Monochrome renders price as plain text
+    // Try CSS classes first, fall back to text pattern matching for minimal themes
     this.productPrice = page.locator(
       '.price__regular .price-item, .product__price, [data-product-price], .price',
     ).first();
@@ -32,10 +35,9 @@ export class ShopifyProductPage extends BasePage {
       '.product__description, .product-single__description, [data-product-description]',
     ).first();
 
-    // Add-to-cart button — most themes use button[name="add"] inside an add-to-cart form
-    this.addToCartButton = page.locator(
-      'button[name="add"], button[type="submit"][data-add-to-cart], .product-form__submit, [data-add-to-cart-btn]',
-    ).first();
+    // Add-to-cart — Dawn uses <button name="add">; Monochrome uses <input type="submit" value="Add to Shopping Cart">
+    // getByRole('button') matches both <button> and <input type="submit">
+    this.addToCartButton = page.getByRole('button', { name: /add to/i }).first();
 
     this.addToCartForm = page.locator(
       'form[action*="/cart/add"], [data-product-form], .product-form',
@@ -78,7 +80,11 @@ export class ShopifyProductPage extends BasePage {
   }
 
   async getPrice(): Promise<string> {
-    return await this.productPrice.innerText();
+    // Try CSS-class-based locator first; fall back to text pattern for minimal themes
+    if (await this.productPrice.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      return await this.productPrice.innerText();
+    }
+    return await this.page.getByText(/\$\d+\.\d{2}/).first().innerText();
   }
 
   async getDescription(): Promise<string> {
