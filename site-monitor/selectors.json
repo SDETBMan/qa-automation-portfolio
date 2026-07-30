@@ -1,0 +1,33 @@
+{
+  "monitored": {
+    "ids": {
+      "user-name": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "password": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "login-button": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "checkout": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "react-burger-menu-btn": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "logout_sidebar_link": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "continue-shopping": ["cypress", "playwright-dotnet"],
+      "add-to-cart-sauce-labs-backpack": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "remove-sauce-labs-backpack": ["cypress", "selenium-java", "playwright-dotnet"]
+    },
+    "classes": {
+      "inventory_list": ["cypress", "playwright-dotnet"],
+      "inventory_item": ["cypress", "playwright-dotnet"],
+      "inventory_item_name": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "inventory_item_price": ["cypress", "playwright-dotnet"],
+      "cart_item": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "shopping_cart_link": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "shopping_cart_badge": ["cypress", "selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "title": ["selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "complete-header": ["cypress", "playwright-dotnet"],
+      "complete-text": ["cypress", "playwright-dotnet"]
+    },
+    "data_test": {
+      "error": ["selenium-java", "cucumber", "cucumber-python", "playwright-dotnet"],
+      "product-sort-container": ["cypress"],
+      "checkout": ["cypress", "selenium-java"],
+      "continue-shopping": ["cypress", "playwright-dotnet"]
+    }
+  }
+}

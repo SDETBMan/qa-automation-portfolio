@@ -1,0 +1,4 @@
+beautifulsoup4>=4.12
+click>=8.1
+requests>=2.31
+pytest>=7.4

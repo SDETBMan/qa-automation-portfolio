@@ -37,6 +37,11 @@ test-results/
 .claude/*
 !.claude/commands/
 
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+.coverage
+
 # ── Environment overrides (may contain secrets) ───────────────────────────────
 appsettings.local.json
 .env
