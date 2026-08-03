@@ -87,6 +87,6 @@ public class TestHooks
         int.TryParse(failed,  out int failedInt);
         int.TryParse(skipped, out int skippedInt);
         long durationMs = (long)(DateTime.UtcNow - _suiteStart).TotalMilliseconds;
-        await DataDogUtils.SendTestMetricsAsync(passedInt, failedInt, skippedInt, durationMs, "playwright-dotnet");
+        await DataDogUtils.SendTestMetricsAsync(passedInt, failedInt, skippedInt, durationMs, "playwright");
     }
 }

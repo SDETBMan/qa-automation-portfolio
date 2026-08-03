@@ -198,7 +198,7 @@ def run_from_github(repo: str, output: Path | None = None) -> dict:
     )
 
     workflows = [
-        "playwright-dotnet.yml",
+        "playwright.yml",
         "selenium-java.yml",
         "cucumber.yml",
         "cypress.yml",

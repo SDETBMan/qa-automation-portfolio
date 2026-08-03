@@ -8,17 +8,17 @@
 #   1. In your Azure DevOps project, go to Pipelines → New Pipeline
 #   2. Select your GitHub repo (or Azure Repos mirror)
 #   3. Choose "Existing Azure Pipelines YAML file"
-#   4. Path: /playwright-dotnet/azure-pipelines.yml
+#   4. Path: /playwright/azure-pipelines.yml
 #   5. Create a variable group named "playwright-secrets" with:
 #        APP_PASSWORD = secret_sauce
 #   6. Grant the pipeline permission to use the variable group
 # ──────────────────────────────────────────────────────────────────────────────
 
 # No push trigger — smoke gate is PR-only.
-# Nightly/push runs are handled by GitHub Actions (playwright-dotnet.yml).
+# Nightly/push runs are handled by GitHub Actions (playwright.yml).
 trigger: none
 
-# Run on every PR targeting main that touches playwright-dotnet/.
+# Run on every PR targeting main that touches playwright/.
 # autoCancel: true cancels superseded runs (equivalent to GHA cancel-in-progress).
 pr:
   autoCancel: true
@@ -27,12 +27,12 @@ pr:
       - main
   paths:
     include:
-      - playwright-dotnet/*
+      - playwright/*
 
 variables:
   - group: playwright-secrets
   - name: WORKING_DIR
-    value: playwright-dotnet/tests/playwright-ts
+    value: playwright/tests/playwright-ts
   - name: NODE_VERSION
     value: '20'
   - name: BASE_URL

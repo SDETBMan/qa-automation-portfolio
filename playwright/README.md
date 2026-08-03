@@ -1,6 +1,6 @@
 # PlaywrightDotNetFramework
 
-[![playwright-dotnet CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright-dotnet.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright-dotnet.yml)
+[![playwright CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright.yml)
 [![.NET 8](https://img.shields.io/badge/.NET-8.0%20LTS-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Playwright](https://img.shields.io/badge/Playwright-1.44-45ba4b?logo=playwright)](https://playwright.dev/dotnet/)
 [![NUnit](https://img.shields.io/badge/NUnit-3.x-22c55e)](https://nunit.org/)
@@ -502,9 +502,9 @@ The CI pipeline also runs an **OWASP ZAP Baseline Scan** after every test run (`
 
 | Workflow | Trigger | Purpose |
 |---|---|---|
-| `playwright-dotnet.yml` | push · PR · nightly 02:00 UTC | Full regression: C# + TypeScript + Shopify + visual + OWASP ZAP |
-| `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright-dotnet/**`) | Fast @smoke gate: Chromium only, 5-min timeout, fail-fast |
-| `azure-pipelines.yml` | PR to `main` (paths: `playwright-dotnet/*`) | Azure DevOps equivalent of the GHA smoke gate |
+| `playwright.yml` | push · PR · nightly 02:00 UTC | Full regression: C# + TypeScript + Shopify + visual + OWASP ZAP |
+| `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright/**`) | Fast @smoke gate: Chromium only, 5-min timeout, fail-fast |
+| `azure-pipelines.yml` | PR to `main` (paths: `playwright/*`) | Azure DevOps equivalent of the GHA smoke gate |
 | `deploy-validate-rollback.yml` | `workflow_dispatch` · `workflow_call` | Health-check → smoke → auto-rollback pipeline |
 | `visual-regression-update.yml` | `workflow_dispatch` | Update visual baselines → commit → open PR for review |
 

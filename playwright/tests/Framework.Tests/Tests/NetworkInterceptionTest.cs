@@ -180,7 +180,7 @@ public class NetworkInterceptionTest : BaseTest
             var headers = new Dictionary<string, string>(route.Request.Headers)
             {
                 // Add a custom test identification header.
-                ["x-test-automation"] = "playwright-dotnet"
+                ["x-test-automation"] = "playwright"
             };
 
             // Capture the header value so we can assert on it after the request fires.
@@ -197,7 +197,7 @@ public class NetworkInterceptionTest : BaseTest
         await Page.GotoAsync("https://www.saucedemo.com");
 
         // Assert that the header was captured with the expected value.
-        Assert.That(capturedHeader, Is.EqualTo("playwright-dotnet"),
+        Assert.That(capturedHeader, Is.EqualTo("playwright"),
             "Custom header should have been injected into the forwarded request.");
 
         // Also confirm the page loaded successfully after the header modification.

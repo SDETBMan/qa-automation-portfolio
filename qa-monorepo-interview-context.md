@@ -147,7 +147,7 @@ All run nightly on GitHub Actions.
 
 ---
 
-### Framework 4: `playwright-dotnet` — Cross-Browser UI Testing
+### Framework 4: `playwright` — Cross-Browser UI Testing
 **Stack:** C# · TypeScript · Playwright 1.44 · NUnit · .NET 8
 **What it does:** Two parallel Playwright suites — one in C# (NUnit) and one in TypeScript — testing SauceDemo end-to-end.
 
@@ -177,7 +177,7 @@ All run nightly on GitHub Actions.
   5. Passive operation auditor — `page.on('request')` records every GraphQL operation fired during a flow; documents N+1 detection, mutation hygiene, and auth boundary patterns
 
 **PR smoke gate (`playwright-smoke-pr.yml`):**
-- Triggers exclusively on `pull_request` to `main` (push/nightly handled by `playwright-dotnet.yml`)
+- Triggers exclusively on `pull_request` to `main` (push/nightly handled by `playwright.yml`)
 - `timeout-minutes: 5` hard cap — fails the job if exceeded, forcing deliberate scope control
 - `concurrency: cancel-in-progress: true` — new commit immediately cancels stale run
 - Chromium only · `--grep @smoke` · `--retries=0` (fail-fast, no flakiness masking)
@@ -577,7 +577,7 @@ The existing k6 load tests now use declarative SLO configuration:
 | `selenium-java` | test suite results + duration |
 | `cucumber` | test suite results + duration (Cucumber + Karate) |
 | `cucumber-python` | test suite results + duration |
-| `playwright-dotnet` | test suite results + duration |
+| `playwright` | test suite results + duration |
 | `job-agent` | jobs_found · jobs_scored · cover_letters_drafted · duration · latency |
 | `coding-agent` | (no DataDog integration — demo artefacts written to `output/`) |
 | `quality-dashboard` | kpi.pass_rate · kpi.failure_density · kpi.avg_duration_s · kpi.p95_duration_s · kpi.total_tests · kpi.suite_stability · kpi.flakiness_rate · kpi.mttd_seconds |
@@ -593,7 +593,7 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 |---|---|---|
 | `playwright-smoke-pr.yml` | PR only · 5-min hard cap | — (Chromium · @smoke · retries=0 always) |
 | `azure-pipelines.yml` | PR (Azure DevOps) | ADO equivalent of GHA smoke gate |
-| `playwright-dotnet.yml` | push · PR · nightly 02:00 UTC | browser · execution mode · JMeter toggle |
+| `playwright.yml` | push · PR · nightly 02:00 UTC | browser · execution mode · JMeter toggle |
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | browser · execution mode · JMeter toggle |
 | `karate.yml` | push · PR · nightly 04:00 UTC | karate_env (dev · staging) · karate_tags filter |

@@ -4,7 +4,7 @@
 # Usage:
 #   make              → print available targets
 #   make all          → run all five frameworks sequentially
-#   make playwright   → playwright-dotnet (C# + TypeScript, headless Chromium)
+#   make playwright   → playwright (C# + TypeScript, headless Chromium)
 #   make selenium     → selenium-java (headless Chrome)
 #   make cucumber     → cucumber (headless Chrome)
 #   make ai-eval      → ai-eval (Python + Pytest + DeepEval)
@@ -35,7 +35,7 @@ help:
 	@echo "  make langgraph-agent      Run LangGraph test-case generator demo (requires ANTHROPIC_API_KEY)"
 	@echo "  make dspy-optimizer       Run DSPy baseline vs optimized comparison (requires OPENAI_API_KEY)"
 	@echo "  make job-agent            Run Claude-powered job search agent"
-	@echo "  make playwright           Run playwright-dotnet suite (C# + TypeScript)"
+	@echo "  make playwright           Run playwright suite (C# + TypeScript)"
 	@echo "  make selenium             Run selenium-java suite (headless Chrome)"
 	@echo "  make cucumber             Run cucumber suite (headless Chrome)"
 	@echo "  make ai-eval              Run AI evaluation suite (Python + DeepEval)"
@@ -98,10 +98,10 @@ all: playwright selenium cucumber ai-eval postman
 
 playwright:
 	@echo ""
-	@echo ">>> [playwright-dotnet] Running C# + TypeScript suite..."
-	$(MAKE) -C playwright-dotnet all
+	@echo ">>> [playwright] Running C# + TypeScript suite..."
+	$(MAKE) -C playwright all
 	@echo ""
-	@echo ">>> [playwright-dotnet] Done."
+	@echo ">>> [playwright] Done."
 	@echo ""
 
 selenium:
@@ -349,8 +349,8 @@ terraform-clean:
 
 clean:
 	@echo ""
-	@echo ">>> Cleaning playwright-dotnet artefacts..."
-	$(MAKE) -C playwright-dotnet clean
+	@echo ">>> Cleaning playwright artefacts..."
+	$(MAKE) -C playwright clean
 	@echo ""
 	@echo ">>> Cleaning selenium-java artefacts..."
 	cd selenium-java && mvn clean

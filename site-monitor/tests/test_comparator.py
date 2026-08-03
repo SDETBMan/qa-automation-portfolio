@@ -63,7 +63,7 @@ class TestCheckMonitored:
             "monitored": {
                 "ids": {
                     "user-name": ["cypress", "selenium-java"],
-                    "login-button": ["cypress", "playwright-dotnet"],
+                    "login-button": ["cypress", "playwright"],
                 },
                 "classes": {
                     "inventory_item": ["cypress"],

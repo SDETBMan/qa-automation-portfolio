@@ -1,12 +1,12 @@
-name: playwright-dotnet CI
+name: playwright CI
 
 on:
   push:
     branches: [ main ]
-    paths: [ 'playwright-dotnet/**' ]
+    paths: [ 'playwright/**' ]
   pull_request:
     branches: [ main ]
-    paths: [ 'playwright-dotnet/**' ]
+    paths: [ 'playwright/**' ]
   schedule:
     # Run nightly at 02:00 UTC
     - cron: '0 2 * * *'
@@ -18,7 +18,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: playwright-dotnet   # all run steps default to this directory
+        working-directory: playwright   # all run steps default to this directory
 
     steps:
       - name: Checkout code
@@ -66,7 +66,7 @@ jobs:
           curl -fsSL "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" \
             --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
           datadog-ci junit upload --service qa-automation-portfolio \
-            --tags framework:playwright-dotnet \
+            --tags framework:playwright \
             TestResults/**/junit-results.xml
         env:
           DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
@@ -101,7 +101,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
-          path: playwright-dotnet/allure-results/
+          path: playwright/allure-results/
           retention-days: 30
 
       - name: Upload test results
@@ -109,7 +109,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: playwright-dotnet/TestResults/
+          path: playwright/TestResults/
           retention-days: 7
 
       # ── TypeScript Playwright Tests ──────────────────────────────────────
@@ -118,18 +118,18 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: playwright-dotnet/tests/playwright-ts/package-lock.json
+          cache-dependency-path: playwright/tests/playwright-ts/package-lock.json
 
       - name: Install TypeScript dependencies
-        working-directory: playwright-dotnet/tests/playwright-ts
+        working-directory: playwright/tests/playwright-ts
         run: npm ci
 
       - name: Install Playwright browsers (TypeScript)
-        working-directory: playwright-dotnet/tests/playwright-ts
+        working-directory: playwright/tests/playwright-ts
         run: npx playwright install chromium
 
       - name: Run TypeScript Playwright tests
-        working-directory: playwright-dotnet/tests/playwright-ts
+        working-directory: playwright/tests/playwright-ts
         run: npx playwright test --project=setup --project=chromium
         env:
           CI: 'true'
@@ -139,7 +139,7 @@ jobs:
       - name: Run visual regression tests
         if: always()
         continue-on-error: true   # First run will fail (no baselines yet). Use visual-regression-update workflow to generate them.
-        working-directory: playwright-dotnet/tests/playwright-ts
+        working-directory: playwright/tests/playwright-ts
         run: npx playwright test --grep "@visual" --project=setup --project=chromium
         env:
           CI: 'true'
@@ -148,7 +148,7 @@ jobs:
 
       - name: Run Shopify storefront tests
         if: always()
-        working-directory: playwright-dotnet/tests/playwright-ts
+        working-directory: playwright/tests/playwright-ts
         run: npx playwright test --project=shopify || true
         env:
           CI: 'true'
@@ -156,7 +156,7 @@ jobs:
 
       - name: Generate TypeScript Allure report
         if: always()
-        working-directory: playwright-dotnet/tests/playwright-ts
+        working-directory: playwright/tests/playwright-ts
         run: npx allure generate allure-results --clean -o allure-report
 
       - name: Upload TypeScript Allure results
@@ -164,7 +164,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-ts-allure-results
-          path: playwright-dotnet/tests/playwright-ts/allure-results/
+          path: playwright/tests/playwright-ts/allure-results/
           retention-days: 30
 
       - name: Upload TypeScript Allure report
@@ -172,7 +172,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-ts-allure-report
-          path: playwright-dotnet/tests/playwright-ts/allure-report/
+          path: playwright/tests/playwright-ts/allure-report/
           retention-days: 30
 
       - name: Upload TypeScript Playwright report
@@ -180,7 +180,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-ts-report
-          path: playwright-dotnet/tests/playwright-ts/playwright-report/
+          path: playwright/tests/playwright-ts/playwright-report/
           retention-days: 30
 
       - name: Upload TypeScript traces (on failure)
@@ -188,7 +188,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-ts-traces
-          path: playwright-dotnet/tests/playwright-ts/test-results/
+          path: playwright/tests/playwright-ts/test-results/
           retention-days: 7
 
       - name: Upload visual regression snapshot diffs (on failure)
@@ -196,6 +196,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: visual-regression-diffs
-          path: playwright-dotnet/tests/playwright-ts/test-results/**/*-diff.png
+          path: playwright/tests/playwright-ts/test-results/**/*-diff.png
           retention-days: 14
           if-no-files-found: ignore

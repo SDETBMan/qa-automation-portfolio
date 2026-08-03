@@ -30,7 +30,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: playwright-dotnet/tests/playwright-ts
+        working-directory: playwright/tests/playwright-ts
 
     steps:
       - name: Checkout code
@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: playwright-dotnet/tests/playwright-ts/package-lock.json
+          cache-dependency-path: playwright/tests/playwright-ts/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -79,7 +79,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           BRANCH="visual-baseline-update/${{ inputs.project }}-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
-          git add playwright-dotnet/tests/playwright-ts/tests/
+          git add playwright/tests/playwright-ts/tests/
           git commit -m "chore: update ${{ inputs.project }} visual regression baselines
 
           Updated via visual-regression-update workflow.
@@ -112,5 +112,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: visual-baselines-${{ inputs.project }}
-          path: playwright-dotnet/tests/playwright-ts/tests/**/*-snapshots/
+          path: playwright/tests/playwright-ts/tests/**/*-snapshots/
           retention-days: 30

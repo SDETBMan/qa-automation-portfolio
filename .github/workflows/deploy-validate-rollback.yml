@@ -55,7 +55,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: playwright-dotnet/tests/playwright-ts
+        working-directory: playwright/tests/playwright-ts
 
     steps:
       - name: Checkout code
@@ -66,7 +66,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: playwright-dotnet/tests/playwright-ts/package-lock.json
+          cache-dependency-path: playwright/tests/playwright-ts/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -110,7 +110,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: smoke-health-report
-          path: playwright-dotnet/tests/playwright-ts/playwright-report/
+          path: playwright/tests/playwright-ts/playwright-report/
           retention-days: 14
 
       - name: Upload snapshot diffs (on failure)
@@ -118,7 +118,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: smoke-health-diffs
-          path: playwright-dotnet/tests/playwright-ts/test-results/
+          path: playwright/tests/playwright-ts/test-results/
           retention-days: 7
 
   # ── Step 2: Rollback on Failure ────────────────────────────────────────────

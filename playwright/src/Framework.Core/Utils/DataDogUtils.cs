@@ -48,7 +48,7 @@ public static class DataDogUtils
     /// <param name="failed">Number of tests that failed.</param>
     /// <param name="skipped">Number of tests that were skipped.</param>
     /// <param name="durationMs">Total suite wall-clock duration in milliseconds.</param>
-    /// <param name="framework">Short framework label for the tag, e.g. "playwright-dotnet".</param>
+    /// <param name="framework">Short framework label for the tag, e.g. "playwright".</param>
     public static async Task SendTestMetricsAsync(int passed, int failed, int skipped, long durationMs, string framework)
     {
         string? apiKey = Environment.GetEnvironmentVariable("DD_API_KEY");

@@ -4,7 +4,7 @@ name: Playwright Smoke — PR Gate
 # PURPOSE: Fast confidence signal on every developer PR.
 #
 # Design constraints:
-#   - Runs ONLY on pull_request — push/nightly are handled by playwright-dotnet.yml
+#   - Runs ONLY on pull_request — push/nightly are handled by playwright.yml
 #   - Hard 5-minute timeout enforced at the job level
 #   - Chromium only — cross-browser coverage lives in the nightly full suite
 #   - @smoke tags only — golden path flows, not regression depth
@@ -18,7 +18,7 @@ name: Playwright Smoke — PR Gate
 on:
   pull_request:
     branches: [ main ]
-    paths: [ 'playwright-dotnet/**' ]
+    paths: [ 'playwright/**' ]
 
 # Cancel any in-progress smoke run for this PR branch the moment a new commit
 # is pushed. Devs get results for the latest code, not a stale commit.
@@ -38,7 +38,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: playwright-dotnet/tests/playwright-ts
+        working-directory: playwright/tests/playwright-ts
 
     steps:
       # ── 1. Source ───────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: playwright-dotnet/tests/playwright-ts/package-lock.json
+          cache-dependency-path: playwright/tests/playwright-ts/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -68,7 +68,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ hashFiles('playwright-dotnet/tests/playwright-ts/package-lock.json') }}
+          key: playwright-chromium-${{ hashFiles('playwright/tests/playwright-ts/package-lock.json') }}
           restore-keys: |
             playwright-chromium-
 
@@ -118,7 +118,7 @@ jobs:
           | **Commit** | \`${{ github.sha }}\` |
           | **PR** | #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }} |
 
-          > Full regression suite runs on merge to \`main\` via **playwright-dotnet CI**.
+          > Full regression suite runs on merge to \`main\` via **playwright CI**.
           EOF
 
       # ── 6. Upload report — failure only ─────────────────────────────────────
@@ -130,7 +130,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: smoke-report-pr${{ github.event.pull_request.number }}-${{ github.run_id }}
-          path: playwright-dotnet/tests/playwright-ts/playwright-report/
+          path: playwright/tests/playwright-ts/playwright-report/
           retention-days: 3
 
       - name: Upload traces
@@ -138,5 +138,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: smoke-traces-pr${{ github.event.pull_request.number }}-${{ github.run_id }}
-          path: playwright-dotnet/tests/playwright-ts/test-results/
+          path: playwright/tests/playwright-ts/test-results/
           retention-days: 3

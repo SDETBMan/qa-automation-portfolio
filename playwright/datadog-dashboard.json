@@ -1,6 +1,6 @@
 {
   "title": "Playwright .NET: Cross-Browser UI Tests",
-  "description": "Test suite results for playwright-dotnet (framework:playwright-dotnet)",
+  "description": "Test suite results for playwright (framework:playwright)",
   "layout_type": "ordered",
   "template_variables": [
     { "name": "env", "prefix": "env", "available_values": ["ci"], "default": "ci" }
@@ -9,7 +9,7 @@
     {
       "definition": {
         "type": "note",
-        "content": "## Playwright .NET: Cross-Browser UI Tests\nC# · NUnit · Playwright  |  Headless Chromium  |  `framework:playwright-dotnet`",
+        "content": "## Playwright .NET: Cross-Browser UI Tests\nC# · NUnit · Playwright  |  Headless Chromium  |  `framework:playwright`",
         "background_color": "blue",
         "font_size": "14",
         "text_align": "center",
@@ -29,7 +29,7 @@
         "requests": [
           {
             "response_format": "scalar",
-            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.passed{framework:playwright-dotnet}", "aggregator": "last" }],
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.passed{framework:playwright}", "aggregator": "last" }],
             "formulas": [{ "formula": "q1" }]
           }
         ]
@@ -47,7 +47,7 @@
         "requests": [
           {
             "response_format": "scalar",
-            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.failed{framework:playwright-dotnet}", "aggregator": "last" }],
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.failed{framework:playwright}", "aggregator": "last" }],
             "formulas": [{ "formula": "q1" }]
           }
         ]
@@ -65,7 +65,7 @@
         "requests": [
           {
             "response_format": "scalar",
-            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.skipped{framework:playwright-dotnet}", "aggregator": "last" }],
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "sum:test.suite.skipped{framework:playwright}", "aggregator": "last" }],
             "formulas": [{ "formula": "q1" }]
           }
         ]
@@ -83,9 +83,9 @@
           {
             "response_format": "timeseries",
             "queries": [
-              { "name": "passed", "data_source": "metrics", "query": "sum:test.suite.passed{framework:playwright-dotnet}" },
-              { "name": "failed", "data_source": "metrics", "query": "sum:test.suite.failed{framework:playwright-dotnet}" },
-              { "name": "skipped", "data_source": "metrics", "query": "sum:test.suite.skipped{framework:playwright-dotnet}" }
+              { "name": "passed", "data_source": "metrics", "query": "sum:test.suite.passed{framework:playwright}" },
+              { "name": "failed", "data_source": "metrics", "query": "sum:test.suite.failed{framework:playwright}" },
+              { "name": "skipped", "data_source": "metrics", "query": "sum:test.suite.skipped{framework:playwright}" }
             ],
             "formulas": [
               { "alias": "Passed", "formula": "passed" },
@@ -110,7 +110,7 @@
         "requests": [
           {
             "response_format": "timeseries",
-            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:test.suite.duration_ms{framework:playwright-dotnet}" }],
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:test.suite.duration_ms{framework:playwright}" }],
             "formulas": [{ "formula": "q1" }],
             "display_type": "bars",
             "style": { "palette": "cool", "line_type": "solid", "line_width": "normal" }

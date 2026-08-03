@@ -1,6 +1,6 @@
 # QA Automation Portfolio
 
-[![playwright-dotnet CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright-dotnet.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright-dotnet.yml)
+[![playwright CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright.yml)
 [![selenium-java CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/selenium-java.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/selenium-java.yml)
 [![cucumber CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cucumber.yml)
 [![karate CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/karate.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/karate.yml)
@@ -47,7 +47,7 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`ai-eval`](./ai-eval/) | Python | DeepEval · Pytest · OpenAI · ChromaDB · Python 3.11 | [→](./ai-eval/README.md) |
 | [`conv-eval`](./conv-eval/) | Python | DeepEval · Pytest · OpenAI · Python 3.11 | [→](./conv-eval/README.md) |
 | [`agent-eval`](./agent-eval/) | Python | DeepEval · Pytest · OpenAI · Pydantic · Python 3.11 | [→](./agent-eval/README.md) |
-| [`playwright-dotnet`](./playwright-dotnet/) | C# · TypeScript | Playwright 1.44 · NUnit · .NET 8 · TypeScript 5.4 | [→](./playwright-dotnet/README.md) |
+| [`playwright`](./playwright/) | C# · TypeScript | Playwright 1.44 · NUnit · .NET 8 · TypeScript 5.4 | [→](./playwright/README.md) |
 | [`selenium-java`](./selenium-java/) | Java | Selenium 4 · TestNG · Maven · Java 17 | [→](./selenium-java/README.md) |
 | [`cucumber`](./cucumber/) | Java | Cucumber 7 · Karate 1.5 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
 | [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
@@ -73,7 +73,7 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 
 ## Feature Coverage
 
-| Capability | playwright-dotnet | selenium-java | cucumber | cypress | ai-eval | conv-eval | agent-eval | postman | job-agent |
+| Capability | playwright | selenium-java | cucumber | cypress | ai-eval | conv-eval | agent-eval | postman | job-agent |
 |---|---|---|---|---|---|---|---|---|---|
 | **Page Object Model** | ✅ C# + TypeScript | ✅ Java | ✅ Java | ✅ TypeScript | — | — | — | — | — |
 | **Custom commands** | — | — | — | ✅ `cy.login()` · `cy.addToCart()` · `cy.clearCart()` | — | — | — | — | — |
@@ -213,12 +213,12 @@ export ANTHROPIC_API_KEY=sk-ant-...
 npm run ai:generate "User adds two items to cart and verifies badge count"
 ```
 
-### playwright-dotnet (C# + TypeScript)
+### playwright (C# + TypeScript)
 
 **Prerequisites:** [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8) · [Node.js 20 LTS](https://nodejs.org)
 
 ```bash
-cd playwright-dotnet
+cd playwright
 
 # One command: installs all deps, browsers, runs C# and TypeScript suites
 bash run-all.sh
@@ -560,7 +560,7 @@ qa-automation-portfolio/
 │       ├── ai-eval.yml             # triggers on: paths ai-eval/**
 │       ├── conv-eval.yml           # triggers on: paths conv-eval/**
 │       ├── agent-eval.yml          # triggers on: paths agent-eval/**
-│       ├── playwright-dotnet.yml   # triggers on: paths playwright-dotnet/**
+│       ├── playwright.yml   # triggers on: paths playwright/**
 │       ├── selenium-java.yml       # triggers on: paths selenium-java/**
 │       ├── cucumber.yml            # triggers on: paths cucumber/**
 │       ├── cypress.yml             # triggers on: paths cypress/** · nightly 05:00 UTC
@@ -598,7 +598,7 @@ qa-automation-portfolio/
 │   ├── evals/                          # test_tool_correctness · test_task_completion · test_safety
 │   ├── conftest.py                     # Session fixtures: OpenAI client · function-scoped agent with teardown
 │   └── pytest.ini
-├── playwright-dotnet/              # Playwright · NUnit · C# · TypeScript
+├── playwright/              # Playwright · NUnit · C# · TypeScript
 │   ├── tests/
 │   │   ├── Framework.Tests/        # NUnit C# test project
 │   │   └── playwright-ts/          # TypeScript Playwright project
@@ -747,7 +747,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 
 | Workflow | Trigger | dispatch inputs |
 |---|---|---|
-| `playwright-dotnet.yml` | push · PR · nightly 02:00 UTC | execution mode · browser · JMeter toggle |
+| `playwright.yml` | push · PR · nightly 02:00 UTC | execution mode · browser · JMeter toggle |
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | execution mode · browser · JMeter toggle |
 | `karate.yml` | push · PR · nightly 04:00 UTC | karate_env (dev · staging) · karate_tags filter |
@@ -771,8 +771,8 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `flakiness-detector.yml` | push · PR (paths: `flakiness-detector/**`) · `workflow_dispatch` | — |
 | `site-monitor.yml` | daily 06:00 UTC · push · PR (paths: `site-monitor/**`) · `workflow_dispatch` | auto-issue on drift |
 | `codeql.yml` | push to main · weekly Monday 14:00 UTC | Python, JavaScript/TypeScript |
-| `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright-dotnet/**`) | Chromium-only @smoke gate, 5-min timeout, fail-fast |
-| `azure-pipelines.yml` | PR (Azure DevOps) | ADO YAML equivalent of GHA smoke gate (playwright-dotnet) |
+| `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright/**`) | Chromium-only @smoke gate, 5-min timeout, fail-fast |
+| `azure-pipelines.yml` | PR (Azure DevOps) | ADO YAML equivalent of GHA smoke gate (playwright) |
 | `deploy-validate-rollback.yml` | `workflow_dispatch` · `workflow_call` | deployment URL · Vercel project ID · auto-rollback toggle |
 | `visual-regression-update.yml` | `workflow_dispatch` | browser project (chromium · firefox · webkit) |
 
@@ -850,7 +850,7 @@ The headers test uses soft assertions (`SoftAssert` in Java, `Assert.Multiple` i
 | Framework | File | Groups / Tags |
 |---|---|---|
 | selenium-java | `src/test/java/com/framework/tests/SecurityTest.java` | `security`, `regression`, `web` picked up by `testng.xml` |
-| playwright-dotnet | `tests/Framework.Tests/Tests/SecurityTest.cs` | `[Category("security")]`, `[Category("regression")]` |
+| playwright | `tests/Framework.Tests/Tests/SecurityTest.cs` | `[Category("security")]`, `[Category("regression")]` |
 | cucumber | `src/test/resources/features/security.feature` + `SecuritySteps.java` | `@security` runs with all features by default |
 
 ### OWASP ZAP Baseline Scan (CI)
