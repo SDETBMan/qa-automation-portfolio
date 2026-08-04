@@ -199,3 +199,17 @@ jobs:
           path: playwright/tests/playwright-ts/test-results/**/*-diff.png
           retention-days: 14
           if-no-files-found: ignore
+
+      # ── Testiny Test Management Sync ───────────────────────────────────
+      - name: Sync results to Testiny
+        if: always() && env.TESTINY_API_TOKEN != ''
+        continue-on-error: true
+        working-directory: playwright/tests/playwright-ts
+        run: |
+          npx @testiny/cli automation \
+            --project "$TESTINY_PROJECT" \
+            --source "playwright" \
+            --junit playwright-report/results.xml
+        env:
+          TESTINY_API_TOKEN: ${{ secrets.TESTINY_API_TOKEN }}
+          TESTINY_PROJECT: ${{ vars.TESTINY_PROJECT || 'qa-automation-portfolio' }}

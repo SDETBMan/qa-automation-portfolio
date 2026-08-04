@@ -1,0 +1,86 @@
+# Sauce Labs configuration for Playwright TypeScript tests.
+#
+# Run with:  npx saucectl run --config .sauce/config.yml
+#
+# Prerequisites:
+#   npm i -g saucectl
+#   export SAUCE_USERNAME=<your-username>
+#   export SAUCE_ACCESS_KEY=<your-access-key>
+#
+# The suite mirrors the local playwright.config.ts projects (setup + chromium).
+# Sauce Labs runs Playwright natively via saucectl -- no Selenium translation.
+
+apiVersion: v1alpha
+kind: playwright
+defaults:
+  timeout: 10m
+sauce:
+  region: us-west-1
+  concurrency: 4
+  metadata:
+    tags:
+      - qa-automation-portfolio
+      - playwright
+    build: "GitHub Actions ${{ env.GITHUB_RUN_ID || 'local' }}"
+
+rootDir: tests/playwright-ts
+
+playwright:
+  version: "1.44.0"
+
+suites:
+  # ── Chromium (primary) ───────────────────────────────────────────────
+  - name: "chromium-regression"
+    platformName: "Windows 11"
+    testMatch:
+      - "tests/**/*.spec.ts"
+    excludedTestMatch:
+      - "tests/shopify/**"
+      - "tests/auth.setup.ts"
+    params:
+      project: "chromium"
+      browserName: "chromium"
+    env:
+      BASE_URL: "https://www.saucedemo.com"
+      APP_USERNAME: "standard_user"
+      APP_PASSWORD: "secret_sauce"
+
+  # ── Firefox ──────────────────────────────────────────────────────────
+  - name: "firefox-regression"
+    platformName: "Windows 11"
+    testMatch:
+      - "tests/**/*.spec.ts"
+    excludedTestMatch:
+      - "tests/shopify/**"
+      - "tests/auth.setup.ts"
+    params:
+      project: "firefox"
+      browserName: "firefox"
+    env:
+      BASE_URL: "https://www.saucedemo.com"
+      APP_USERNAME: "standard_user"
+      APP_PASSWORD: "secret_sauce"
+
+  # ── WebKit (Safari) ─────────────────────────────────────────────────
+  - name: "webkit-regression"
+    platformName: "macOS 14"
+    testMatch:
+      - "tests/**/*.spec.ts"
+    excludedTestMatch:
+      - "tests/shopify/**"
+      - "tests/auth.setup.ts"
+    params:
+      project: "webkit"
+      browserName: "webkit"
+    env:
+      BASE_URL: "https://www.saucedemo.com"
+      APP_USERNAME: "standard_user"
+      APP_PASSWORD: "secret_sauce"
+
+artifacts:
+  download:
+    when: fail
+    match:
+      - "playwright-report/**"
+      - "test-results/**"
+    directory: ./artifacts
