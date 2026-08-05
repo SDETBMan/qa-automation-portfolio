@@ -22,14 +22,14 @@ letter review, or job-fit analysis.
 ## Technical Skills
 
 - **Languages:** Java (primary), Python, C#, TypeScript, JavaScript
-- **UI Automation:** Selenium WebDriver, Playwright (C# + TypeScript), Cucumber/BDD
+- **UI Automation:** Selenium WebDriver, Playwright, Cucumber/BDD
 - **API Testing:** REST Assured, Karate 1.5, Postman/Newman, pytest
 - **AI / LLM Testing:** DeepEval, Anthropic Claude (tool-use, agentic loops, `@beta_tool` auto-schema, multi-agent orchestration, AI test generation for Cypress), OpenAI function-calling, ChromaDB, RAG evaluation, conversation evaluation, agent evaluation
 - **CI/CD:** GitHub Actions, Azure DevOps Pipelines, Jenkins, Docker, Kubernetes (k8s health checks)
 - **Performance Testing:** k6 (load testing with scenario executors), JMeter (Maven plugin)
 - **Monitoring / Observability:** DataDog (custom metrics via v2 API, CI Visibility, dashboard JSON, Allure reporting)
 - **Build tools:** Maven, pip, npm, .NET CLI
-- **Other:** Git, JIRA, TestRail, Page Object Model, Factory pattern, BDD, parallel execution, retry analyzers, OWASP ZAP
+- **Other:** Git, JIRA, TestRail, Testiny, Page Object Model, Factory pattern, BDD, parallel execution, retry analyzers, OWASP ZAP, Sauce Labs
 
 ---
 
@@ -71,16 +71,49 @@ Bachelor of Science | Expected Completion: 2026
 
 ---
 
-## Portfolio: qa-automation-portfolio (GitHub Monorepo)
+## QA Operating Model
 
-**Repo:** github.com/SDETBMan/qa-automation-portfolio
-**Structure:** 17 independent, production-grade frameworks in a single monorepo.
-Each framework has its own CI workflow, dependencies, and DataDog integration.
-All run nightly on GitHub Actions.
-
-**Standalone repos:** 3 additional projects outside the monorepo — `legal-funding-qa-agent` (adversarial QA + BLOCK/WARN/PASS release gate), `agentic-p2p-auditor` (three-agent financial controls auditor), `ai-pr-reviewer` (AI code reviewer with promptfoo eval).
+The repo includes a `QA-OPERATING-MODEL.md` document that defines quality assurance standards, processes, and coverage strategy. It serves as the single source of truth for regression planning, release readiness, defect triage, and device/browser coverage across three tiers (Must Pass, Should Pass, Best Effort).
 
 ---
+
+## Portfolio at a Glance
+
+**Repo:** github.com/SDETBMan/qa-automation-portfolio
+**Structure:** 24 independent, production-grade frameworks in a single monorepo. Each framework has its own CI workflow, dependencies, and DataDog integration. All run on GitHub Actions.
+
+**Standalone repos:** 3 additional projects outside the monorepo — `legal-funding-qa-agent`, `agentic-p2p-auditor`, `ai-pr-reviewer`.
+
+| # | Framework | Stack | Description |
+|---|---|---|---|
+| 1 | `ai-eval` | Python · DeepEval · OpenAI · ChromaDB | RAG pipeline quality evaluation with 8 LLM metrics |
+| 2 | `conv-eval` | Python · DeepEval · OpenAI | Multi-turn conversation quality testing (4 metrics) |
+| 3 | `agent-eval` | Python · DeepEval · OpenAI · Pydantic | AI agent tool-use evaluation (function-calling) |
+| 4 | `playwright` | C# · TypeScript · Playwright · NUnit · .NET 8 | Cross-browser UI testing + GraphQL + visual regression + DB assertions |
+| 5 | `selenium-java` | Java · Selenium 4 · TestNG · Maven | Production-grade UI regression suite with Healenium self-healing |
+| 6 | `cucumber` | Java · Cucumber 7 · Karate 1.5 · TestNG | BDD feature tests + standalone Karate API testing (13 features) |
+| 7 | `postman` | Postman · Newman 6 · Node.js 20 | REST API contract tests against JSONPlaceholder |
+| 8 | `job-agent` | Python · Claude · Tavily | Agentic job search, scoring, and cover letter drafting |
+| 9 | `coding-agent` | Python · Claude · `@beta_tool` | 5-demo AI coding agent (rewrite, execute, git, multi-agent, test gen) |
+| 10 | `cucumber_python` | Python · Behave · Selenium 4 | Python BDD framework with 4 scaling strategies |
+| 11 | `claims-diff` | Python · Pydantic · Pandas · BigQuery | Healthcare claims adjudication data diff engine |
+| 12 | `pact-consumer` | TypeScript · Pact v13 · Vitest | Consumer-driven contract testing (8 interactions) |
+| 13 | `flakiness-detector` | Python · JUnit XML · Click · DataDog | Flaky test detection, scoring, and quarantine recommendations |
+| 14 | `vulnerability-aggregator` | Python · GitHub API · Dependabot · CodeQL · ZAP | Unified security scanning aggregation |
+| 15 | `cypress` | TypeScript · Cypress 13 · React 18 · Claude | E2E + component tests + AI test generator |
+| 16 | `quality-dashboard` | Python · JUnit XML · DataDog v2 · GH Actions API | Portfolio-wide quality KPI aggregation |
+| 17 | `failure-triage` | Python · Claude · `@beta_tool` · JUnit XML | AI-powered failure root cause clustering |
+| 18 | `fastapi-service` | Python · FastAPI · Redis · Pytest · k6 | REST API + Redis caching + full test suite + load tests |
+| 19 | `terraform` | HCL · Terraform 1.6 · AWS · DataDog | IaC for S3 artifacts, OIDC IAM, DataDog observability |
+| 20 | `langchain-rag` | Python · LangChain 0.3 · Chroma · OpenAI | Multi-turn conversational RAG assistant over monorepo docs |
+| 21 | `langgraph-agent` | Python · LangGraph 0.4 · Claude Haiku | BDD test case generator with 4-node StateGraph pipeline |
+| 22 | `dspy-optimizer` | Python · DSPy 2.6 · BootstrapFewShot · OpenAI | Bug severity classifier with prompt optimization |
+| 23 | `dspy-vertex` | Python · DSPy 2.6 · Vertex AI Gemini 1.5 | Same classifier, Vertex AI backend (multi-LLM portability) |
+| 24 | `site-monitor` | Python · BeautifulSoup · Click · DataDog · Requests | Website drift detection across 30+ selectors for 5 frameworks |
+
+---
+
+## Deep Dives
 
 ### Framework 1: `ai-eval` — RAG Pipeline Quality Evaluation
 **Stack:** Python 3.11 · DeepEval · OpenAI (GPT-4o-mini) · ChromaDB · pytest
@@ -161,9 +194,11 @@ All run nightly on GitHub Actions.
 - `Assert.Multiple` for soft assertions on security header checks
 - OWASP ZAP passive baseline scan in CI (`continue-on-error: true`)
 - **Azure DevOps Pipeline** (`azure-pipelines.yml`) — ADO YAML equivalent of the GHA PR smoke gate
+- **Sauce Labs configuration** (`.sauce/config.yml`) — 3 suites (Chromium, Firefox, WebKit) via `saucectl`; runs Playwright natively on Sauce Labs infrastructure with `us-west-1` region and concurrency 4
 - Allure reporting + GitHub Pages deployment
 - Trace Viewer artifacts on failure (DOM snapshots, screenshots, network calls)
 - DataDog CI Visibility via TRX upload
+- **Testiny test management sync** — CI uploads JUnit XML results to Testiny via `@testiny/cli automation`
 
 **GraphQL testing layer (TypeScript suite):**
 - `utils/graphqlClient.ts` — typed `GraphQLClient` class built on Playwright's built-in `APIRequestContext`; zero new npm dependencies; handles query/mutation, variables, operationName, auth headers
@@ -479,6 +514,7 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 - `testIsolation: false` strategy for external site rate-limiting
 - DataDog GAUGE metrics + JUnit XML CI Visibility
 - 25 E2E + 4 component = 29 tests
+- **Testiny test management sync** — CI uploads JUnit XML results to Testiny via `@testiny/cli automation`
 
 **AI Test Generator (`ai-generator/generate-test.ts`):**
 - CLI tool: `npm run ai:generate "User story here"` → writes `cypress/e2e/generated/<name>.cy.ts`
@@ -540,20 +576,168 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 
 ---
 
-### GenAI Workflow: `.claude/commands/`
+### Framework 18: `fastapi-service` — REST API + Full Test Suite + Redis Caching Layer
+**Stack:** Python 3.11 · FastAPI · Pydantic v2 · Redis 7 · Pytest · k6
+**What it does:** A self-contained REST API built with FastAPI + Pydantic v2, paired with a full contract and integration test suite in pytest. A Redis caching layer sits between endpoints and the in-memory store as a transparent read-through cache with graceful fallback when Redis is unavailable. Closes the full-stack loop in the portfolio: instead of testing someone else's API, this service is built here and tested here.
+
+**API endpoints:**
+- `GET /health` — liveness check
+- `GET /products`, `GET /products/{id}`, `POST /products`, `PUT /products/{id}`, `DELETE /products/{id}` — full CRUD
+- `GET /users`, `GET /users/{id}` — read-only
+
+**Redis caching (`app/cache.py`):**
+- Transparent read-through cache — GET endpoints check cache first, populate on miss
+- Mutation endpoints (POST/PUT/DELETE) invalidate affected keys
+- Cache key scheme: `fastapi:products:list`, `fastapi:products:{id}`, `fastapi:users:list`, `fastapi:users:{id}`
+- Graceful degradation: app starts and works normally without Redis; cache ops become no-ops with `[WARN]` logged if Redis goes down mid-flight
+- `docker-compose.yml` provides `redis:7-alpine` for local development
+
+**Test suite (37 tests across 5 files):**
+- `test_health.py` (2 tests) — liveness endpoint
+- `test_products.py` (11 tests) — full CRUD: list, get, create, update, delete
+- `test_users.py` (5 tests) — read-only user endpoints + 405 guard
+- `test_api_contract.py` (4 tests) — OpenAPI schema validation
+- `test_cache.py` (15 tests) — cache hit/miss, invalidation, TTL, graceful degradation, utilities
+- All tests fully deterministic — `reset_store` autouse fixture restores seed data, `_reset_cache` injects fresh `fakeredis` instance per test for order-independent execution
+
+**k6 load tests with SLO thresholds:**
+- 4 scenarios: `health_baseline` (constant-vus), `read_heavy` (ramping-vus), `crud_workflow` (per-vu-iterations), `error_handling` (constant-vus)
+- `k6/slo.json` — single source of truth for all performance thresholds
+- Dynamic threshold generation — `load-test.js` reads `slo.json` instead of hardcoding values
+- `handleSummary(data)` — produces per-scenario pass/fail SLO report (`k6-slo-report.json`)
+- `k6/datadog-summary.js` — sends `k6.slo.pass`, `k6.slo.margin_ms`, `k6.slo.error_rate` metrics to DataDog
+
+**DataDog metrics:** `test.suite.*`, `cache.hits`, `cache.misses`, `k6.slo.pass`, `k6.slo.margin_ms`, `k6.slo.error_rate`
+
+**CI:** `fastapi-service.yml` (nightly 10:00 UTC + dispatch) for pytest; `k6-load-test.yml` (nightly 11:00 UTC + dispatch) for k6
+
+---
+
+### Framework 19: `terraform` — Infrastructure as Code
+**Stack:** HCL · Terraform >= 1.6 · AWS · DataDog
+**What it does:** Provisions the cloud infrastructure that supports the monorepo.
+
+**Three modules:**
+- `s3-artifacts` — S3 bucket for permanent test artifact storage (Allure reports, JUnit XML, screenshots) with versioning, AES-256 encryption, public-access block, and lifecycle rules
+- `iam-ci` — Keyless GitHub Actions → AWS IAM role via OIDC (no long-lived AWS keys in CI)
+- `datadog-observability` — DataDog dashboard, two monitors, and a CI pass-rate SLO
+
+**CI (`terraform.yml`):** push/PR (paths: `terraform/**`) + dispatch. Plan on PR, apply on merge to main, OIDC AWS auth.
+
+---
+
+### Framework 20: `langchain-rag` — Multi-Turn Conversational RAG Assistant
+**Stack:** Python 3.11 · LangChain 0.3 LCEL · Chroma (in-memory) · OpenAI gpt-4o-mini · text-embedding-3-small · Langfuse tracing
+**What it does:** A Retrieval-Augmented Generation pipeline that loads the monorepo's own `.md` and `.feature` files as its knowledge corpus, then answers natural-language questions about the test frameworks. Supports multi-turn conversation with chat memory.
+
+**Key architecture:**
+- **LCEL chain composition** — `rag/chain.py`: dict fan-out, `RunnablePassthrough`, `StrOutputParser`
+- **In-memory Chroma vector store** — `rag/vectorstore.py`: `RecursiveCharacterTextSplitter` + `OpenAIEmbeddings`
+- **Multi-source document loader** — `rag/loader.py`: walks monorepo, skips noise dirs
+- **Conversation history** — `RunnableWithMessageHistory` + `InMemoryHistory` for multi-turn chat memory
+- **Cost-efficient models** — gpt-4o-mini + text-embedding-3-small (< $0.01 per demo run)
+- **Langfuse observability** — `rag/observability.py`: LLM tracing, token/cost tracking, retriever spans
+
+**CLI modes:** `--question` (single), `--demo` (3 built-in questions), `--interactive` (REPL)
+
+**CI (`langchain-rag.yml`):** push/PR lint (free) + `workflow_dispatch` full demo (< $0.01)
+
+---
+
+### Framework 21: `langgraph-agent` — BDD Test Case Generator Pipeline
+**Stack:** Python 3.11 · LangGraph 0.4 · LangChain Anthropic · claude-haiku-4-5 · Langfuse tracing
+**What it does:** A stateful multi-agent graph that turns a plain-English feature description into reviewed, production-quality BDD Gherkin scenarios — with an automated review/revise cycle.
+
+**Graph topology (StateGraph with 4 nodes):**
+```
+parse_requirements → generate_tests → review_quality
+    review_quality ├── (REVISE, count < 2) → revise_tests → review_quality  [loop]
+                   └── (PASS or count >= 2) → END
+```
+
+**Key architecture:**
+- **StateGraph + TypedDict state** — `graph/state.py`, `graph/pipeline.py`
+- **4 nodes as pure functions** — `graph/nodes.py`: parse_requirements, generate_tests, review_quality, revise_tests
+- **Conditional edges** — `graph/edges.py`: `review_router` routes to revise or END
+- **Bounded revision cycles** — max 2 revisions to prevent runaway loops
+- **Provider-agnostic LLM** — `ChatAnthropic` shows LangGraph works beyond OpenAI
+- **Real-time streaming** — `graph.stream()` prints node-by-node progress
+- **Langfuse observability** — span-per-node tracing with graceful-skip pattern
+
+**Cost:** ~$0.02 per run
+
+**CLI:** `--demo` (built-in feature) or `--feature "User can reset their password via email"`
+
+**CI (`langgraph-agent.yml`):** push/PR lint (free) + `workflow_dispatch` full demo (~$0.02)
+
+---
+
+### Framework 22: `dspy-optimizer` — Bug Severity Classifier
+**Stack:** Python 3.11 · DSPy 2.6 · BootstrapFewShot · OpenAI gpt-4o-mini
+**What it does:** A systematic prompt optimization demo that classifies bug reports by severity (Critical / High / Medium / Low) and compares zero-shot baseline accuracy against a BootstrapFewShot-optimized classifier on a held-out test set.
+
+**Key architecture:**
+- **DSPy Signatures** — `classifier/signatures.py`: `InputField` / `OutputField` with docstring instructions
+- **ChainOfThought module** — `classifier/modules.py`: reasoning before classification
+- **BootstrapFewShot optimizer** — `classifier/optimizer.py`: auto-selects few-shot demos from trainset
+- **Offline dataset** — `datasets/bug_reports.py`: 30 synthetic examples (20 train, 10 dev), zero API cost for data
+- **Before/after accuracy** — `run.py --mode compare`: prints delta on 10-item held-out split
+- **Compiled program export** — `output/compiled_classifier.json`: saved after optimization
+
+**Cost:** ~$0.02 per run
+
+**CLI modes:** `--mode baseline` (zero-shot), `--mode optimized` (Bootstrap + evaluate), `--mode compare` (side-by-side)
+
+**CI (`dspy-optimizer.yml`):** push/PR lint (free) + `workflow_dispatch` compare run (~$0.02)
+
+---
+
+### Framework 23: `dspy-vertex` — Bug Severity Classifier (Vertex AI Backend)
+**Stack:** Python 3.11 · DSPy 2.6 · BootstrapFewShot · Vertex AI Gemini 1.5 Flash
+**What it does:** Same DSPy BootstrapFewShot optimization pipeline as `dspy-optimizer`, but using Google Vertex AI (Gemini 1.5 Flash) as the LLM backend instead of OpenAI. Demonstrates multi-LLM flexibility — the classifier, datasets, and optimizer logic are identical; only the LLM configuration changes.
+
+**Proves:**
+- Cloud-native ML pipeline skills (Vertex AI / GCP)
+- Backend portability — same optimization, different provider
+- Graceful degradation — exits cleanly when GCP credentials are unavailable
+
+**Auth:** `GCP_PROJECT` + `gcloud auth application-default login`
+
+**CI (`dspy-vertex.yml`):** push/PR lint (free) + `workflow_dispatch` compare run
+
+---
+
+### Framework 24: `site-monitor` — Website Drift Detection
+**Stack:** Python 3.11 · BeautifulSoup · Click · DataDog · Requests
+**What it does:** Monitors saucedemo.com for DOM selector changes that could break the 5 browser automation frameworks in the portfolio (Cypress, Selenium Java, Cucumber Java, Cucumber Python, Playwright). SauceDemo has no changelog — when they push updates, selectors can change without warning, causing test failures discovered only after the fact in CI.
+
+**Pipeline:**
+1. **Fetch** — Downloads the HTML page and Vite JS bundle from saucedemo.com
+2. **Extract** — Parses all DOM selectors (IDs, classes, data-test attributes) using BeautifulSoup + regex
+3. **Compare** — Diffs current state against a committed baseline snapshot (`baseline.json`)
+4. **Report** — Generates markdown report identifying removed/added selectors and affected frameworks
+5. **Alert** — Optionally auto-creates a GitHub issue on critical drift and sends metrics to DataDog
+
+**Architecture:**
+- `monitor/fetcher.py` — HTTP fetch of HTML + JS bundle
+- `monitor/extractor.py` — Parse selectors from HTML + JS
+- `monitor/comparator.py` — Diff current vs baseline
+- `monitor/reporter.py` — Markdown report + GitHub issue creation
+- `monitor/datadog.py` — DataDog drift metrics
+- `selectors.json` — Monitored selector registry (30+ selectors mapped to 5 frameworks)
+- `baseline.json` — Committed selector baseline (auto-generated)
+
+**CLI:** `python run.py [--update-baseline] [--output drift-report.md] [--auto-issue]`
+
+**CI (`site-monitor.yml`):** Daily 06:00 UTC + push/PR (paths: `site-monitor/**`) + dispatch. Auto-creates GitHub issues on critical drift.
+
+---
+
+## GenAI Workflow: `.claude/commands/`
 Three Claude Code custom slash commands for daily QA workflow integration:
 - `/project:triage-failures <xml-dir>` — AI failure triage from JUnit XML
 - `/project:review-tests <test-dir>` — QA best practice review (POM, waits, isolation, assertions, data, fixtures)
 - `/project:gen-test <description>` — Generate tests matching project conventions from plain-English descriptions
-
----
-
-### k6 SLO Thresholds (Enhancement to `fastapi-service`)
-The existing k6 load tests now use declarative SLO configuration:
-- `k6/slo.json` — Single source of truth for all performance thresholds
-- Dynamic threshold generation — `load-test.js` reads `slo.json` instead of hardcoding values
-- `handleSummary(data)` — Produces a per-scenario pass/fail SLO report (`k6-slo-report.json`)
-- `k6/datadog-summary.js` — Sends `k6.slo.pass`, `k6.slo.margin_ms`, `k6.slo.error_rate` metrics to DataDog
 
 ---
 
@@ -580,6 +764,11 @@ The existing k6 load tests now use declarative SLO configuration:
 | `playwright` | test suite results + duration |
 | `job-agent` | jobs_found · jobs_scored · cover_letters_drafted · duration · latency |
 | `coding-agent` | (no DataDog integration — demo artefacts written to `output/`) |
+| `fastapi-service` | test suite + cache.hits · cache.misses + k6 SLO metrics |
+| `site-monitor` | drift.selectors_removed · drift.selectors_added · drift.frameworks_affected |
+| `langchain-rag` | Langfuse tracing (token/cost/latency per retrieval + generation) |
+| `langgraph-agent` | Langfuse tracing (span-per-node, token/cost tracking) |
+| `dspy-optimizer` | baseline_accuracy · optimized_accuracy · delta |
 | `quality-dashboard` | kpi.pass_rate · kpi.failure_density · kpi.avg_duration_s · kpi.p95_duration_s · kpi.total_tests · kpi.suite_stability · kpi.flakiness_rate · kpi.mttd_seconds |
 | `failure-triage` | triage.total_failures · triage.cluster_count · triage.root_cause (per category) |
 
@@ -597,6 +786,7 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | browser · execution mode · JMeter toggle |
 | `karate.yml` | push · PR · nightly 04:00 UTC | karate_env (dev · staging) · karate_tags filter |
+| `cypress.yml` | push · PR · nightly 05:00 UTC | browser · test type (e2e · component · all) |
 | `cucumber-python.yml` | push · PR · nightly 05:00 UTC | execution_mode · browser · test_tags |
 | `ai-eval.yml` | push · PR · nightly 05:00 UTC | pytest marker (smoke · regression · safety) |
 | `conv-eval.yml` | push · PR · nightly 06:00 UTC | pytest marker (smoke · regression · safety · retention) |
@@ -604,19 +794,32 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | `postman-newman.yml` | push · PR · nightly 08:00 UTC | folder filter |
 | `job-agent.yml` | nightly 09:00 UTC · workflow_dispatch | role_filter keyword |
 | `coding-agent.yml` | push · PR · workflow_dispatch | demo number (1-5 or all) |
+| `fastapi-service.yml` | nightly 10:00 UTC · workflow_dispatch | — |
 | `k6-load-test.yml` | nightly 11:00 UTC · workflow_dispatch | — |
-| `claims-diff.yml` | push · PR (paths: `claims-diff/**`) · `workflow_dispatch` | — |
+| `site-monitor.yml` | daily 06:00 UTC · push · PR · workflow_dispatch | auto-issue on drift |
+| `terraform.yml` | push · PR (paths: `terraform/**`) · workflow_dispatch | plan on PR · apply on merge · OIDC AWS auth |
+| `claims-diff.yml` | push · PR (paths: `claims-diff/**`) · workflow_dispatch | — |
 | `pact.yml` | push · PR (paths: `pact-consumer/**`, `fastapi-service/**`) | consumer → provider verification |
-| `flakiness-detector.yml` | push · PR (paths: `flakiness-detector/**`) · `workflow_dispatch` | — |
+| `flakiness-detector.yml` | push · PR (paths: `flakiness-detector/**`) · workflow_dispatch | — |
+| `langchain-rag.yml` | push · PR (lint only, free) · workflow_dispatch (demo) | — |
+| `langgraph-agent.yml` | push · PR (lint only, free) · workflow_dispatch (demo) | — |
+| `dspy-optimizer.yml` | push · PR (lint only, free) · workflow_dispatch (compare) | — |
+| `dspy-vertex.yml` | push · PR (lint only, free) · workflow_dispatch (compare) | — |
+| `visual-regression-update.yml` | workflow_dispatch | browser project (chromium · firefox · webkit) |
+| `deploy-validate-rollback.yml` | workflow_dispatch · workflow_call | deployment URL · Vercel project ID · auto-rollback toggle |
 | `codeql.yml` | push to main · weekly Monday 14:00 UTC | Python, JavaScript/TypeScript |
 | `k8s.yml` | workflow_dispatch only | framework (selenium-java · cucumber) |
 
 **Secrets required:**
-- `OPENAI_API_KEY` — ai-eval, conv-eval, agent-eval
-- `ANTHROPIC_API_KEY` — job-agent, coding-agent
+- `OPENAI_API_KEY` — ai-eval, conv-eval, agent-eval, langchain-rag, dspy-optimizer
+- `ANTHROPIC_API_KEY` — job-agent, coding-agent, langgraph-agent, cypress AI generator
 - `TAVILY_API_KEY` — job-agent
 - `CANDIDATE_PROFILE` — job-agent (injects git-ignored profile.md into CI runner)
 - `DD_API_KEY` — optional, all frameworks (graceful skip if absent)
+- `TESTINY_API_TOKEN` — optional, Playwright + Cypress (test management sync)
+- `SAUCE_USERNAME` / `SAUCE_ACCESS_KEY` — optional, Playwright Sauce Labs runs
+- `VERCEL_TOKEN` — deploy-validate-rollback workflow
+- `GOOGLE_APPLICATION_CREDENTIALS` — dspy-vertex (GCP auth)
 
 ---
 
