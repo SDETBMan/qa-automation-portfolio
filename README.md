@@ -24,7 +24,7 @@
 [![site-monitor CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml)
 [![CodeQL](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml)
 
-A monorepo housing twenty-four independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers.
+A monorepo housing twenty-four independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers. See [`QA-OPERATING-MODEL.md`](./QA-OPERATING-MODEL.md) for the portfolio-wide quality standards, device/browser coverage tiers, and release readiness criteria.
 
 ---
 
@@ -766,6 +766,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `langchain-rag.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
 | `langgraph-agent.yml` | push · PR (lint only, free) · `workflow_dispatch` (full demo) | — |
 | `dspy-optimizer.yml` | push · PR (lint only, free) · `workflow_dispatch` (compare run) | — |
+| `dspy-vertex.yml` | push · PR (lint only, free) · `workflow_dispatch` (compare run) | — |
 | `claims-diff.yml` | push · PR (paths: `claims-diff/**`) · `workflow_dispatch` | — |
 | `pact.yml` | push · PR (paths: `pact-consumer/**`, `fastapi-service/**`) | consumer tests → provider verification |
 | `flakiness-detector.yml` | push · PR (paths: `flakiness-detector/**`) · `workflow_dispatch` | — |

@@ -1,4 +1,4 @@
-# PlaywrightDotNetFramework
+# Playwright
 
 [![playwright CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright.yml)
 [![.NET 8](https://img.shields.io/badge/.NET-8.0%20LTS-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![Playwright TS](https://img.shields.io/badge/Playwright%20TS-1.44-45ba4b?logo=playwright)](https://playwright.dev/)
 
-A professional Playwright + .NET 8 + NUnit test automation framework targeting [SauceDemo](https://www.saucedemo.com/). This is the C# counterpart to the Java [SeleniumPOMFramework](../SeleniumPOMFramework).
+A professional Playwright + .NET 8 + NUnit test automation framework targeting [SauceDemo](https://www.saucedemo.com/). This is the C# counterpart to the Java [selenium-java](../selenium-java) framework.
 
 ---
 
@@ -106,15 +106,15 @@ Install the two prerequisites, clone, and run the entire suite with a single com
 
 ```bash
 # Linux / macOS / Git Bash on Windows
-git clone https://github.com/SDETBMan/PlaywrightDotNetFramework.git
-cd PlaywrightDotNetFramework
+git clone https://github.com/SDETBMan/qa-automation-portfolio.git
+cd qa-automation-portfolio/playwright
 bash run-all.sh
 ```
 
 ```bash
 # Any environment with make installed (Linux / macOS / WSL)
-git clone https://github.com/SDETBMan/PlaywrightDotNetFramework.git
-cd PlaywrightDotNetFramework
+git clone https://github.com/SDETBMan/qa-automation-portfolio.git
+cd qa-automation-portfolio/playwright
 make all
 ```
 
@@ -151,8 +151,8 @@ make all
 ### 1. Clone and restore
 
 ```bash
-git clone https://github.com/SDETBMan/PlaywrightDotNetFramework.git
-cd PlaywrightDotNetFramework
+git clone https://github.com/SDETBMan/qa-automation-portfolio.git
+cd qa-automation-portfolio/playwright
 dotnet restore
 ```
 
@@ -248,7 +248,7 @@ npx playwright show-trace tests/playwright-ts/test-results/**/*.zip
 ## Project Structure
 
 ```
-PlaywrightDotNetFramework/
+playwright/
 ├── PlaywrightDotNetFramework.sln
 ├── src/
 │   └── Framework.Core/                    # Class library — pages + utilities
