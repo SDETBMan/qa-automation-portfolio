@@ -80,13 +80,13 @@ The repo includes a `QA-OPERATING-MODEL.md` document that defines quality assura
 ## Portfolio at a Glance
 
 **Repo:** github.com/SDETBMan/qa-automation-portfolio
-**Structure:** 24 independent, production-grade frameworks in a single monorepo. Each framework has its own CI workflow, dependencies, and DataDog integration. All run on GitHub Actions.
+**Structure:** 24 independent, production-grade frameworks in a single monorepo with 27 GitHub Actions workflows. Each framework has its own CI workflow, dependencies, and DataDog integration.
 
-**Standalone repos:** 3 additional projects outside the monorepo — `legal-funding-qa-agent`, `agentic-p2p-auditor`, `ai-pr-reviewer`.
+**Standalone repos:** 3 additional projects outside the monorepo — `legal-funding-qa-agent`, `agentic-p2p-auditor`, `ai-pr-reviewer` — for a total of 27 projects.
 
 | # | Framework | Stack | Description |
 |---|---|---|---|
-| 1 | `ai-eval` | Python · DeepEval · OpenAI · ChromaDB | RAG pipeline quality evaluation with 8 LLM metrics |
+| 1 | `ai-eval` | Python · DeepEval · OpenAI · ChromaDB | RAG pipeline quality evaluation with 10 DeepEval metrics |
 | 2 | `conv-eval` | Python · DeepEval · OpenAI | Multi-turn conversation quality testing (4 metrics) |
 | 3 | `agent-eval` | Python · DeepEval · OpenAI · Pydantic | AI agent tool-use evaluation (function-calling) |
 | 4 | `playwright` | C# · TypeScript · Playwright · NUnit · .NET 8 | Cross-browser UI testing + GraphQL + visual regression + DB assertions |
@@ -117,17 +117,19 @@ The repo includes a `QA-OPERATING-MODEL.md` document that defines quality assura
 
 ### Framework 1: `ai-eval` — RAG Pipeline Quality Evaluation
 **Stack:** Python 3.11 · DeepEval · OpenAI (GPT-4o-mini) · ChromaDB · pytest
-**What it does:** Evaluates a full RAG (Retrieval-Augmented Generation) pipeline built on SauceDemo FAQ content. ChromaDB stores embedded FAQ chunks; OpenAI generates grounded answers; DeepEval scores those answers with 5 metrics.
+**What it does:** Evaluates a full RAG (Retrieval-Augmented Generation) pipeline built on SauceDemo FAQ content. ChromaDB stores embedded FAQ chunks; OpenAI generates grounded answers; DeepEval scores those answers across 10 metrics in 8 test files.
 
-**Metrics evaluated:**
+**10 DeepEval metrics evaluated:**
 - Answer Relevancy (0.7 threshold)
-- Faithfulness (0.8 threshold)
+- Faithfulness via GEval (0.7 threshold) — custom rubric instead of built-in FaithfulnessMetric to stay within gpt-4o-mini output token limits
 - Hallucination (lower is better)
-- Safety / toxicity
+- Hallucination Benchmark — aggregate sentinel across 10 test cases
+- Toxicity / safety
+- Bias — probes across gender, age, race, socioeconomic, adversarial stereotype
 - JSON Schema Correctness (Pydantic models)
 - Contextual Precision (0.7 threshold) — retrieval chunk relevance
 - Contextual Recall (0.7 threshold) — retrieval context coverage
-- Contextual Relevancy (0.7 threshold) — retrieval-to-query alignment
+- Contextual Relevancy (0.05 threshold) — retrieval-to-query alignment (low threshold because coarse FAQ chunks yield low sentence-level ratios)
 
 **Key architecture decisions:**
 - `conftest.py` session fixtures: ChromaDB embedded once per session, shared across all tests
@@ -765,7 +767,7 @@ Three Claude Code custom slash commands for daily QA workflow integration:
 | `job-agent` | jobs_found · jobs_scored · cover_letters_drafted · duration · latency |
 | `coding-agent` | (no DataDog integration — demo artefacts written to `output/`) |
 | `fastapi-service` | test suite + cache.hits · cache.misses + k6 SLO metrics |
-| `site-monitor` | drift.selectors_removed · drift.selectors_added · drift.frameworks_affected |
+| `site-monitor` | site_monitor.drift_detected · site_monitor.selectors_removed · site_monitor.selectors_added |
 | `langchain-rag` | Langfuse tracing (token/cost/latency per retrieval + generation) |
 | `langgraph-agent` | Langfuse tracing (span-per-node, token/cost tracking) |
 | `dspy-optimizer` | baseline_accuracy · optimized_accuracy · delta |
@@ -781,7 +783,6 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | Workflow | Trigger | Key dispatch inputs |
 |---|---|---|
 | `playwright-smoke-pr.yml` | PR only · 5-min hard cap | — (Chromium · @smoke · retries=0 always) |
-| `azure-pipelines.yml` | PR (Azure DevOps) | ADO equivalent of GHA smoke gate |
 | `playwright.yml` | push · PR · nightly 02:00 UTC | browser · execution mode · JMeter toggle |
 | `selenium-java.yml` | push · PR · nightly 03:00 UTC | browser · suite XML · JMeter toggle |
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | browser · execution mode · JMeter toggle |
