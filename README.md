@@ -22,9 +22,10 @@
 [![pact CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/pact.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/pact.yml)
 [![flakiness-detector CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/flakiness-detector.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/flakiness-detector.yml)
 [![site-monitor CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml)
+[![qms-evidence-collector CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/qms-evidence-collector.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/qms-evidence-collector.yml)
 [![CodeQL](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml)
 
-A monorepo housing twenty-four independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers. See [`QA-OPERATING-MODEL.md`](./QA-OPERATING-MODEL.md) for the portfolio-wide quality standards, device/browser coverage tiers, and release readiness criteria.
+A monorepo housing twenty-five independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, compliance evidence collection, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers. See [`QA-OPERATING-MODEL.md`](./QA-OPERATING-MODEL.md) for the portfolio-wide quality standards and [`ISO-9001-QUALITY-MANUAL.md`](./ISO-9001-QUALITY-MANUAL.md) for the ISO 9001:2015 clause-aligned quality manual.
 
 ---
 
@@ -68,6 +69,7 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`site-monitor`](./site-monitor/) | Python | BeautifulSoup · Click · DataDog · Requests · Python 3.11 | [→](./site-monitor/README.md) |
 | [`quality-dashboard`](./quality-dashboard/) | Python | JUnit XML · DataDog v2 API · GitHub Actions API · Python 3.11 | [→](./quality-dashboard/README.md) |
 | [`failure-triage`](./failure-triage/) | Python | Anthropic Claude (tool use) · JUnit XML · DataDog · Python 3.11 | [→](./failure-triage/README.md) |
+| [`qms-evidence-collector`](./qms-evidence-collector/) | Python | Click · ISO 9001 · SOC 2 · ISO/IEC 17025 · DataDog · Python 3.11 | [→](./qms-evidence-collector/README.md) |
 
 ---
 
@@ -729,6 +731,11 @@ qa-automation-portfolio/
 │   ├── triage_agent.py                 # Agent loop using client.beta.messages.tool_runner
 │   ├── datadog_reporter.py             # Send triage metrics to DataDog
 │   └── run.py                          # CLI: --xml-dir · --output
+├── qms-evidence-collector/             # Python · Click · ISO 9001 · SOC 2 · ISO/IEC 17025
+│   ├── collector/                      # scanner · mapper · reporter · datadog
+│   ├── mappings/clause_registry.json   # Artifact-to-clause definitions (10 artifact types)
+│   ├── tests/                          # 48 tests: scanner, mapper, reporter
+│   └── run.py                          # CLI: --repo-dir · --output · --standard · --format
 ├── .claude/
 │   └── commands/                       # Claude Code custom slash commands
 │       ├── triage-failures.md          # /project:triage-failures — AI failure triage
@@ -771,6 +778,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `pact.yml` | push · PR (paths: `pact-consumer/**`, `fastapi-service/**`) | consumer tests → provider verification |
 | `flakiness-detector.yml` | push · PR (paths: `flakiness-detector/**`) · `workflow_dispatch` | — |
 | `site-monitor.yml` | daily 06:00 UTC · push · PR (paths: `site-monitor/**`) · `workflow_dispatch` | auto-issue on drift |
+| `qms-evidence-collector.yml` | push · PR (paths: `qms-evidence-collector/**`) · nightly 12:00 UTC · `workflow_dispatch` | — |
 | `codeql.yml` | push to main · weekly Monday 14:00 UTC | Python, JavaScript/TypeScript |
 | `playwright-smoke-pr.yml` | PR to `main` (paths: `playwright/**`) | Chromium-only @smoke gate, 5-min timeout, fail-fast |
 | `azure-pipelines.yml` | PR (Azure DevOps) | ADO YAML equivalent of GHA smoke gate (playwright) |
@@ -801,6 +809,7 @@ Two DataDog features run across all frameworks:
 | `fastapi-service` | `cache.hits` · `cache.misses` |
 | `quality-dashboard` | `kpi.pass_rate` · `kpi.failure_density` · `kpi.avg_duration_s` · `kpi.p95_duration_s` · `kpi.total_tests` · `kpi.suite_stability` · `kpi.flakiness_rate` · `kpi.mttd_seconds` |
 | `failure-triage` | `triage.total_failures` · `triage.cluster_count` · `triage.root_cause` (per category) |
+| `qms-evidence-collector` | `qms.clauses_covered` · `qms.evidence_files` · `qms.iso9001_clauses` · `qms.soc2_controls` · `qms.iso17025_clauses` |
 
 All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues, while the CI stays green.
 

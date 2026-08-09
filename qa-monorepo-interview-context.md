@@ -73,16 +73,18 @@ Bachelor of Science | Expected Completion: 2026
 
 ## QA Operating Model
 
-The repo includes a `QA-OPERATING-MODEL.md` document that defines quality assurance standards, processes, and coverage strategy. It serves as the single source of truth for regression planning, release readiness, defect triage, and device/browser coverage across three tiers (Must Pass, Should Pass, Best Effort).
+The repo includes two quality governance documents:
+- **`QA-OPERATING-MODEL.md`** — Defines quality assurance standards, processes, and coverage strategy. Single source of truth for regression planning, release readiness, defect triage, and device/browser coverage across three tiers (Must Pass, Should Pass, Best Effort).
+- **`ISO-9001-QUALITY-MANUAL.md`** — Maps portfolio quality practices to ISO 9001:2015 clause structure (sections 4-10), with cross-references to SOC 2 CC-series controls and ISO/IEC 17025:2017 (Testing and Calibration Laboratories). Supplements the operating model with formal compliance clause references.
 
 ---
 
 ## Portfolio at a Glance
 
 **Repo:** github.com/SDETBMan/qa-automation-portfolio
-**Structure:** 24 independent, production-grade frameworks in a single monorepo with 27 GitHub Actions workflows. Each framework has its own CI workflow, dependencies, and DataDog integration.
+**Structure:** 25 independent, production-grade frameworks in a single monorepo with 28 GitHub Actions workflows. Each framework has its own CI workflow, dependencies, and DataDog integration.
 
-**Standalone repos:** 3 additional projects outside the monorepo — `legal-funding-qa-agent`, `agentic-p2p-auditor`, `ai-pr-reviewer` — for a total of 27 projects.
+**Standalone repos:** 3 additional projects outside the monorepo — `legal-funding-qa-agent`, `agentic-p2p-auditor`, `ai-pr-reviewer` — for a total of 28 projects.
 
 | # | Framework | Stack | Description |
 |---|---|---|---|
@@ -110,6 +112,7 @@ The repo includes a `QA-OPERATING-MODEL.md` document that defines quality assura
 | 22 | `dspy-optimizer` | Python · DSPy 2.6 · BootstrapFewShot · OpenAI | Bug severity classifier with prompt optimization |
 | 23 | `dspy-vertex` | Python · DSPy 2.6 · Vertex AI Gemini 1.5 | Same classifier, Vertex AI backend (multi-LLM portability) |
 | 24 | `site-monitor` | Python · BeautifulSoup · Click · DataDog · Requests | Website drift detection across 30+ selectors for 5 frameworks |
+| 25 | `qms-evidence-collector` | Python · Click · DataDog | Maps CI artifacts to ISO 9001, SOC 2, and ISO/IEC 17025 clauses |
 
 ---
 
@@ -735,6 +738,39 @@ parse_requirements → generate_tests → review_quality
 
 ---
 
+### Framework 25: `qms-evidence-collector` — Compliance Evidence Mapping
+**Stack:** Python 3.11 · Click · DataDog · Requests
+**What it does:** Scans the monorepo for CI artifacts (JUnit XML, ZAP reports, coverage files, Pact contracts, k6 results, flakiness reports, drift baselines, Allure reports, triage reports, dependency scans) and maps each artifact type to specific compliance clauses across three standards: ISO 9001:2015, SOC 2 CC-series, and ISO/IEC 17025:2017. Generates a structured evidence report with gap analysis for audit preparation.
+
+**10 artifact types mapped:**
+- JUnit/TRX XML → ISO 9001 8.6 (Release), 9.1.1 (Monitoring), 7.1.5.1 (Measuring resources)
+- Coverage reports → ISO 9001 8.5.1 (Control of production), 9.1.3 (Analysis)
+- ZAP reports → ISO 9001 6.1 (Risk), SOC 2 CC6.1 (Logical access)
+- Flakiness reports → ISO 9001 7.1.5.2 (Measurement traceability), 10.2 (Corrective action)
+- Pact contracts → ISO 9001 8.4.2 (External provision control)
+- k6 SLO results → ISO 9001 9.1.1 (Monitoring), ISO/IEC 17025 7.2.2 (Validation)
+- Drift baselines → ISO 9001 8.5.6 (Control of changes), ISO/IEC 17025 7.7.1 (Validity)
+- Allure reports → ISO 9001 7.5.1 (Documented information)
+- Dependency scans → SOC 2 CC3.1 (Risk assessment), CC6.1 (Logical access)
+- Triage reports → ISO 9001 10.2 (Corrective action), SOC 2 CC7.2 (Incident management)
+
+**Architecture:**
+- `collector/scanner.py` — Walks the repo, matches files against known artifact patterns
+- `collector/mapper.py` — Maps artifact types to clause registry entries
+- `collector/reporter.py` — Generates markdown or JSON evidence reports with gap analysis
+- `collector/datadog.py` — Sends coverage metrics (graceful-skip pattern)
+- `mappings/clause_registry.json` — Artifact-to-clause definitions with rationale
+
+**Test suite:** 48 tests across 3 files (scanner, mapper, reporter)
+
+**CLI:** `python run.py [--repo-dir ..] [--output evidence.json] [--standard iso9001] [--format json]`
+
+**DataDog metrics:** `qms.clauses_covered`, `qms.evidence_files`, `qms.iso9001_clauses`, `qms.soc2_controls`, `qms.iso17025_clauses`
+
+**CI (`qms-evidence-collector.yml`):** push/PR (paths: `qms-evidence-collector/**`) + nightly 12:00 UTC + dispatch. Runs tests and full repo evidence scan.
+
+---
+
 ## GenAI Workflow: `.claude/commands/`
 Three Claude Code custom slash commands for daily QA workflow integration:
 - `/project:triage-failures <xml-dir>` — AI failure triage from JUnit XML
@@ -773,6 +809,7 @@ Three Claude Code custom slash commands for daily QA workflow integration:
 | `dspy-optimizer` | baseline_accuracy · optimized_accuracy · delta |
 | `quality-dashboard` | kpi.pass_rate · kpi.failure_density · kpi.avg_duration_s · kpi.p95_duration_s · kpi.total_tests · kpi.suite_stability · kpi.flakiness_rate · kpi.mttd_seconds |
 | `failure-triage` | triage.total_failures · triage.cluster_count · triage.root_cause (per category) |
+| `qms-evidence-collector` | qms.clauses_covered · qms.evidence_files · qms.iso9001_clauses · qms.soc2_controls · qms.iso17025_clauses |
 
 ---
 
@@ -806,6 +843,7 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | `langgraph-agent.yml` | push · PR (lint only, free) · workflow_dispatch (demo) | — |
 | `dspy-optimizer.yml` | push · PR (lint only, free) · workflow_dispatch (compare) | — |
 | `dspy-vertex.yml` | push · PR (lint only, free) · workflow_dispatch (compare) | — |
+| `qms-evidence-collector.yml` | push · PR (paths: `qms-evidence-collector/**`) · nightly 12:00 UTC | — |
 | `visual-regression-update.yml` | workflow_dispatch | browser project (chromium · firefox · webkit) |
 | `deploy-validate-rollback.yml` | workflow_dispatch · workflow_call | deployment URL · Vercel project ID · auto-rollback toggle |
 | `codeql.yml` | push to main · weekly Monday 14:00 UTC | Python, JavaScript/TypeScript |

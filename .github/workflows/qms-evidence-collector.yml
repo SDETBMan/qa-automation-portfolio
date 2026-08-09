@@ -1,0 +1,80 @@
+name: qms-evidence-collector CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['qms-evidence-collector/**']
+  pull_request:
+    branches: [main]
+    paths: ['qms-evidence-collector/**']
+  schedule:
+    - cron: '0 12 * * *'    # nightly 12:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: qms-evidence-collector
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: qms-evidence-collector/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: >
+          python -m pytest tests/ -v
+          --junitxml=test-results/results.xml
+
+      # ── Evidence collection (full repo scan) ─────────────────────────
+      - name: Run evidence collection
+        run: |
+          python run.py --repo-dir .. --output evidence-report.md
+          python run.py --repo-dir .. --output evidence-report.json
+        env:
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+
+      # ── DataDog CI Visibility ────────────────────────────────────────
+      - name: Upload test results to Datadog CI Visibility
+        if: always()
+        continue-on-error: true
+        run: |
+          curl -fsSL "https://github.com/DataDog/datadog-ci/releases/latest/download/datadog-ci_linux-x64" \
+            --output /usr/local/bin/datadog-ci && chmod +x /usr/local/bin/datadog-ci
+          datadog-ci junit upload --service qa-automation-portfolio \
+            --tags framework:qms-evidence-collector \
+            test-results/*.xml
+        env:
+          DATADOG_API_KEY: ${{ secrets.DD_API_KEY }}
+          DATADOG_SITE: ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      # ── Artifacts ────────────────────────────────────────────────────
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qms-test-results
+          path: qms-evidence-collector/test-results/
+          retention-days: 30
+
+      - name: Upload evidence reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qms-evidence-reports
+          path: |
+            qms-evidence-collector/evidence-report.md
+            qms-evidence-collector/evidence-report.json
+          retention-days: 30

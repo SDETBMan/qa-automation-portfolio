@@ -1,0 +1,335 @@
+{
+  "artifact_mappings": [
+    {
+      "artifact_type": "junit_xml",
+      "file_patterns": ["**/test-results/*.xml", "**/TEST-*.xml", "**/*.trx"],
+      "description": "Test execution results (pass/fail/skip with duration)",
+      "clauses": {
+        "iso_9001": [
+          {
+            "clause": "8.6",
+            "title": "Release of products and services",
+            "rationale": "Test results provide documented evidence that acceptance criteria have been met before release"
+          },
+          {
+            "clause": "9.1.1",
+            "title": "Monitoring, measurement, analysis and evaluation",
+            "rationale": "Pass/fail rates and duration trends constitute measurement data for process performance evaluation"
+          },
+          {
+            "clause": "7.1.5.1",
+            "title": "Monitoring and measuring resources — General",
+            "rationale": "Automated test suites are the measuring instruments used to verify product conformity"
+          }
+        ],
+        "soc2": [
+          {
+            "control": "CC8.1",
+            "title": "Change management",
+            "rationale": "Test results validate that changes meet quality requirements before deployment"
+          },
+          {
+            "control": "CC4.1",
+            "title": "Monitoring activities — COSO",
+            "rationale": "Continuous test execution provides ongoing monitoring of system behavior"
+          }
+        ],
+        "iso_17025": [
+          {
+            "clause": "7.7.1",
+            "title": "Ensuring validity of results",
+            "rationale": "Repeated execution of standardized test cases validates measurement system consistency"
+          }
+        ]
+      }
+    },
+    {
+      "artifact_type": "coverage_report",
+      "file_patterns": ["**/coverage.xml", "**/.coverage", "**/lcov.info", "**/cobertura.xml"],
+      "description": "Code coverage metrics (line, branch, function coverage)",
+      "clauses": {
+        "iso_9001": [
+          {
+            "clause": "8.5.1",
+            "title": "Control of production and service provision",
+            "rationale": "Coverage metrics demonstrate that controlled conditions include adequate verification of production code"
+          },
+          {
+            "clause": "9.1.3",
+            "title": "Analysis and evaluation",
+            "rationale": "Coverage percentages provide quantitative data for evaluating test adequacy"
+          }
+        ],
+        "soc2": [
+          {
+            "control": "CC8.1",
+            "title": "Change management",
+            "rationale": "Coverage metrics verify that changed code paths are exercised by tests"
+          }
+        ],
+        "iso_17025": [
+          {
+            "clause": "7.2.2",
+            "title": "Validation of methods",
+            "rationale": "Coverage data validates that the test method exercises the intended scope of the system under test"
+          }
+        ]
+      }
+    },
+    {
+      "artifact_type": "zap_report",
+      "file_patterns": ["**/zap-report.json", "**/zap-report.html"],
+      "description": "OWASP ZAP security scan findings (passive and active)",
+      "clauses": {
+        "iso_9001": [
+          {
+            "clause": "6.1",
+            "title": "Actions to address risks and opportunities",
+            "rationale": "Security scans identify risks to product quality and data integrity"
+          },
+          {
+            "clause": "8.2.3",
+            "title": "Review of requirements for products and services",
+            "rationale": "Security findings validate whether implicit security requirements are met"
+          }
+        ],
+        "soc2": [
+          {
+            "control": "CC6.1",
+            "title": "Logical access security",
+            "rationale": "ZAP scans verify that logical access controls resist common attack vectors (OWASP Top 10)"
+          },
+          {
+            "control": "CC3.1",
+            "title": "COSO risk assessment",
+            "rationale": "Automated vulnerability scanning is a risk identification mechanism"
+          }
+        ],
+        "iso_17025": []
+      }
+    },
+    {
+      "artifact_type": "flakiness_report",
+      "file_patterns": ["**/flakiness-report.md", "**/flakiness-report.json"],
+      "description": "Flaky test detection scores and quarantine recommendations",
+      "clauses": {
+        "iso_9001": [
+          {
+            "clause": "7.1.5.2",
+            "title": "Measurement traceability",
+            "rationale": "Flakiness scoring identifies unreliable measurements and removes them from release decisions"
+          },
+          {
+            "clause": "10.2",
+            "title": "Nonconformity and corrective action",
+            "rationale": "Quarantine recommendations constitute corrective action for nonconforming test instruments"
+          }
+        ],
+        "soc2": [
+          {
+            "control": "CC4.1",
+            "title": "Monitoring activities — COSO",
+            "rationale": "Flakiness monitoring ensures that monitoring controls themselves remain reliable"
+          }
+        ],
+        "iso_17025": [
+          {
+            "clause": "7.7.2",
+            "title": "Ensuring validity — intermediate checks",
+            "rationale": "Flakiness detection is an intermediate check on the reliability of the measurement system"
+          }
+        ]
+      }
+    },
+    {
+      "artifact_type": "pact_contract",
+      "file_patterns": ["**/pacts/*.json", "**/pact-consumer/pacts/*.json"],
+      "description": "Consumer-driven contract definitions and verification results",
+      "clauses": {
+        "iso_9001": [
+          {
+            "clause": "8.4.2",
+            "title": "Type and extent of control — external provision",
+            "rationale": "Contract tests define and verify the interface between internally and externally provided services"
+          },
+          {
+            "clause": "8.2.2",
+            "title": "Determination of requirements related to products and services",
+            "rationale": "Pact contracts formally document and verify inter-service requirements"
+          }
+        ],
+        "soc2": [
+          {
+            "control": "CC8.1",
+            "title": "Change management",
+            "rationale": "Contract verification detects breaking API changes before deployment"
+          }
+        ],
+        "iso_17025": []
+      }
+    },
+    {
+      "artifact_type": "k6_load_test",
+      "file_patterns": ["**/k6-slo-report.json", "**/k6-results.json"],
+      "description": "k6 load test results with SLO threshold pass/fail",
+      "clauses": {
+        "iso_9001": [
+          {
+            "clause": "9.1.1",
+            "title": "Monitoring, measurement, analysis and evaluation",
+            "rationale": "Performance SLO results measure system behavior under load against defined thresholds"
+          },
+          {
+            "clause": "8.5.1",
+            "title": "Control of production and service provision",
+            "rationale": "Load testing verifies production readiness under expected and peak traffic conditions"
+          }
+        ],
+        "soc2": [
+          {
+            "control": "CC7.1",
+            "title": "System monitoring",
+            "rationale": "Performance baselines and SLO monitoring ensure system availability and responsiveness"
+          }
+        ],
+        "iso_17025": [
+          {
+            "clause": "7.2.2",
+            "title": "Validation of methods",
+            "rationale": "Load test scenarios validate that the system operates within expected performance parameters"
+          }
+        ]
+      }
+    },
+    {
+      "artifact_type": "drift_report",
+      "file_patterns": ["**/drift-report.md", "**/baseline.json"],
+      "description": "Site-monitor drift detection results (selector changes)",
+      "clauses": {
+        "iso_9001": [
+          {
+            "clause": "8.5.6",
+            "title": "Control of changes",
+            "rationale": "Drift detection identifies uncontrolled upstream changes that could impact product quality"
+          },
+          {
+            "clause": "7.5.3",
+            "title": "Control of documented information",
+            "rationale": "Baseline snapshots maintain version-controlled reference points for comparison"
+          }
+        ],
+        "soc2": [
+          {
+            "control": "CC7.1",
+            "title": "System monitoring",
+            "rationale": "Automated drift monitoring detects environmental changes that could affect system integrity"
+          },
+          {
+            "control": "CC8.1",
+            "title": "Change management",
+            "rationale": "Drift reports provide evidence that external changes are detected and evaluated"
+          }
+        ],
+        "iso_17025": [
+          {
+            "clause": "7.7.1",
+            "title": "Ensuring validity of results",
+            "rationale": "Drift monitoring ensures that the system under test has not changed in ways that invalidate previous measurements"
+          }
+        ]
+      }
+    },
+    {
+      "artifact_type": "allure_report",
+      "file_patterns": ["**/allure-results/*.json", "**/allure-report/**"],
+      "description": "Allure test execution reports with history, categories, and trends",
+      "clauses": {
+        "iso_9001": [
+          {
+            "clause": "7.5.1",
+            "title": "Documented information — General",
+            "rationale": "Allure reports constitute documented information required by the QMS for traceability"
+          },
+          {
+            "clause": "9.1.3",
+            "title": "Analysis and evaluation",
+            "rationale": "Trend data in Allure history enables analysis of quality performance over time"
+          }
+        ],
+        "soc2": [
+          {
+            "control": "CC4.1",
+            "title": "Monitoring activities — COSO",
+            "rationale": "Allure trend reports provide ongoing monitoring evidence for audit review"
+          }
+        ],
+        "iso_17025": [
+          {
+            "clause": "7.11",
+            "title": "Control of data and information management",
+            "rationale": "Allure reports provide structured, version-controlled test execution records"
+          }
+        ]
+      }
+    },
+    {
+      "artifact_type": "dependency_scan",
+      "file_patterns": ["**/dependabot.yml", "**/codeql-analysis.yml"],
+      "description": "Dependabot and CodeQL security vulnerability alerts",
+      "clauses": {
+        "iso_9001": [
+          {
+            "clause": "8.4.1",
+            "title": "Control of externally provided processes, products and services",
+            "rationale": "Dependency scanning monitors the quality and security of externally provided software components"
+          },
+          {
+            "clause": "6.1",
+            "title": "Actions to address risks and opportunities",
+            "rationale": "Vulnerability alerts identify risks from third-party dependencies before they affect production"
+          }
+        ],
+        "soc2": [
+          {
+            "control": "CC6.1",
+            "title": "Logical access security",
+            "rationale": "Dependency vulnerability scanning prevents compromised libraries from weakening access controls"
+          },
+          {
+            "control": "CC3.1",
+            "title": "COSO risk assessment",
+            "rationale": "Automated dependency scanning is a systematic risk identification mechanism"
+          }
+        ],
+        "iso_17025": []
+      }
+    },
+    {
+      "artifact_type": "triage_report",
+      "file_patterns": ["**/triage_report.json", "**/triage_report.md"],
+      "description": "AI-powered failure root cause clustering and severity ranking",
+      "clauses": {
+        "iso_9001": [
+          {
+            "clause": "10.2",
+            "title": "Nonconformity and corrective action",
+            "rationale": "Root cause clustering systematically identifies and categorizes nonconformities for corrective action"
+          },
+          {
+            "clause": "10.3",
+            "title": "Continual improvement",
+            "rationale": "Failure pattern analysis drives targeted improvements to reduce recurring defect categories"
+          }
+        ],
+        "soc2": [
+          {
+            "control": "CC7.2",
+            "title": "Incident management",
+            "rationale": "Automated triage classifies incidents by severity and root cause for structured response"
+          }
+        ],
+        "iso_17025": []
+      }
+    }
+  ]
+}

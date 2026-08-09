@@ -1,0 +1,83 @@
+{
+  "title": "QMS Evidence Collector",
+  "description": "Compliance evidence coverage metrics — ISO 9001, SOC 2, ISO/IEC 17025",
+  "widgets": [
+    {
+      "definition": {
+        "title": "Total Clauses Covered",
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "avg:qms.clauses_covered{framework:qms-evidence-collector}",
+            "aggregator": "last"
+          }
+        ],
+        "precision": 0
+      }
+    },
+    {
+      "definition": {
+        "title": "Total Evidence Files",
+        "type": "query_value",
+        "requests": [
+          {
+            "q": "avg:qms.evidence_files{framework:qms-evidence-collector}",
+            "aggregator": "last"
+          }
+        ],
+        "precision": 0
+      }
+    },
+    {
+      "definition": {
+        "title": "Clause Coverage by Standard",
+        "type": "toplist",
+        "requests": [
+          {
+            "q": "avg:qms.iso9001_clauses{*}, avg:qms.soc2_controls{*}, avg:qms.iso17025_clauses{*}",
+            "style": {
+              "palette": "semantic"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "definition": {
+        "title": "ISO 9001 Clauses Covered (trend)",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:qms.iso9001_clauses{framework:qms-evidence-collector}",
+            "display_type": "line"
+          }
+        ]
+      }
+    },
+    {
+      "definition": {
+        "title": "SOC 2 Controls Covered (trend)",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:qms.soc2_controls{framework:qms-evidence-collector}",
+            "display_type": "line"
+          }
+        ]
+      }
+    },
+    {
+      "definition": {
+        "title": "ISO/IEC 17025 Clauses Covered (trend)",
+        "type": "timeseries",
+        "requests": [
+          {
+            "q": "avg:qms.iso17025_clauses{framework:qms-evidence-collector}",
+            "display_type": "line"
+          }
+        ]
+      }
+    }
+  ],
+  "layout_type": "ordered"
+}
