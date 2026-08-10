@@ -97,6 +97,8 @@ def test_hallucination_benchmark_aggregate():
     send_eval_score("llm.eval.hallucination_benchmark.sample_count", total, tags)
 
     # ── Aggregate assertion ─────────────────────────────────────────
+    _benchmark_scores.clear()  # prevent stale accumulation across repeated runs
+
     assert pass_rate >= 80, (
         f"Hallucination benchmark pass rate {pass_rate:.1f}% is below the "
         f"80% threshold ({passed_count}/{total} cases passed)"

@@ -1,66 +1,16 @@
-"""BootstrapFewShot optimizer for the bug severity classifier."""
-
-from __future__ import annotations
-
+# Re-exported from dspy-optimizer — single source of truth for shared classifier logic.
+import sys
 from pathlib import Path
 
-import dspy
-from dspy.teleprompt import BootstrapFewShot
+_OPTIMIZER_DIR = str(Path(__file__).resolve().parent.parent.parent / "dspy-optimizer")
+if _OPTIMIZER_DIR not in sys.path:
+    sys.path.insert(0, _OPTIMIZER_DIR)
 
-from .modules import BugClassifier
+from classifier.optimizer import (  # noqa: E402
+    compile_with_bootstrap,
+    evaluate,
+    load_compiled,
+    save_compiled,
+)
 
-
-def _severity_metric(example: dspy.Example, prediction: dspy.Prediction, trace=None) -> bool:
-    """Return True if the predicted severity matches the gold label (case-insensitive)."""
-    return example.severity.strip().lower() == prediction.severity.strip().lower()
-
-
-def compile_with_bootstrap(
-    trainset: list[dspy.Example],
-    max_bootstrapped_demos: int = 3,
-) -> BugClassifier:
-    """Compile BugClassifier using BootstrapFewShot.
-
-    BootstrapFewShot runs the unoptimized module on *trainset*, collects
-    successful (input, output) demonstrations, and injects them as few-shot
-    examples into the optimized module's prompt.
-
-    Args:
-        trainset: Training examples with .report and .severity fields.
-        max_bootstrapped_demos: Maximum few-shot examples to inject (keeps
-            token count and cost low; default 3 is sufficient for this task).
-
-    Returns:
-        A compiled BugClassifier with optimized prompts.
-    """
-    optimizer = BootstrapFewShot(
-        metric=_severity_metric,
-        max_bootstrapped_demos=max_bootstrapped_demos,
-        max_labeled_demos=max_bootstrapped_demos,
-    )
-    student = BugClassifier()
-    compiled = optimizer.compile(student, trainset=trainset)
-    return compiled
-
-
-def evaluate(classifier: BugClassifier, devset: list[dspy.Example]) -> float:
-    """Return accuracy (fraction correct) on *devset*."""
-    correct = 0
-    for ex in devset:
-        pred = classifier(report=ex.report)
-        if _severity_metric(ex, pred):
-            correct += 1
-    return correct / len(devset) if devset else 0.0
-
-
-def save_compiled(classifier: BugClassifier, path: Path) -> None:
-    """Save the compiled program state to a JSON file."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    classifier.save(str(path))
-
-
-def load_compiled(path: Path) -> BugClassifier:
-    """Load a previously compiled program from a JSON file."""
-    classifier = BugClassifier()
-    classifier.load(str(path))
-    return classifier
+__all__ = ["compile_with_bootstrap", "evaluate", "load_compiled", "save_compiled"]

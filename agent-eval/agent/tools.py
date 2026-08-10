@@ -221,6 +221,11 @@ def get_account_status(username: str) -> dict:
     return {"error": f"Account '{username}' not found. Valid accounts: {', '.join(_ACCOUNTS)}."}
 
 
+def get_valid_tool_names() -> set[str]:
+    """Return the set of tool names derived from TOOL_DEFINITIONS (single source of truth)."""
+    return {t["function"]["name"] for t in TOOL_DEFINITIONS}
+
+
 def execute_tool(name: str, args: dict) -> dict:
     """Dispatch a tool call by name to the appropriate implementation."""
     dispatch = {
@@ -231,4 +236,9 @@ def execute_tool(name: str, args: dict) -> dict:
     }
     if name not in dispatch:
         return {"error": f"Unknown tool: '{name}'"}
-    return dispatch[name]()
+    try:
+        return dispatch[name]()
+    except TypeError as exc:
+        return {"error": f"Tool '{name}' called with invalid arguments {args}: {exc}"}
+    except Exception as exc:
+        return {"error": f"Tool '{name}' failed: {exc}"}

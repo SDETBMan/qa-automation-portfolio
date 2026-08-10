@@ -22,11 +22,7 @@ export class LoginPage extends BasePage {
     return this.getText(SELECTORS.errorMessage);
   }
 
-  assertErrorContains(text: string): void {
-    cy.get(SELECTORS.errorMessage).should('contain.text', text);
-  }
-
-  assertOnLoginPage(): void {
-    cy.get(SELECTORS.loginButton).should('be.visible');
+  isLoginButtonVisible(): Cypress.Chainable<boolean> {
+    return cy.get(SELECTORS.loginButton).should('exist').then($el => $el.is(':visible'));
   }
 }

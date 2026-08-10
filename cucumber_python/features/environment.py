@@ -57,7 +57,7 @@ def after_scenario(context: Context, scenario: Scenario) -> None:
         _skipped += 1
 
     # Screenshot on failure — attached inline to the Allure / Behave report
-    driver = driver_manager._local.__dict__.get("driver")
+    driver = driver_manager.get_driver_or_none()
     if scenario.status.name == "failed" and driver is not None:
         try:
             screenshot = driver.get_screenshot_as_png()

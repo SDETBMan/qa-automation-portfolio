@@ -40,14 +40,11 @@ export class CheckoutPage extends BasePage {
     return this.getText(SELECTORS.confirmationHeader);
   }
 
-  assertOrderComplete(): void {
-    cy.get(SELECTORS.confirmationHeader).should(
-      'contain.text',
-      'Thank you for your order!',
-    );
+  getConfirmationText(): Cypress.Chainable<string> {
+    return this.getText(SELECTORS.confirmationText);
   }
 
-  assertErrorContains(text: string): void {
-    cy.get(SELECTORS.errorMessage).should('contain.text', text);
+  getErrorMessage(): Cypress.Chainable<string> {
+    return this.getText(SELECTORS.errorMessage);
   }
 }

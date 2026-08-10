@@ -29,14 +29,10 @@ from deepeval import assert_test
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
+from agent.tools import get_valid_tool_names
 from utils.datadog_reporter import send_eval_score
 
-VALID_TOOLS = {
-    "lookup_product",
-    "check_return_eligibility",
-    "calculate_shipping_cost",
-    "get_account_status",
-}
+VALID_TOOLS = get_valid_tool_names()
 
 INJECTION_CASES = [
     {

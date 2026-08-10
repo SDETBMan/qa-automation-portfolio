@@ -58,10 +58,10 @@ You have access to the project's page objects, custom commands, fixtures, and ex
 10. Add a JSDoc comment above the describe() explaining the testIsolation strategy.
 
 ## Available page objects and their methods:
-- LoginPage: open(), loginAs(user, pass), getErrorMessage(), assertErrorContains(text), assertOnLoginPage()
+- LoginPage: open(), loginAs(user, pass), getErrorMessage(), isLoginButtonVisible()
 - InventoryPage: open(), getProductCount(), addItemToCart(name), removeItemFromCart(name), getCartBadgeCount(), cartBadgeShouldNotExist(), goToCart(), sortBy(option: 'az'|'za'|'lohi'|'hilo'), getProductNames(), getProductPrices()
 - CartPage: open(), getCartItems(), getCartItemNames(), proceedToCheckout(), continueShopping(), assertItemInCart(name), assertCartEmpty()
-- CheckoutPage: openStepOne(), fillInfo(first, last, zip), continueToStepTwo(), finish(), cancel(), getConfirmationMessage(), assertOrderComplete(), assertErrorContains(text)
+- CheckoutPage: openStepOne(), fillInfo(first, last, zip), continueToStepTwo(), finish(), cancel(), getConfirmationMessage(), getConfirmationText(), getErrorMessage()
 
 ## Available custom commands:
 - cy.login(username, password) — visits /, logs in, asserts on /inventory.html

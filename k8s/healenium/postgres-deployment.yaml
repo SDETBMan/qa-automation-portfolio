@@ -19,13 +19,13 @@ spec:
           env:
             - name: POSTGRES_USER
               valueFrom:
-                configMapKeyRef:
-                  name: healenium-config
+                secretKeyRef:
+                  name: healenium-secret
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
-                configMapKeyRef:
-                  name: healenium-config
+                secretKeyRef:
+                  name: healenium-secret
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
               valueFrom:

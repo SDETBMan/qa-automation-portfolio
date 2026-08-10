@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from collections import defaultdict
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -34,13 +33,8 @@ from kpi_calculator import (
     compute_suite_stability,
 )
 
-# Add flakiness-detector to path for parser
-_REPO_ROOT = Path(__file__).parent.parent
-_FLAKINESS_DIR = _REPO_ROOT / "flakiness-detector"
-if str(_FLAKINESS_DIR) not in sys.path:
-    sys.path.insert(0, str(_FLAKINESS_DIR))
-
-from flakiness.parser import RunResults, parse_directory  # noqa: E402
+# Reuse flakiness-detector's parser via kpi_calculator (avoids sys.path manipulation)
+from kpi_calculator import RunResults, parse_directory
 
 
 def _group_runs_by_suite(runs: list[RunResults]) -> dict[str, list[RunResults]]:

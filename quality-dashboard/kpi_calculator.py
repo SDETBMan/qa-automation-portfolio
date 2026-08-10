@@ -11,18 +11,34 @@ Reuses flakiness-detector's parser for JUnit XML parsing.
 
 from __future__ import annotations
 
+import importlib
 import statistics
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import ModuleType
 
-# Add flakiness-detector to path so we can reuse its parser
+# Import flakiness-detector's parser via importlib to avoid polluting sys.path.
+# This keeps the dependency explicit without the sys.path.insert anti-pattern.
 _REPO_ROOT = Path(__file__).parent.parent
 _FLAKINESS_DIR = _REPO_ROOT / "flakiness-detector"
-if str(_FLAKINESS_DIR) not in sys.path:
-    sys.path.insert(0, str(_FLAKINESS_DIR))
 
-from flakiness.parser import RunResults, TestResult, parse_directory, parse_junit_xml  # noqa: E402
+
+def _import_flakiness_parser() -> ModuleType:
+    """Import flakiness.parser from the sibling framework directory."""
+    _prev = sys.path.copy()
+    sys.path.insert(0, str(_FLAKINESS_DIR))
+    try:
+        return importlib.import_module("flakiness.parser")
+    finally:
+        sys.path[:] = _prev  # Restore original sys.path
+
+
+_parser = _import_flakiness_parser()
+RunResults = _parser.RunResults
+TestResult = _parser.TestResult
+parse_directory = _parser.parse_directory
+parse_junit_xml = _parser.parse_junit_xml
 
 
 @dataclass

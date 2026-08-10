@@ -42,8 +42,8 @@ suites:
       browserName: "chromium"
     env:
       BASE_URL: "https://www.saucedemo.com"
-      APP_USERNAME: "standard_user"
-      APP_PASSWORD: "secret_sauce"
+      APP_USERNAME: "${{ env.APP_USERNAME || 'standard_user' }}"
+      APP_PASSWORD: "${{ env.APP_PASSWORD || 'secret_sauce' }}"
 
   # ── Firefox ──────────────────────────────────────────────────────────
   - name: "firefox-regression"
@@ -58,8 +58,8 @@ suites:
       browserName: "firefox"
     env:
       BASE_URL: "https://www.saucedemo.com"
-      APP_USERNAME: "standard_user"
-      APP_PASSWORD: "secret_sauce"
+      APP_USERNAME: "${{ env.APP_USERNAME || 'standard_user' }}"
+      APP_PASSWORD: "${{ env.APP_PASSWORD || 'secret_sauce' }}"
 
   # ── WebKit (Safari) ─────────────────────────────────────────────────
   - name: "webkit-regression"
@@ -74,8 +74,8 @@ suites:
       browserName: "webkit"
     env:
       BASE_URL: "https://www.saucedemo.com"
-      APP_USERNAME: "standard_user"
-      APP_PASSWORD: "secret_sauce"
+      APP_USERNAME: "${{ env.APP_USERNAME || 'standard_user' }}"
+      APP_PASSWORD: "${{ env.APP_PASSWORD || 'secret_sauce' }}"
 
 artifacts:
   download:

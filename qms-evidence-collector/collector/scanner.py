@@ -45,7 +45,7 @@ _SKIP_DIRS = {
 
 def _match_pattern(file_path: Path, pattern: str) -> bool:
     """Check if a file path matches a glob-like pattern."""
-    return file_path.match(pattern.lstrip("**/"))
+    return file_path.match(pattern)
 
 
 def _detect_framework(file_path: Path, root: Path) -> str:

@@ -40,21 +40,21 @@ describe('Checkout', { testIsolation: false }, () => {
     checkoutPage.fillInfo('Jane', 'Doe', '94105');
     checkoutPage.continueToStepTwo();
     checkoutPage.finish();
-    checkoutPage.assertOrderComplete();
+    checkoutPage.getConfirmationMessage().should('contain', 'Thank you for your order!');
   });
 
   it('@regression missing first name shows validation error', () => {
     cartPage.proceedToCheckout();
     checkoutPage.fillInfo('', 'Doe', '94105');
     checkoutPage.continueToStepTwo();
-    checkoutPage.assertErrorContains('First Name is required');
+    checkoutPage.getErrorMessage().should('contain', 'First Name is required');
   });
 
   it('@regression missing last name shows validation error', () => {
     cartPage.proceedToCheckout();
     checkoutPage.fillInfo('Jane', '', '94105');
     checkoutPage.continueToStepTwo();
-    checkoutPage.assertErrorContains('Last Name is required');
+    checkoutPage.getErrorMessage().should('contain', 'Last Name is required');
   });
 
   it('@regression cancel checkout returns to cart', () => {

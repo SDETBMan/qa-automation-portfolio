@@ -25,7 +25,7 @@ from classifier.modules import BugClassifier
 from classifier.optimizer import compile_with_bootstrap, evaluate, save_compiled
 from datasets.bug_reports import DEVSET, TRAINSET
 
-DIVIDER = "-" * 60
+DIVIDER = "─" * 60
 COMPILED_PATH = Path(__file__).parent / "output" / "compiled_classifier.json"
 
 
@@ -119,8 +119,8 @@ def _print_sample_predictions(classifier: BugClassifier, examples: list, label: 
     print(f"\n  Sample predictions ({label}):")
     for ex in examples:
         pred = classifier(report=ex.report)
-        match = "+" if pred.severity.strip().lower() == ex.severity.lower() else "X"
-        short_report = ex.report[:70] + ("..." if len(ex.report) > 70 else "")
+        match = "✓" if pred.severity.strip().lower() == ex.severity.lower() else "✗"
+        short_report = ex.report[:70] + ("…" if len(ex.report) > 70 else "")
         print(f"  {match} Gold={ex.severity:<9} Pred={pred.severity.strip():<9} | {short_report}")
 
 

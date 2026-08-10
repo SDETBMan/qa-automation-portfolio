@@ -1,22 +1,12 @@
-"""DSPy module wrapping the bug severity classifier."""
+# Re-exported from dspy-optimizer — single source of truth for shared classifier logic.
+# dspy-vertex differs only in LM backend configuration (Vertex AI vs OpenAI).
+import sys
+from pathlib import Path
 
-from __future__ import annotations
+_OPTIMIZER_DIR = str(Path(__file__).resolve().parent.parent.parent / "dspy-optimizer")
+if _OPTIMIZER_DIR not in sys.path:
+    sys.path.insert(0, _OPTIMIZER_DIR)
 
-import dspy
+from classifier.modules import BugClassifier  # noqa: E402
 
-from .signatures import BugSeveritySignature
-
-
-class BugClassifier(dspy.Module):
-    """Chain-of-thought bug severity classifier.
-
-    Uses dspy.ChainOfThought to prompt the LLM to reason step-by-step before
-    committing to a severity label — improves accuracy on borderline cases.
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.classify = dspy.ChainOfThought(BugSeveritySignature)
-
-    def forward(self, report: str) -> dspy.Prediction:
-        return self.classify(report=report)
+__all__ = ["BugClassifier"]

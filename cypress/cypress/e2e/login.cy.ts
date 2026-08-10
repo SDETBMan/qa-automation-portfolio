@@ -34,13 +34,13 @@ describe('Login', { testIsolation: false }, () => {
   it('@smoke invalid password shows error message', () => {
     cy.fixture('users').then((users) => {
       loginPage.loginAs(users.standard.username, 'wrong_password');
-      loginPage.assertErrorContains('Username and password do not match');
+      loginPage.getErrorMessage().should('contain', 'Username and password do not match');
     });
   });
 
   it('@smoke empty username shows validation error', () => {
     cy.get('#login-button').click();
-    loginPage.assertErrorContains('Username is required');
+    loginPage.getErrorMessage().should('contain', 'Username is required');
   });
 
   // ── Regression — error states ───────────────────────────────────────────────
@@ -48,7 +48,7 @@ describe('Login', { testIsolation: false }, () => {
   it('@regression locked-out user sees specific error', () => {
     cy.fixture('users').then((users) => {
       loginPage.loginAs(users.locked.username, users.locked.password);
-      loginPage.assertErrorContains('Sorry, this user has been locked out');
+      loginPage.getErrorMessage().should('contain', 'Sorry, this user has been locked out');
     });
   });
 
@@ -66,6 +66,6 @@ describe('Login', { testIsolation: false }, () => {
     // Starts on /inventory.html — left there by the previous test.
     cy.get('#react-burger-menu-btn').click();
     cy.get('#logout_sidebar_link').click();
-    loginPage.assertOnLoginPage();
+    loginPage.isLoginButtonVisible();
   });
 });

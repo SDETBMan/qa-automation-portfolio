@@ -22,13 +22,21 @@ from utils import config_reader
 # Each thread (parallel scenario) gets its own private driver instance.
 # Python's threading.local() is the equivalent of Java's ThreadLocal<WebDriver>.
 _local = threading.local()
+_init_lock = threading.Lock()
 
 
 def get_driver() -> WebDriver:
     """Return the WebDriver for the current thread, creating it on first call."""
     if not hasattr(_local, "driver") or _local.driver is None:
-        _initialize_driver()
+        with _init_lock:
+            if not hasattr(_local, "driver") or _local.driver is None:
+                _initialize_driver()
     return _local.driver
+
+
+def get_driver_or_none() -> WebDriver | None:
+    """Return the current thread's driver, or None if not yet initialized."""
+    return getattr(_local, "driver", None)
 
 
 def quit_driver() -> None:
