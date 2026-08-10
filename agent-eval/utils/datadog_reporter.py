@@ -1,14 +1,14 @@
 # Re-exported from ai-eval — single source of truth for shared DataDog reporting.
-import sys
+# Uses importlib file-path loading to avoid circular import (same module name).
+import importlib.util
 from pathlib import Path
 
-_AI_EVAL_DIR = str(Path(__file__).resolve().parent.parent.parent / "ai-eval")
-if _AI_EVAL_DIR not in sys.path:
-    sys.path.insert(0, _AI_EVAL_DIR)
+_SRC = Path(__file__).resolve().parent.parent.parent / "ai-eval" / "utils" / "datadog_reporter.py"
+_spec = importlib.util.spec_from_file_location("_ai_eval_datadog_reporter", _SRC)
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
 
-from utils.datadog_reporter import (  # noqa: E402
-    send_eval_score,
-    send_test_metrics,
-)
+send_eval_score = _mod.send_eval_score
+send_test_metrics = _mod.send_test_metrics
 
 __all__ = ["send_eval_score", "send_test_metrics"]
