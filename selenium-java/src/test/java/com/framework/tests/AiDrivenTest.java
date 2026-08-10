@@ -18,7 +18,8 @@ import org.testng.annotations.Test;
  * in the testing toolchain.
  *
  * <p>WHAT {@link AiHelper} DOES: {@code AiHelper.generateTestData(String prompt)}
- * calls an AI model (currently a local stub that simulates AI responses) with a
+ * calls an AI model (OpenAI GPT-4o via the API, with graceful fallback to
+ * deterministic mock data when OPENAI_API_KEY is not set) with a
  * natural-language prompt describing what kind of data to generate. The AI returns
  * plausible-looking but invalid test credentials — the kind a real attacker or
  * curious user might try — that the app should reject.

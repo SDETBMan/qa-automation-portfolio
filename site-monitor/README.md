@@ -45,7 +45,7 @@ python run.py --auto-issue
 
 ## Monitored Selectors
 
-The `selectors.json` registry maps 30+ selectors to the frameworks that depend on them. When a monitored selector is removed, the report identifies exactly which test suites are affected.
+The `selectors.json` registry maps 23 selectors (9 IDs, 10 classes, 4 data-test attributes) to the frameworks that depend on them. When a monitored selector is removed, the report identifies exactly which test suites are affected.
 
 ## Architecture
 

@@ -111,7 +111,7 @@ The repo includes two quality governance documents:
 | 21 | `langgraph-agent` | Python · LangGraph 0.4 · Claude Haiku | BDD test case generator with 4-node StateGraph pipeline |
 | 22 | `dspy-optimizer` | Python · DSPy 2.6 · BootstrapFewShot · OpenAI | Bug severity classifier with prompt optimization |
 | 23 | `dspy-vertex` | Python · DSPy 2.6 · Vertex AI Gemini 1.5 | Same classifier, Vertex AI backend (multi-LLM portability) |
-| 24 | `site-monitor` | Python · BeautifulSoup · Click · DataDog · Requests | Website drift detection across 30+ selectors for 5 frameworks |
+| 24 | `site-monitor` | Python · BeautifulSoup · Click · DataDog · Requests | Website drift detection across 23 selectors for 5 frameworks |
 | 25 | `qms-evidence-collector` | Python · Click · DataDog | Maps CI artifacts to ISO 9001, SOC 2, and ISO/IEC 17025 clauses |
 
 ---
@@ -429,8 +429,8 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 - `billed_cents`, `allowed_cents`, `paid_cents`: `>= 0` — monetary amounts cannot be negative
 - `status`: `Literal["paid", "denied", "pending"]` — only valid adjudication statuses
 
-**Test suite (28 tests across 3 files):**
-- `test_models.py` (10 tests) — Pydantic schema enforcement: CPT format, status enum, negative amounts, extra fields, serialization round-trip
+**Test suite (30 tests across 3 files):**
+- `test_models.py` (12 tests) — Pydantic schema enforcement: CPT format, status enum, negative amounts, extra fields, serialization round-trip
 - `test_diff_engine.py` (12 tests) — core diff logic: added/removed/modified detection, multi-field changes, empty datasets, real CSV integration test
 - `test_loader.py` (6 tests) — CSV loading: field types, missing columns, empty files, non-numeric values, file-not-found
 
@@ -518,7 +518,7 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 - Lighthouse performance audits (Chrome only)
 - `testIsolation: false` strategy for external site rate-limiting
 - DataDog GAUGE metrics + JUnit XML CI Visibility
-- 25 E2E + 4 component = 29 tests
+- 43 E2E + 4 component = 47 tests
 - **Testiny test management sync** — CI uploads JUnit XML results to Testiny via `@testiny/cli automation`
 
 **AI Test Generator (`ai-generator/generate-test.ts`):**
@@ -597,12 +597,13 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 - Graceful degradation: app starts and works normally without Redis; cache ops become no-ops with `[WARN]` logged if Redis goes down mid-flight
 - `docker-compose.yml` provides `redis:7-alpine` for local development
 
-**Test suite (37 tests across 5 files):**
+**Test suite (38 tests across 6 files):**
 - `test_health.py` (2 tests) — liveness endpoint
 - `test_products.py` (11 tests) — full CRUD: list, get, create, update, delete
 - `test_users.py` (5 tests) — read-only user endpoints + 405 guard
 - `test_api_contract.py` (4 tests) — OpenAPI schema validation
 - `test_cache.py` (15 tests) — cache hit/miss, invalidation, TTL, graceful degradation, utilities
+- `test_pact_provider.py` (1 test) — Pact provider verification (contract compliance)
 - All tests fully deterministic — `reset_store` autouse fixture restores seed data, `_reset_cache` injects fresh `fakeredis` instance per test for order-independent execution
 
 **k6 load tests with SLO thresholds:**
@@ -729,7 +730,7 @@ parse_requirements → generate_tests → review_quality
 - `monitor/comparator.py` — Diff current vs baseline
 - `monitor/reporter.py` — Markdown report + GitHub issue creation
 - `monitor/datadog.py` — DataDog drift metrics
-- `selectors.json` — Monitored selector registry (30+ selectors mapped to 5 frameworks)
+- `selectors.json` — Monitored selector registry (23 selectors mapped to 5 frameworks)
 - `baseline.json` — Committed selector baseline (auto-generated)
 
 **CLI:** `python run.py [--update-baseline] [--output drift-report.md] [--auto-issue]`

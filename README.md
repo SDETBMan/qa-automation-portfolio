@@ -388,7 +388,7 @@ python run_demo.py --all
 # Start the API server on :8001
 make fastapi-service
 
-# Run the Pytest suite with coverage (37 tests, no Redis needed)
+# Run the Pytest suite with coverage (38 tests, no Redis needed)
 make fastapi-service-test
 
 # Or manually
@@ -509,7 +509,7 @@ python run.py --mode optimized
 ```bash
 # From the repo root
 make claims-diff           # run diff against default datasets
-make claims-diff-test      # run pytest suite (28 tests) with coverage + parallel execution
+make claims-diff-test      # run pytest suite (30 tests) with coverage + parallel execution
 
 # Or manually
 cd claims-diff
@@ -665,7 +665,7 @@ qa-automation-portfolio/
 │   └── run_demo.py                     # CLI entry: python run_demo.py --demo {1-5}
 ├── fastapi-service/                    # Python · FastAPI · Redis · Pytest · k6
 │   ├── app/                            # FastAPI application + Redis cache layer
-│   ├── tests/                          # 37 tests: CRUD, contract, cache (fakeredis)
+│   ├── tests/                          # 38 tests: CRUD, contract, cache (fakeredis), pact
 │   ├── k6/                             # k6 load tests (4 scenarios: health, read, CRUD, error)
 │   ├── utils/                          # datadog_reporter (test + cache metrics)
 │   └── docker-compose.yml             # redis:7-alpine for local dev
@@ -699,7 +699,7 @@ qa-automation-portfolio/
 ├── claims-diff/                        # Python · Pandas · Pydantic · BigQuery (optional)
 │   ├── differ/                         # models · loader · diff_engine
 │   ├── datasets/                       # baseline/current CSVs + generate.py data generator
-│   ├── tests/                          # 28 tests: model validation, diff logic, CSV loading
+│   ├── tests/                          # 30 tests: model validation, diff logic, CSV loading
 │   ├── pytest.ini                      # pytest-xdist parallel config (-n auto --dist=loadscope)
 │   └── run.py                          # CLI: structured JSON diff report
 ├── pact-consumer/                      # TypeScript · Pact v13 · Vitest
@@ -717,7 +717,7 @@ qa-automation-portfolio/
 ├── site-monitor/                       # Python · BeautifulSoup · Click · DataDog
 │   ├── monitor/                        # fetcher · extractor · comparator · reporter · datadog
 │   ├── tests/                          # Unit tests for extractor and comparator
-│   ├── selectors.json                  # Monitored selector registry (30+ selectors × 5 frameworks)
+│   ├── selectors.json                  # Monitored selector registry (23 selectors × 5 frameworks)
 │   ├── baseline.json                   # Committed selector baseline (auto-generated)
 │   └── run.py                          # CLI: --url · --baseline · --update-baseline · --auto-issue
 ├── quality-dashboard/                  # Python · JUnit XML · DataDog v2 API · GitHub Actions API

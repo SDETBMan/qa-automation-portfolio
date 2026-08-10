@@ -147,12 +147,12 @@ make cypress-open    # interactive runner
 
 | File | Tests | Tags |
 |---|---|---|
-| `login.cy.ts` | 5 | `@smoke` `@regression` |
-| `inventory.cy.ts` | 6 | `@smoke` `@regression` |
-| `checkout.cy.ts` | 4 | `@regression` |
-| `network.cy.ts` | 4 | `@regression` |
-| `accessibility.cy.ts` | 5 | `@smoke` `@regression` `@known-defect` |
-| `performance.cy.ts` | 1 | `@regression` (Chrome only) |
+| `login.cy.ts` | 7 | `@smoke` `@regression` |
+| `inventory.cy.ts` | 7 | `@smoke` `@regression` |
+| `checkout.cy.ts` | 5 | `@regression` |
+| `network.cy.ts` | 13 | `@regression` |
+| `accessibility.cy.ts` | 7 | `@smoke` `@regression` `@known-defect` |
+| `performance.cy.ts` | 4 | `@regression` (Chrome only) |
 
 ### Component (`cypress/component/`)
 
@@ -160,7 +160,7 @@ make cypress-open    # interactive runner
 |---|---|
 | `ProductCard.cy.tsx` | 4 |
 
-**Total: 25 E2E + 4 component = 29 tests**
+**Total: 43 E2E + 4 component = 47 tests**
 
 ---
 

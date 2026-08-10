@@ -104,8 +104,9 @@ uvicorn app.main:app --reload --port 8001
 | `test_users.py` | 5 | Read-only user endpoints + 405 guard |
 | `test_api_contract.py` | 4 | OpenAPI schema validation |
 | `test_cache.py` | 15 | Cache hit/miss, invalidation, TTL, graceful degradation, utilities |
+| `test_pact_provider.py` | 1 | Pact provider verification (contract compliance) |
 
-**37 tests total.** All tests are **fully deterministic** -- no external network
+**38 tests total.** All tests are **fully deterministic** -- no external network
 calls, no ports, no API keys required. The `reset_store` autouse fixture restores
 seed data and the `_reset_cache` fixture injects a fresh `fakeredis` instance before
 every test so suites are order-independent.
