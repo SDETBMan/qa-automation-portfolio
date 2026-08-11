@@ -41,9 +41,9 @@ jobs:
         working-directory: cypress
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -57,7 +57,7 @@ jobs:
         if: >
           github.event.inputs.test_type != 'component' &&
           (github.event_name != 'workflow_dispatch' || inputs.execution_mode != 'browserstack')
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@v7
         with:
           working-directory: cypress
           browser: ${{ github.event.inputs.browser || 'chrome' }}
@@ -88,7 +88,7 @@ jobs:
       # ── OWASP ZAP Baseline Scan ─────────────────────────────────────────────
       - name: OWASP ZAP Baseline Scan
         if: always()
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.15.0
         continue-on-error: true
         with:
           target: 'https://www.saucedemo.com'
@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload ZAP JSON report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-zap-report
           path: zap-report.json
@@ -121,7 +121,7 @@ jobs:
       # ── Artifacts ───────────────────────────────────────────────────────────
       - name: Upload Allure results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-allure-results
           path: cypress/allure-results/
@@ -129,7 +129,7 @@ jobs:
 
       - name: Upload videos and screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-recordings
           path: |
@@ -139,7 +139,7 @@ jobs:
 
       - name: Upload JUnit results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-test-results
           path: cypress/test-results/
@@ -157,7 +157,7 @@ jobs:
 
       - name: Deploy Allure Report to GitHub Pages
         if: always()
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
