@@ -1,6 +1,6 @@
-deepeval>=3.8.0,<4.0.0
-openai>=1.30.0
-python-dotenv>=1.0.0
-pytest>=8.0.0
-requests>=2.31.0          # used by datadog_reporter; already a transitive dep via deepeval
-pytest-rerunfailures>=14.0  # retries tests that fail due to transient OpenAI API timeouts
+deepeval>=4.1.5,<5.0.0
+openai>=2.53.0
+python-dotenv>=1.2.2
+pytest>=9.1.1
+requests>=2.34.2          # used by datadog_reporter; already a transitive dep via deepeval
+pytest-rerunfailures>=16.4  # retries tests that fail due to transient OpenAI API timeouts
