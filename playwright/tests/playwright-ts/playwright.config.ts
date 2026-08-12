@@ -71,7 +71,7 @@ export default defineConfig({
         storageState: 'test-results/.auth/user.json',
       },
       dependencies: ['setup'],
-      testIgnore: ['**/shopify/**'],
+      testIgnore: ['**/shopify/**', '**/annuity-api.spec.ts'],
     },
     {
       name: 'firefox',
@@ -80,7 +80,7 @@ export default defineConfig({
         storageState: 'test-results/.auth/user.json',
       },
       dependencies: ['setup'],
-      testIgnore: ['**/shopify/**'],
+      testIgnore: ['**/shopify/**', '**/annuity-api.spec.ts'],
     },
     {
       name: 'webkit',
@@ -89,7 +89,7 @@ export default defineConfig({
         storageState: 'test-results/.auth/user.json',
       },
       dependencies: ['setup'],
-      testIgnore: ['**/shopify/**'],
+      testIgnore: ['**/shopify/**', '**/annuity-api.spec.ts'],
     },
 
     /**

@@ -25,7 +25,7 @@
 [![qms-evidence-collector CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/qms-evidence-collector.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/qms-evidence-collector.yml)
 [![CodeQL](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml)
 
-A monorepo housing twenty-five independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, compliance evidence collection, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers. See [`QA-OPERATING-MODEL.md`](./QA-OPERATING-MODEL.md) for the portfolio-wide quality standards and [`ISO-9001-QUALITY-MANUAL.md`](./ISO-9001-QUALITY-MANUAL.md) for the ISO 9001:2015 clause-aligned quality manual.
+A monorepo housing twenty-six independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, compliance evidence collection, dependency auditing, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers. See [`QA-OPERATING-MODEL.md`](./QA-OPERATING-MODEL.md) for the portfolio-wide quality standards and [`ISO-9001-QUALITY-MANUAL.md`](./ISO-9001-QUALITY-MANUAL.md) for the ISO 9001:2015 clause-aligned quality manual.
 
 ---
 
@@ -48,7 +48,7 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`ai-eval`](./ai-eval/) | Python | DeepEval · Pytest · OpenAI · ChromaDB · Python 3.11 | [→](./ai-eval/README.md) |
 | [`conv-eval`](./conv-eval/) | Python | DeepEval · Pytest · OpenAI · Python 3.11 | [→](./conv-eval/README.md) |
 | [`agent-eval`](./agent-eval/) | Python | DeepEval · Pytest · OpenAI · Pydantic · Python 3.11 | [→](./agent-eval/README.md) |
-| [`playwright`](./playwright/) | C# · TypeScript | Playwright 1.44 · NUnit · .NET 8 · TypeScript 5.4 | [→](./playwright/README.md) |
+| [`playwright`](./playwright/) | TypeScript · C# | Playwright 1.52 · TypeScript 5.4 · NUnit · .NET 8 | [→](./playwright/README.md) |
 | [`selenium-java`](./selenium-java/) | Java | Selenium 4 · TestNG · Maven · Java 17 | [→](./selenium-java/README.md) |
 | [`cucumber`](./cucumber/) | Java | Cucumber 7 · Karate 1.5 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
 | [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
@@ -56,7 +56,7 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`cypress`](./cypress/) | TypeScript | Cypress 13 · React 18 · Vite · Claude AI Test Generator · Node.js 20 | [→](./cypress/README.md) |
 | [`cucumber-python`](./cucumber_python/) | Python | Behave · Selenium 4 · Python 3.11 | [→](./cucumber_python/README.md) |
 | [`coding-agent`](./coding-agent/) | Python | Anthropic Claude · AgentOps · Python 3.11 | [→](./coding-agent/README.md) |
-| [`fastapi-service`](./fastapi-service/) | Python · JavaScript | FastAPI · Redis · Pytest · k6 · Python 3.11 | [→](./fastapi-service/README.md) |
+| [`fastapi-service`](./fastapi-service/) | Python · JavaScript | FastAPI · MYGA annuity · Redis · Pytest · k6 · Python 3.11 | [→](./fastapi-service/README.md) |
 | [`terraform`](./terraform/) | HCL | Terraform ≥ 1.6 · AWS · DataDog | [→](./terraform/README.md) |
 | [`langchain-rag`](./langchain-rag/) | Python | LangChain 0.3 · LCEL · Chroma · OpenAI `gpt-4o-mini` · Langfuse · Python 3.11 | [→](./langchain-rag/README.md) |
 | [`langgraph-agent`](./langgraph-agent/) | Python | LangGraph 0.4 · LangChain Anthropic · `claude-haiku-4-5` · Python 3.11 | [→](./langgraph-agent/README.md) |
@@ -70,6 +70,7 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`quality-dashboard`](./quality-dashboard/) | Python | JUnit XML · DataDog v2 API · GitHub Actions API · Python 3.11 | [→](./quality-dashboard/README.md) |
 | [`failure-triage`](./failure-triage/) | Python | Anthropic Claude (tool use) · JUnit XML · DataDog · Python 3.11 | [→](./failure-triage/README.md) |
 | [`qms-evidence-collector`](./qms-evidence-collector/) | Python | Click · ISO 9001 · SOC 2 · ISO/IEC 17025 · DataDog · Python 3.11 | [→](./qms-evidence-collector/README.md) |
+| [`dependency-audit`](./dependency-audit/) | Python | Click · Requests · npm/PyPI/NuGet/Maven registries · Python 3.12 | [→](./dependency-audit/README.md) |
 
 ---
 
@@ -388,7 +389,7 @@ python run_demo.py --all
 # Start the API server on :8001
 make fastapi-service
 
-# Run the Pytest suite with coverage (38 tests, no Redis needed)
+# Run the Pytest suite with coverage (66 tests, no Redis needed)
 make fastapi-service-test
 
 # Or manually
@@ -578,6 +579,7 @@ qa-automation-portfolio/
 │       ├── dspy-optimizer.yml      # push/PR lint (free) · workflow_dispatch compare (~$0.02)
 │       ├── claims-diff.yml        # push/PR paths: claims-diff/** · workflow_dispatch
 │       ├── site-monitor.yml      # daily 06:00 UTC · push/PR paths: site-monitor/**
+│       ├── dependency-audit.yml  # weekly Sunday 04:00 UTC · workflow_dispatch (auto-update + ecosystem filter)
 │       ├── playwright-smoke-pr.yml # PR gate: @smoke Chromium only, 5-min timeout, fail-fast
 │       ├── k6-load-test.yml       # nightly k6 load test against fastapi-service
 │       ├── deploy-validate-rollback.yml  # Vercel health-check → smoke → auto-rollback
@@ -604,10 +606,10 @@ qa-automation-portfolio/
 │   ├── tests/
 │   │   ├── Framework.Tests/        # NUnit C# test project
 │   │   └── playwright-ts/          # TypeScript Playwright project
-│   │       ├── tests/              # login · inventory · network · visual-regression · db-assertions · graphql
+│   │       ├── tests/              # login · inventory · network · visual-regression · db-assertions · graphql · annuity-api
 │   │       │   └── shopify/        # storefront E2E + visual baselines (Shopify)
 │   │       ├── pages/shopify/      # ShopifyStorefront · Product · Cart page objects
-│   │       ├── utils/              # dbClient · dbAssertions · graphqlClient · allureHelper
+│   │       ├── utils/              # dbClient · dbAssertions · graphqlClient · annuityClient · allureHelper
 │   │       └── scripts/            # health-check.ts (deploy validation)
 │   ├── Makefile
 │   └── run-all.sh
@@ -664,8 +666,8 @@ qa-automation-portfolio/
 │   ├── shared/                         # shared utilities
 │   └── run_demo.py                     # CLI entry: python run_demo.py --demo {1-5}
 ├── fastapi-service/                    # Python · FastAPI · Redis · Pytest · k6
-│   ├── app/                            # FastAPI application + Redis cache layer
-│   ├── tests/                          # 38 tests: CRUD, contract, cache (fakeredis), pact
+│   ├── app/                            # FastAPI application + Redis cache layer + MYGA annuity endpoints
+│   ├── tests/                          # 66 tests: CRUD, contract, cache (fakeredis), pact, MYGA annuity
 │   ├── k6/                             # k6 load tests (4 scenarios: health, read, CRUD, error)
 │   ├── utils/                          # datadog_reporter (test + cache metrics)
 │   └── docker-compose.yml             # redis:7-alpine for local dev
@@ -736,6 +738,10 @@ qa-automation-portfolio/
 │   ├── mappings/clause_registry.json   # Artifact-to-clause definitions (10 artifact types)
 │   ├── tests/                          # 48 tests: scanner, mapper, reporter
 │   └── run.py                          # CLI: --repo-dir · --output · --standard · --format
+├── dependency-audit/                   # Python · Click · Requests · cross-ecosystem auditor
+│   ├── auditor/                        # scanner · checkers · updater · reporter
+│   ├── requirements.txt               # click, requests
+│   └── run.py                          # CLI: --repo-dir · --ecosystem · --update · --output
 ├── .claude/
 │   └── commands/                       # Claude Code custom slash commands
 │       ├── triage-failures.md          # /project:triage-failures — AI failure triage
@@ -784,6 +790,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `azure-pipelines.yml` | PR (Azure DevOps) | ADO YAML equivalent of GHA smoke gate (playwright) |
 | `deploy-validate-rollback.yml` | `workflow_dispatch` · `workflow_call` | deployment URL · Vercel project ID · auto-rollback toggle |
 | `visual-regression-update.yml` | `workflow_dispatch` | browser project (chromium · firefox · webkit) |
+| `dependency-audit.yml` | weekly Sunday 04:00 UTC · `workflow_dispatch` | auto-update toggle · ecosystem filter (npm · pip · nuget · maven) |
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
 
