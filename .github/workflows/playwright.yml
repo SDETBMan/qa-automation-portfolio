@@ -37,11 +37,10 @@ jobs:
 
       - name: Install Playwright browsers
         # npx uses the runner's pre-installed Node — no bundled binary issues.
-        # Microsoft.Playwright 1.44.* maps to npm playwright 1.44.0 (same Chromium build).
-        # --with-deps is omitted: Playwright 1.44 references libasound2 which was renamed
-        # to libasound2t64 in Ubuntu 24.04 (github ubuntu-latest), causing apt-get to fail.
-        # The ubuntu-24.04 runner ships all required Chromium system libs pre-installed.
-        run: npx --yes playwright@1.44.0 install chromium
+        # Microsoft.Playwright 1.52.* maps to npm playwright 1.52.0 (same Chromium build).
+        # --with-deps is omitted: Ubuntu 24.04 (github ubuntu-latest) ships all required
+        # Chromium system libs pre-installed.
+        run: npx --yes playwright@1.52.0 install chromium
 
       - name: Run tests (CI settings)
         run: >
