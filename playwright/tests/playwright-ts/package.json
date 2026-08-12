@@ -14,6 +14,7 @@
     "test:visual": "npx playwright test --grep \"@visual\" --project=chromium",
     "test:visual:update": "npx playwright test --grep \"@visual\" --project=chromium --update-snapshots",
     "test:shopify": "npx playwright test --project=shopify",
+    "test:annuity": "npx playwright test tests/annuity-api.spec.ts --project=annuity-api",
     "test:health": "npx playwright test tests/smoke-health.spec.ts --project=chromium",
     "report": "npx playwright show-report",
     "allure:generate": "npx allure generate allure-results --clean -o allure-report",
@@ -21,7 +22,7 @@
     "allure:serve": "npx allure serve allure-results"
   },
   "devDependencies": {
-    "@playwright/test": "^1.44.0",
+    "@playwright/test": "^1.52.0",
     "@types/pg": "^8.11.0",
     "allure-commandline": "^2.30.0",
     "allure-playwright": "^3.0.0",

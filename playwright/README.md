@@ -1,43 +1,52 @@
-# Playwright
+# Playwright — TypeScript + C# Cross-Browser Testing
 
 [![playwright CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/playwright.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Playwright TS](https://img.shields.io/badge/Playwright%20TS-1.52-45ba4b?logo=playwright)](https://playwright.dev/)
 [![.NET 8](https://img.shields.io/badge/.NET-8.0%20LTS-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
-[![Playwright](https://img.shields.io/badge/Playwright-1.44-45ba4b?logo=playwright)](https://playwright.dev/dotnet/)
+[![Playwright](https://img.shields.io/badge/Playwright-1.52-45ba4b?logo=playwright)](https://playwright.dev/dotnet/)
 [![NUnit](https://img.shields.io/badge/NUnit-3.x-22c55e)](https://nunit.org/)
 [![Allure](https://img.shields.io/badge/Allure-Report-F7941E)](https://docs.qameta.io/allure/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Playwright TS](https://img.shields.io/badge/Playwright%20TS-1.44-45ba4b?logo=playwright)](https://playwright.dev/)
 
-A professional Playwright + .NET 8 + NUnit test automation framework targeting [SauceDemo](https://www.saucedemo.com/). This is the C# counterpart to the Java [selenium-java](../selenium-java) framework.
+A production-grade Playwright test automation framework with **TypeScript as the primary test suite** and a C# / .NET 8 / NUnit companion suite for cross-language portability. The TypeScript suite demonstrates modern Playwright patterns — custom fixtures, storageState authentication, API testing, visual regression, GraphQL validation, database-to-UI assertions, and MYGA annuity domain testing — while the C# suite mirrors the same patterns using NUnit idioms.
 
 ---
 
 ## Features
 
-- **Page Object Model**: clean separation of page logic from test logic
-- **Playwright built-in auto-wait**: no `WebDriverWait` / `ExpectedConditions` boilerplate
-- **Full parallel execution**: `[Parallelizable(ParallelScope.Self)]` with isolated `IPage` per test
-- **Cross-browser**: Chromium, Firefox, WebKit via `.runsettings` files (C#) and `projects` config (TypeScript)
-- **Trace Viewer**: `Context.Tracing` captures screenshots + DOM snapshots on failure; viewable via `playwright show-trace`
-- **Network interception**: `RouteAsync` patterns: block assets, mock responses, inject headers, simulate failures
-- **Fixtures (C#)**: `AuthenticatedTest` base class pre-logs in via NUnit `[SetUp]` chain; zero login boilerplate in tests
-- **Fixtures (TypeScript)**: `test.extend<AppFixtures, WorkerFixtures>` with `authenticatedPage` (storageState) and worker-scoped `dbClient`; setup/teardown via `use()` callback
+### TypeScript Suite (Primary)
+
+- **Custom fixtures**: `test.extend<AppFixtures, WorkerFixtures>` with `authenticatedPage` (storageState) and worker-scoped `dbClient`; setup/teardown via `use()` callback
 - **storageState authentication**: global `auth.setup.ts` logs in once, saves cookies/localStorage; browser projects reuse the saved state — eliminates per-test login overhead
 - **Semantic locators**: page objects use Playwright's recommended priority: `getByRole` → `getByPlaceholder` / `getByText` → `getByTestId` (via `testIdAttribute: 'data-test'`) → scoped CSS
-- **TypeScript project**: full Playwright TypeScript suite in `tests/playwright-ts/` with strict mode, page objects, and fixtures
+- **MYGA annuity API testing**: domain-specific tests against a FastAPI annuity service — accrual projections, surrender quotes, integer-cents invariants, and API-setup-then-verify lifecycle patterns
+- **Visual regression**: `toHaveScreenshot()` with configurable thresholds, baseline update workflow, dynamic content masking
+- **GraphQL API testing**: 5 patterns via Playwright `request` fixture (direct query, variables, mock by operationName, error handling, operation auditing)
+- **Database-to-UI assertions**: `dbClient` + `dbAssertions` utilities — 5 validation patterns (scalar match, row count, field match, input pre-fill, column values in list)
+- **Network interception**: `page.route()` patterns: block assets, mock responses, inject headers, simulate failures
+- **Shopify E2E testing**: 8 storefront tests + 4 visual baselines with dedicated page objects and fixtures
+- **Allure reporting**: rich HTML reports with screenshots and traces on failure (`allure-playwright` v3)
+
+### Shared Capabilities
+
+- **Page Object Model**: clean separation of page logic from test logic
+- **Playwright built-in auto-wait**: no `WebDriverWait` / `ExpectedConditions` boilerplate
+- **Full parallel execution**: isolated page instances per test in both suites
+- **Cross-browser**: Chromium, Firefox, WebKit via `projects` config (TypeScript) and `.runsettings` files (C#)
+- **Trace Viewer**: captures screenshots + DOM snapshots on failure; viewable via `playwright show-trace`
+- **Deploy validation + rollback**: Vercel health-check → Playwright smoke → auto-rollback CI pipeline
+- **GitHub Actions CI**: nightly regression pipeline with C# + TypeScript artifact upload, PR smoke gate
+
+### C# Suite (Cross-Language Portability)
+
+- **Fixtures (C#)**: `AuthenticatedTest` base class pre-logs in via NUnit `[SetUp]` chain; zero login boilerplate in tests
 - **Data-driven tests**: `[TestCaseSource]` for persona-based login scenarios
 - **AI-assisted test data**: OpenAI integration via `AiHelper`
 - **REST API tests**: `HttpClient` + `System.Text.Json` (mirrors REST Assured)
 - **Database utilities**: `MySqlConnector` async ADO.NET helpers
 - **Slack notifications**: post suite results to a webhook
 - **BrowserStack upload**: app binary upload for mobile (Phase 2)
-- **Visual regression**: `toHaveScreenshot()` with configurable thresholds, baseline update workflow, dynamic content masking
-- **GraphQL API testing**: 5 patterns via Playwright `request` fixture (direct query, variables, mock by operationName, error handling, operation auditing)
-- **Database-to-UI assertions**: `dbClient` + `dbAssertions` utilities — 5 validation patterns (scalar match, row count, field match, input pre-fill, column values in list)
-- **Shopify E2E testing**: 8 storefront tests + 4 visual baselines with dedicated page objects and fixtures
-- **Deploy validation + rollback**: Vercel health-check → Playwright smoke → auto-rollback CI pipeline
-- **Allure reporting**: rich HTML reports with screenshots and traces on failure (`allure-playwright` v3)
-- **GitHub Actions CI**: nightly regression pipeline with C# + TypeScript artifact upload, PR smoke gate
+- **Network interception**: `RouteAsync` patterns: block assets, mock responses, inject headers, simulate failures
 - **NUnit `[Retry]`**: built-in retry replaces Java's `AnnotationTransformer` + `RetryAnalyzer`
 
 ---
@@ -46,22 +55,22 @@ A professional Playwright + .NET 8 + NUnit test automation framework targeting [
 
 | Component | Technology |
 |---|---|
-| Browser automation (C#) | Microsoft.Playwright 1.44 |
-| Browser automation (TS) | @playwright/test 1.44 |
-| Test framework (C#) | NUnit 3.x |
-| Test framework (TS) | Playwright Test runner |
-| Language (C#) | C# / .NET 8 |
+| Browser automation (TS) | @playwright/test 1.52 |
+| Browser automation (C#) | Microsoft.Playwright 1.52 |
 | Language (TS) | TypeScript 5.4 (strict mode) |
-| Test runner | `dotnet test` + NUnit3TestAdapter / `npx playwright test` |
-| Reporting | Allure.NUnit 2.x + allure-playwright v3 + Playwright HTML report |
-| Configuration | `appsettings.json` + `IConfigurationBuilder` / `playwright.config.ts` |
-| HTTP client | `System.Net.Http.HttpClient` |
-| GraphQL | Playwright `request` fixture + `graphqlClient.ts` |
+| Language (C#) | C# / .NET 8 |
+| Test framework (TS) | Playwright Test runner |
+| Test framework (C#) | NUnit 3.x |
+| Test runner | `npx playwright test` / `dotnet test` + NUnit3TestAdapter |
+| Reporting | allure-playwright v3 + Playwright HTML report + Allure.NUnit 2.x |
+| Configuration | `playwright.config.ts` / `appsettings.json` + `IConfigurationBuilder` |
+| API clients | `annuityClient.ts` · `graphqlClient.ts` (Playwright `request` fixture) |
+| HTTP client (C#) | `System.Net.Http.HttpClient` |
 | JSON | `System.Text.Json` |
-| Database | MySqlConnector 2.x (async ADO.NET) / `dbClient.ts` (MySQL · PostgreSQL) |
+| Database | `dbClient.ts` (MySQL · PostgreSQL) / MySqlConnector 2.x (async ADO.NET) |
 | Visual regression | Playwright `toHaveScreenshot()` with baseline management |
 | CI/CD | GitHub Actions (nightly full + PR smoke gate + deploy validation) |
-| Target apps | [SauceDemo](https://www.saucedemo.com/) · Shopify storefronts |
+| Target apps | [SauceDemo](https://www.saucedemo.com/) · Shopify storefronts · FastAPI annuity service |
 
 ---
 
@@ -357,6 +366,7 @@ playwright/
 | `graphql` | GraphQL API patterns (no browser) | — | `--project=api` |
 | `database` | Database-to-UI assertion patterns | — | `--grep "@database"` |
 | `shopify` | Shopify storefront E2E + visual | — | `--project=shopify` |
+| `annuity` | MYGA annuity API domain tests | — | `--project=annuity-api` |
 
 ---
 

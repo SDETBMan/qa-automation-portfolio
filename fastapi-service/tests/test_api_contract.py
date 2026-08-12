@@ -16,6 +16,10 @@ EXPECTED_PATHS = [
     "/products/{product_id}",
     "/users",
     "/users/{user_id}",
+    "/annuities",
+    "/annuities/{policy_id}",
+    "/annuities/{policy_id}/projection",
+    "/annuities/{policy_id}/surrender",
 ]
 
 

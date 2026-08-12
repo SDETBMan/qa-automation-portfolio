@@ -82,16 +82,16 @@ The repo includes two quality governance documents:
 ## Portfolio at a Glance
 
 **Repo:** github.com/SDETBMan/qa-automation-portfolio
-**Structure:** 25 independent, production-grade frameworks in a single monorepo with 28 GitHub Actions workflows. Each framework has its own CI workflow, dependencies, and DataDog integration.
+**Structure:** 26 independent, production-grade frameworks in a single monorepo with 29 GitHub Actions workflows. Each framework has its own CI workflow, dependencies, and DataDog integration.
 
-**Standalone repos:** 3 additional projects outside the monorepo — `legal-funding-qa-agent`, `agentic-p2p-auditor`, `ai-pr-reviewer` — for a total of 28 projects.
+**Standalone repos:** 3 additional projects outside the monorepo — `legal-funding-qa-agent`, `agentic-p2p-auditor`, `ai-pr-reviewer` — for a total of 29 projects.
 
 | # | Framework | Stack | Description |
 |---|---|---|---|
 | 1 | `ai-eval` | Python · DeepEval · OpenAI · ChromaDB | RAG pipeline quality evaluation with 10 DeepEval metrics |
 | 2 | `conv-eval` | Python · DeepEval · OpenAI | Multi-turn conversation quality testing (4 metrics) |
 | 3 | `agent-eval` | Python · DeepEval · OpenAI · Pydantic | AI agent tool-use evaluation (function-calling) |
-| 4 | `playwright` | C# · TypeScript · Playwright · NUnit · .NET 8 | Cross-browser UI testing + GraphQL + visual regression + DB assertions |
+| 4 | `playwright` | TypeScript · C# · Playwright 1.52 · NUnit · .NET 8 | Cross-browser UI testing + MYGA annuity API + GraphQL + visual regression + DB assertions |
 | 5 | `selenium-java` | Java · Selenium 4 · TestNG · Maven | Production-grade UI regression suite with Healenium self-healing |
 | 6 | `cucumber` | Java · Cucumber 7 · Karate 1.5 · TestNG | BDD feature tests + standalone Karate API testing (13 features) |
 | 7 | `postman` | Postman · Newman 6 · Node.js 20 | REST API contract tests against JSONPlaceholder |
@@ -105,7 +105,7 @@ The repo includes two quality governance documents:
 | 15 | `cypress` | TypeScript · Cypress 13 · React 18 · Claude | E2E + component tests + AI test generator |
 | 16 | `quality-dashboard` | Python · JUnit XML · DataDog v2 · GH Actions API | Portfolio-wide quality KPI aggregation |
 | 17 | `failure-triage` | Python · Claude · `@beta_tool` · JUnit XML | AI-powered failure root cause clustering |
-| 18 | `fastapi-service` | Python · FastAPI · Redis · Pytest · k6 | REST API + Redis caching + full test suite + load tests |
+| 18 | `fastapi-service` | Python · FastAPI · Redis · Pytest · k6 | REST API + MYGA annuity endpoints + Redis caching + full test suite + load tests |
 | 19 | `terraform` | HCL · Terraform 1.6 · AWS · DataDog | IaC for S3 artifacts, OIDC IAM, DataDog observability |
 | 20 | `langchain-rag` | Python · LangChain 0.3 · Chroma · OpenAI | Multi-turn conversational RAG assistant over monorepo docs |
 | 21 | `langgraph-agent` | Python · LangGraph 0.4 · Claude Haiku | BDD test case generator with 4-node StateGraph pipeline |
@@ -113,6 +113,7 @@ The repo includes two quality governance documents:
 | 23 | `dspy-vertex` | Python · DSPy 2.6 · Vertex AI Gemini 1.5 | Same classifier, Vertex AI backend (multi-LLM portability) |
 | 24 | `site-monitor` | Python · BeautifulSoup · Click · DataDog · Requests | Website drift detection across 23 selectors for 5 frameworks |
 | 25 | `qms-evidence-collector` | Python · Click · DataDog | Maps CI artifacts to ISO 9001, SOC 2, and ISO/IEC 17025 clauses |
+| 26 | `dependency-audit` | Python · Click · Requests | Cross-ecosystem dependency scanner with auto-update and markdown reporting |
 
 ---
 
@@ -185,13 +186,14 @@ The repo includes two quality governance documents:
 
 ---
 
-### Framework 4: `playwright` — Cross-Browser UI Testing
-**Stack:** C# · TypeScript · Playwright 1.44 · NUnit · .NET 8
-**What it does:** Two parallel Playwright suites — one in C# (NUnit) and one in TypeScript — testing SauceDemo end-to-end.
+### Framework 4: `playwright` — TypeScript + C# Cross-Browser Testing
+**Stack:** TypeScript · C# · Playwright 1.52 · NUnit · .NET 8
+**What it does:** Two parallel Playwright suites — **TypeScript as the primary suite** and C# (NUnit) as a cross-language companion — testing SauceDemo, GraphQL APIs, Shopify storefronts, and MYGA annuity domain endpoints.
 
 **Key features:**
-- Page Object Model in both C# and TypeScript
-- `AuthenticatedTest` base class for shared login state
+- **MYGA annuity API testing** — `annuityClient.ts` typed client + `annuity-api.spec.ts` with ~25 tests: accrual projections, surrender quotes, integer-cents invariants, guaranteed minimum assertions, policy year vs calendar year, API-setup-then-verify lifecycle pattern
+- Page Object Model in both TypeScript and C#
+- storageState authentication — global `auth.setup.ts` logs in once, browser projects reuse saved state
 - `[Parallelizable]` + `fullyParallel: true` for concurrent execution
 - `[Retry]` attribute + `retries: 2` in CI config
 - 4 mocking patterns: block assets, mock API responses, inject headers, simulate failures
@@ -581,14 +583,28 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 
 ---
 
-### Framework 18: `fastapi-service` — REST API + Full Test Suite + Redis Caching Layer
+### Framework 18: `fastapi-service` — REST API + MYGA Annuity Domain + Full Test Suite + Redis Caching Layer
 **Stack:** Python 3.11 · FastAPI · Pydantic v2 · Redis 7 · Pytest · k6
-**What it does:** A self-contained REST API built with FastAPI + Pydantic v2, paired with a full contract and integration test suite in pytest. A Redis caching layer sits between endpoints and the in-memory store as a transparent read-through cache with graceful fallback when Redis is unavailable. Closes the full-stack loop in the portfolio: instead of testing someone else's API, this service is built here and tested here.
+**What it does:** A self-contained REST API built with FastAPI + Pydantic v2, paired with a full contract and integration test suite in pytest. Includes MYGA (Multi-Year Guaranteed Annuity) domain endpoints demonstrating insurance-domain fluency with Decimal-based rate arithmetic. A Redis caching layer sits between endpoints and the in-memory store as a transparent read-through cache with graceful fallback when Redis is unavailable. Closes the full-stack loop in the portfolio: instead of testing someone else's API, this service is built here and tested here.
 
 **API endpoints:**
 - `GET /health` — liveness check
 - `GET /products`, `GET /products/{id}`, `POST /products`, `PUT /products/{id}`, `DELETE /products/{id}` — full CRUD
 - `GET /users`, `GET /users/{id}` — read-only
+- `POST /annuities` — create MYGA annuity policy (201)
+- `GET /annuities/{policy_id}` — get policy (404 if missing)
+- `GET /annuities/{policy_id}/projection?as_of_date=` — compute accrued value with Decimal math
+- `GET /annuities/{policy_id}/surrender?as_of_date=` — compute surrender value with charge breakdown
+
+**MYGA annuity domain design:**
+- All monetary values stored as integer cents (no IEEE 754 float contamination)
+- Rate arithmetic uses Python `Decimal` type for precision
+- Annual compounding from effective_date (not creation date)
+- Surrender charges indexed by 1-based policy year (not calendar year)
+- Post-maturity: compounding caps at term, surrender charge is zero
+- Free withdrawal: 10% of accrued value per year, penalty-free
+- Pydantic validators: term restricted to {3, 5, 7, 10}, schedule length == term, guaranteed minimum (accrued >= principal)
+- 3 seed policies: MYGA-001 ($100k, 4.50%, 5yr), MYGA-002 ($250k, 5.25%, 7yr), MYGA-003 ($50k, 3.75%, 3yr)
 
 **Redis caching (`app/cache.py`):**
 - Transparent read-through cache — GET endpoints check cache first, populate on miss
@@ -597,14 +613,15 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 - Graceful degradation: app starts and works normally without Redis; cache ops become no-ops with `[WARN]` logged if Redis goes down mid-flight
 - `docker-compose.yml` provides `redis:7-alpine` for local development
 
-**Test suite (38 tests across 6 files):**
+**Test suite (68+ tests across 7 files):**
 - `test_health.py` (2 tests) — liveness endpoint
 - `test_products.py` (11 tests) — full CRUD: list, get, create, update, delete
 - `test_users.py` (5 tests) — read-only user endpoints + 405 guard
-- `test_api_contract.py` (4 tests) — OpenAPI schema validation
+- `test_api_contract.py` (4 tests) — OpenAPI schema validation (includes annuity paths)
+- `test_annuity.py` (30 tests) — seed data, POST/GET round-trip, projections with hand-computed values, surrender schedule lookup, integer cents invariants, validation (invalid term, mismatched schedule, negative principal)
 - `test_cache.py` (15 tests) — cache hit/miss, invalidation, TTL, graceful degradation, utilities
 - `test_pact_provider.py` (1 test) — Pact provider verification (contract compliance)
-- All tests fully deterministic — `reset_store` autouse fixture restores seed data, `_reset_cache` injects fresh `fakeredis` instance per test for order-independent execution
+- All tests fully deterministic — `reset_store` autouse fixture restores seed data (including annuity policies), `_reset_cache` injects fresh `fakeredis` instance per test for order-independent execution
 
 **k6 load tests with SLO thresholds:**
 - 4 scenarios: `health_baseline` (constant-vus), `read_heavy` (ramping-vus), `crud_workflow` (per-vu-iterations), `error_handling` (constant-vus)
@@ -772,6 +789,28 @@ parse_requirements → generate_tests → review_quality
 
 ---
 
+### Framework 26: `dependency-audit` — Cross-Ecosystem Dependency Scanner
+**Stack:** Python 3.11 · Click · Requests
+**What it does:** CLI tool that scans all frameworks in the monorepo, detects outdated dependencies across npm, pip, NuGet, and Maven ecosystems, generates a severity-ranked markdown report, and optionally auto-updates manifests.
+
+**Supported ecosystems:**
+- npm: reads `package.json`, queries registry.npmjs.org
+- pip: reads `requirements.txt`, queries pypi.org
+- NuGet: reads `*.csproj`, queries api.nuget.org
+- Maven: reads `pom.xml`, queries search.maven.org
+
+**Architecture:**
+- `auditor/scanner.py` — Walks repo, discovers manifests by filename pattern
+- `auditor/checkers.py` — Per-ecosystem version checkers with registry API lookups
+- `auditor/updater.py` — Writes updated versions back to manifests preserving format
+- `auditor/reporter.py` — Generates markdown report with summary and outdated/full tables
+
+**CLI:** `python run.py --repo-dir .. [--update] [--ecosystem npm] [--output report.md]`
+
+**CI (`dependency-audit.yml`):** Weekly Sunday 04:00 UTC + `workflow_dispatch`. Optionally creates a PR with auto-updated versions.
+
+---
+
 ## GenAI Workflow: `.claude/commands/`
 Three Claude Code custom slash commands for daily QA workflow integration:
 - `/project:triage-failures <xml-dir>` — AI failure triage from JUnit XML
@@ -848,6 +887,7 @@ Each framework has its own workflow with **path filters** — a push to `seleniu
 | `visual-regression-update.yml` | workflow_dispatch | browser project (chromium · firefox · webkit) |
 | `deploy-validate-rollback.yml` | workflow_dispatch · workflow_call | deployment URL · Vercel project ID · auto-rollback toggle |
 | `codeql.yml` | push to main · weekly Monday 14:00 UTC | Python, JavaScript/TypeScript |
+| `dependency-audit.yml` | weekly Sunday 04:00 UTC · workflow_dispatch | auto_update toggle · ecosystem filter |
 | `k8s.yml` | workflow_dispatch only | framework (selenium-java · cucumber) |
 
 **Secrets required:**

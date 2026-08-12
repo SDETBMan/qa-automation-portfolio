@@ -120,6 +120,27 @@ export default defineConfig({
     },
 
     /**
+     * Annuity API project — MYGA domain tests against the FastAPI service.
+     *
+     * Pure API tests using Playwright's APIRequestContext (no browser).
+     * Validates accrual projections, surrender quotes, integer-cents invariants,
+     * and the API-setup-then-verify lifecycle pattern.
+     *
+     * Target endpoint is controlled by FASTAPI_URL env var:
+     *   Default: http://localhost:8000
+     */
+    {
+      name: 'annuity-api',
+      use: {
+        baseURL: process.env['FASTAPI_URL'] ?? 'http://localhost:8000',
+        extraHTTPHeaders: {
+          'Accept': 'application/json',
+        },
+      },
+      testMatch: ['**/annuity-api.spec.ts'],
+    },
+
+    /**
      * Shopify project — E2E tests against a live Shopify storefront.
      *
      * Requires SHOPIFY_STORE_URL env var (e.g. https://my-store.myshopify.com).

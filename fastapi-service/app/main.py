@@ -1,15 +1,19 @@
 """
-main.py -- FastAPI application with product and user endpoints.
+main.py -- FastAPI application with product, user, and annuity endpoints.
 
 Routes:
-  GET  /health           -- liveness check
-  GET  /products         -- list all products
-  GET  /products/{id}    -- get product by id
-  POST /products         -- create product (returns 201)
-  PUT  /products/{id}    -- update product
-  DELETE /products/{id}  -- delete product (returns 204)
-  GET  /users            -- list all users
-  GET  /users/{id}       -- get user by id
+  GET  /health                              -- liveness check
+  GET  /products                            -- list all products
+  GET  /products/{id}                       -- get product by id
+  POST /products                            -- create product (returns 201)
+  PUT  /products/{id}                       -- update product
+  DELETE /products/{id}                     -- delete product (returns 204)
+  GET  /users                               -- list all users
+  GET  /users/{id}                          -- get user by id
+  POST /annuities                           -- create annuity policy (returns 201)
+  GET  /annuities/{policy_id}               -- get annuity policy
+  GET  /annuities/{policy_id}/projection    -- compute accrued value
+  GET  /annuities/{policy_id}/surrender     -- compute surrender value
 
 All state lives in the module-level store singleton (app/store.py).
 Redis caching (app/cache.py) sits between endpoints and the store as a
@@ -22,6 +26,7 @@ import json
 
 from fastapi import FastAPI, HTTPException, Response
 
+from app.annuity import router as annuity_router
 from app.cache import cache
 from app.models import Product, ProductCreate, User
 from app.store import store
@@ -31,6 +36,8 @@ app = FastAPI(
     description="SauceDemo-seeded REST API used for contract and integration testing.",
     version="1.0.0",
 )
+
+app.include_router(annuity_router)
 
 
 # -- Health ---------------------------------------------------------------

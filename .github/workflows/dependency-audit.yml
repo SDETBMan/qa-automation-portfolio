@@ -1,0 +1,102 @@
+# Dependency Audit — weekly scan of all frameworks for outdated dependencies.
+#
+# Runs on a cron schedule (Sunday 04:00 UTC) and on manual dispatch.
+# Outputs a markdown report as a build artifact.
+# When --update is passed via workflow_dispatch, creates a PR with updates.
+
+name: dependency-audit
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'   # Weekly: Sunday 04:00 UTC
+  workflow_dispatch:
+    inputs:
+      auto_update:
+        description: 'Auto-update outdated dependencies and create PR'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+      ecosystem:
+        description: 'Filter to a single ecosystem (leave empty for all)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - 'npm'
+          - 'pip'
+          - 'nuget'
+          - 'maven'
+
+concurrency:
+  group: dependency-audit
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r dependency-audit/requirements.txt
+
+      - name: Run audit (report only)
+        if: ${{ github.event.inputs.auto_update != 'true' }}
+        run: |
+          cd dependency-audit
+          ECOSYSTEM_FLAG=""
+          if [ -n "${{ github.event.inputs.ecosystem }}" ]; then
+            ECOSYSTEM_FLAG="--ecosystem ${{ github.event.inputs.ecosystem }}"
+          fi
+          python run.py --repo-dir .. $ECOSYSTEM_FLAG --output report.md
+
+      - name: Run audit with auto-update
+        if: ${{ github.event.inputs.auto_update == 'true' }}
+        run: |
+          cd dependency-audit
+          ECOSYSTEM_FLAG=""
+          if [ -n "${{ github.event.inputs.ecosystem }}" ]; then
+            ECOSYSTEM_FLAG="--ecosystem ${{ github.event.inputs.ecosystem }}"
+          fi
+          python run.py --repo-dir .. --update $ECOSYSTEM_FLAG --output report.md
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-report
+          path: dependency-audit/report.md
+
+      - name: Create PR with updates
+        if: ${{ github.event.inputs.auto_update == 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BRANCH="chore/dependency-updates-$(date +%Y%m%d)"
+          git checkout -b "$BRANCH"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "chore: auto-update outdated dependencies"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "chore: auto-update outdated dependencies" \
+            --body "$(cat dependency-audit/report.md)" \
+            --base main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
