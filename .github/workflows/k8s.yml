@@ -18,17 +18,17 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # ── 1. Create local Kind cluster ──────────────────────────────────────
       - name: Create Kind cluster
-        uses: helm/kind-action@v1.9.0
+        uses: helm/kind-action@v1.14.0
         with:
           cluster_name: selenium-grid
 
       # ── 2. Java toolchain ─────────────────────────────────────────────────
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -81,7 +81,7 @@ jobs:
       # ── 7. Collect artifacts ──────────────────────────────────────────────
       - name: Upload Surefire reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: k8s-surefire-reports
           path: ${{ github.event.inputs.framework }}/target/surefire-reports/

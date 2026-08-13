@@ -41,10 +41,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -78,7 +78,7 @@ jobs:
       # ── Artifacts & Reporting ────────────────────────────────────────
       - name: Upload Karate HTML Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: karate-reports
           path: cucumber/target/karate-reports/
@@ -87,7 +87,7 @@ jobs:
 
       - name: Upload Surefire Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: karate-surefire-reports
           path: cucumber/target/surefire-reports/
@@ -97,7 +97,7 @@ jobs:
       # ── Notifications ──────────────────────────────────────────────
       - name: Send Email Notification on Failure
         if: failure()
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v18
         with:
           server_address: smtp.gmail.com
           server_port: 465

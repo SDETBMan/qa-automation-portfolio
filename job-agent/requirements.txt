@@ -1,6 +1,6 @@
-anthropic>=0.40.0
-tavily-python>=0.3.0
-python-dotenv>=1.0.0
-requests>=2.31.0
-agentops>=0.4.0
-pytest>=8.0.0
+anthropic>=0.121.0
+tavily-python>=0.7.27
+python-dotenv>=1.2.2
+requests>=2.34.2
+agentops>=0.4.21
+pytest>=9.1.1

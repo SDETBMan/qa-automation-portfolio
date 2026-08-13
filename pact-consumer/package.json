@@ -8,9 +8,9 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "@pact-foundation/pact": "^13.0.0",
-    "typescript": "^5.4.0",
-    "vitest": "^2.0.0",
-    "@types/node": "^20.0.0"
+    "@pact-foundation/pact": "^17.1.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10",
+    "@types/node": "^26.2.0"
   }
 }
