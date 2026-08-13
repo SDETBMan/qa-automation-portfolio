@@ -1,121 +1,16 @@
+# Dependabot is disabled in favor of the dependency-audit framework,
+# which scans all ecosystems (npm, pip, NuGet, Maven) in a single pass
+# and creates one consolidated PR per week.
+#
+# See: dependency-audit/README.md
+# Workflow: .github/workflows/dependency-audit.yml (Sunday 04:00 UTC)
+#
+# GitHub Actions versions are kept here since dependency-audit
+# does not cover the github-actions ecosystem.
+
 version: 2
 
 updates:
-  # Python pip ecosystems
-  - package-ecosystem: "pip"
-    directory: "/fastapi-service"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/ai-eval"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/conv-eval"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/agent-eval"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/job-agent"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/coding-agent"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/langchain-rag"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/langgraph-agent"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/claims-diff"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/flakiness-detector"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/vulnerability-aggregator"
-    schedule:
-      interval: "weekly"
-    groups:
-      python-deps:
-        patterns: ["*"]
-
-  # Node.js npm ecosystems
-  - package-ecosystem: "npm"
-    directory: "/cypress"
-    schedule:
-      interval: "weekly"
-    groups:
-      npm-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "npm"
-    directory: "/postman"
-    schedule:
-      interval: "weekly"
-    groups:
-      npm-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "npm"
-    directory: "/pact-consumer"
-    schedule:
-      interval: "weekly"
-    groups:
-      npm-deps:
-        patterns: ["*"]
-
-  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
