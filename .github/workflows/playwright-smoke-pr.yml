@@ -43,14 +43,14 @@ jobs:
     steps:
       # ── 1. Source ───────────────────────────────────────────────────────────
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # ── 2. Node + npm cache ─────────────────────────────────────────────────
       # cache: 'npm' + cache-dependency-path means the node_modules cache is
       # invalidated only when package-lock.json changes — typically seconds to
       # restore vs. 45+ seconds for a cold npm ci.
       - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -65,7 +65,7 @@ jobs:
       # automatically busts the cache and installs the matching browser binary.
       - name: Cache Playwright Chromium
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ hashFiles('playwright/tests/playwright-ts/package-lock.json') }}
@@ -127,7 +127,7 @@ jobs:
       # exact moment of failure (configured via trace: 'retain-on-failure' in config).
       - name: Upload HTML report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-report-pr${{ github.event.pull_request.number }}-${{ github.run_id }}
           path: playwright/tests/playwright-ts/playwright-report/
@@ -135,7 +135,7 @@ jobs:
 
       - name: Upload traces
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-traces-pr${{ github.event.pull_request.number }}-${{ github.run_id }}
           path: playwright/tests/playwright-ts/test-results/

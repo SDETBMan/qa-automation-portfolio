@@ -59,10 +59,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -107,7 +107,7 @@ jobs:
 
       - name: Upload smoke test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-health-report
           path: playwright/tests/playwright-ts/playwright-report/
@@ -115,7 +115,7 @@ jobs:
 
       - name: Upload snapshot diffs (on failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-health-diffs
           path: playwright/tests/playwright-ts/test-results/

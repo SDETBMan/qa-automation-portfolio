@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '8.x'
 
@@ -79,7 +79,7 @@ jobs:
 
       - name: OWASP ZAP Baseline Scan
         if: always()
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@v0.15.0
         continue-on-error: true
         with:
           target: 'https://www.saucedemo.com'
@@ -88,7 +88,7 @@ jobs:
 
       - name: Upload ZAP JSON report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-zap-report
           path: zap-report.json
@@ -97,7 +97,7 @@ jobs:
 
       - name: Upload Allure results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: allure-results
           path: playwright/allure-results/
@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: playwright/TestResults/
@@ -113,7 +113,7 @@ jobs:
 
       # ── TypeScript Playwright Tests ──────────────────────────────────────
       - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
@@ -160,7 +160,7 @@ jobs:
 
       - name: Upload TypeScript Allure results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-ts-allure-results
           path: playwright/tests/playwright-ts/allure-results/
@@ -168,7 +168,7 @@ jobs:
 
       - name: Upload TypeScript Allure report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-ts-allure-report
           path: playwright/tests/playwright-ts/allure-report/
@@ -176,7 +176,7 @@ jobs:
 
       - name: Upload TypeScript Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-ts-report
           path: playwright/tests/playwright-ts/playwright-report/
@@ -184,7 +184,7 @@ jobs:
 
       - name: Upload TypeScript traces (on failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-ts-traces
           path: playwright/tests/playwright-ts/test-results/
@@ -192,7 +192,7 @@ jobs:
 
       - name: Upload visual regression snapshot diffs (on failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-regression-diffs
           path: playwright/tests/playwright-ts/test-results/**/*-diff.png

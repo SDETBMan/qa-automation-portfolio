@@ -52,10 +52,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -124,7 +124,7 @@ jobs:
       # ── Security: OWASP ZAP Baseline Scan ───────────────────────────────
       - name: OWASP ZAP Baseline Scan
         if: always()
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.15.0
         continue-on-error: true
         with:
           target: 'https://www.saucedemo.com'
@@ -133,7 +133,7 @@ jobs:
 
       - name: Upload ZAP JSON report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cucumber-python-zap-report
           path: zap-report.json
@@ -157,7 +157,7 @@ jobs:
       # ── Artifacts & Reporting ────────────────────────────────────────────
       - name: Upload Allure results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cucumber-python-allure-results
           path: cucumber_python/reports/allure-results/
@@ -174,7 +174,7 @@ jobs:
 
       - name: Deploy Allure Report to GitHub Pages
         if: always()
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
@@ -183,7 +183,7 @@ jobs:
       # ── Notifications ────────────────────────────────────────────────────
       - name: Send Email Notification on Failure
         if: failure()
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v18
         with:
           server_address: smtp.gmail.com
           server_port: 465
