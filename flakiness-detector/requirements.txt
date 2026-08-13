@@ -1,2 +1,2 @@
-click>=8.0.0
-requests>=2.31.0
+click>=8.4.2
+requests>=2.34.2
