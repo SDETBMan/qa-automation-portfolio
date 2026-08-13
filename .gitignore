@@ -36,6 +36,7 @@ test-results/
 # ── Claude Code local settings ────────────────────────────────────────────────
 .claude/*
 !.claude/commands/
+**/.claude/
 
 # ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
@@ -44,6 +45,10 @@ __pycache__/
 
 # ── Generated output ─────────────────────────────────────────────────────────
 claims-diff/output/
+
+# ── Profile data (may contain PII) ──────────────────────────────────────────
+job-agent/profile/*.png
+job-agent/profile/profile.md
 
 # ── Environment overrides (may contain secrets) ───────────────────────────────
 appsettings.local.json
