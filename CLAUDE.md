@@ -1,0 +1,148 @@
+# CLAUDE.md — QA Automation Portfolio
+
+## Repository overview
+
+Polyglot monorepo with 16 independent QA/SDET frameworks across 6 languages (TypeScript, Java, C#, Python, JavaScript, HCL). Each sub-project is self-contained with its own dependencies, config, tests, and CI workflow. The repo targets SauceDemo and a Shopify test store as system-under-test applications.
+
+## Branching and commits
+
+- **Never push directly to `main`.** Create a feature or fix branch (`dev`, `feature/*`, `fix/*`) and merge via PR.
+- Write concise, conventional commit messages: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `ci:`.
+- Never commit `.env` files, credentials, API keys, or secrets. Each framework provides a `.env.example` template — reference that pattern when adding new config.
+
+## Monorepo structure
+
+Each directory is an independent framework. Changes to one should not break another.
+
+```
+cypress/               TypeScript — Cypress 13, React 18, Vite
+playwright-dotnet/     C# + TypeScript — Playwright 1.44, .NET 8, NUnit
+selenium-java/         Java — Selenium 4.21, TestNG 7.10, Maven, Appium
+cucumber/              Java — Cucumber 7, TestNG, Selenium
+cucumber_python/       Python — Behave, Selenium
+ai-eval/               Python — DeepEval, Pytest, OpenAI, ChromaDB
+conv-eval/             Python — DeepEval, Pytest, OpenAI
+agent-eval/            Python — DeepEval, Pytest, OpenAI
+job-agent/             Python — Anthropic Claude, Tavily
+coding-agent/          Python — Anthropic Claude
+langchain-rag/         Python — LangChain 0.3, ChromaDB
+langgraph-agent/       Python — LangGraph 0.4, LangChain Anthropic
+dspy-optimizer/        Python — DSPy 2.6
+postman/               JSON/JS — Newman 6.2.1
+fastapi-service/       Python — FastAPI, Pytest
+terraform/             HCL — Terraform >= 1.6, AWS, DataDog
+k8s/                   YAML — Kubernetes manifests, Selenium Grid, Healenium
+```
+
+## Architecture principles — follow these in all changes
+
+### Page Object Model (POM)
+
+Every browser framework uses POM with a shared `BasePage` superclass. Locators and page interactions live in page objects, never in test files. When adding or modifying UI interactions:
+
+- Put locators and actions in the appropriate page class under `pages/`.
+- Extend `BasePage` — use its `waitForVisibility`, `click`, `getText` utilities instead of raw driver calls.
+- If a new page is needed, create a new class extending `BasePage`. One page class per logical page or major component.
+- Tests call page methods; tests never reference selectors directly.
+
+### Separation of test logic from test data
+
+- **Cypress:** Fixtures in `cypress/fixtures/*.json`, loaded via `cy.fixture()`.
+- **Java (Selenium/Cucumber):** `@DataProvider` for parametrized tests, `Examples` tables in `.feature` files, `config.properties` for env config.
+- **Python (Pytest):** `@pytest.mark.parametrize` driven by JSON datasets in `datasets/`. Session-scoped fixtures in `conftest.py` for expensive resources (API clients, vector stores).
+- **Python (Behave):** `Scenario Outline` with `Examples` in `.feature` files; `config.ini` for env config.
+- Never hardcode test data in test methods. Extract to fixtures, data providers, or dataset files.
+
+### Configuration management
+
+- Environment-specific values (URLs, credentials, timeouts, browser choice) go in `.env` files or `config.properties`, never hardcoded.
+- Always provide a `.env.example` when adding a new framework or new env vars.
+- Follow the existing override hierarchy: defaults in config files → `.env` overrides → CLI/system env var overrides.
+- DataDog integration is optional everywhere. All `datadog_reporter` utilities skip silently when `DD_API_KEY` is absent.
+
+### DRY and reusable utilities
+
+- **Custom commands** (Cypress): `cy.login()`, `cy.addToCart()`, `cy.clearCart()` in `support/commands.ts` with TypeScript declarations.
+- **Tasks** (Python Behave): `LoginTask`, `AddToCartTask` in `utils/tasks.py` (Screenplay pattern) for composable multi-step actions.
+- **BasePage utilities**: Waits, clicks, text retrieval — use inherited helpers, do not duplicate wait logic in tests or steps.
+- **Service layer** (Selenium Java): Business logic in `services/` separates orchestration from page mechanics.
+- Extract repeated patterns into helpers. If the same 3+ lines appear in multiple tests, create a shared utility or custom command.
+
+### SOLID principles in practice
+
+- **Single Responsibility:** Each page class owns one page. Each test file covers one feature area. Each fixture file serves one data domain.
+- **Open/Closed:** `BasePage` is extended, not modified. Add new page classes for new pages instead of bloating existing ones.
+- **Dependency Inversion:** Tests depend on page abstractions, not raw selectors. Fixtures and config inject data, not tests fetching it inline.
+
+## Language and framework specifics
+
+### TypeScript / Node.js (Cypress, Playwright TS, Postman)
+
+- Node.js 20 LTS. Use `npm ci` for deterministic installs.
+- Cypress: `cypress.config.ts` is the single config source. Custom commands must include `declare global` TypeScript augmentation.
+- Linting: Follow existing ESLint/TSConfig conventions in each sub-project.
+
+### Java (Selenium, Cucumber)
+
+- Java 17, Maven 3.9+. Build with `mvn clean test`.
+- TestNG for execution: test groups (`smoke`, `regression`, `web`, `mobile`), `testng.xml` / `testng_mobile.xml` for suite definitions, parallel via ThreadLocal driver.
+- Allure for reporting: `@Step`, `@Description`, `@Severity` annotations on test methods.
+- Retry: `RetryAnalyzer` applied globally via `AnnotationTransformer`. Tests auto-retry 2x on failure.
+
+### C# / .NET (Playwright)
+
+- .NET 8 LTS. Build with `dotnet test`.
+- NUnit with `[Parallelizable]` attribute. Trace Viewer for debugging.
+
+### Python (8 frameworks)
+
+- Python 3.11+. Each framework has its own `requirements.txt`.
+- Pytest: markers defined in `pytest.ini` (`smoke`, `regression`, `safety`). Use `conftest.py` for fixtures — session scope for expensive resources, function scope for stateful objects needing reset.
+- Behave: `environment.py` for hooks, `behave.ini` for runner config. Steps organized by domain (`auth_steps.py`, `inventory_steps.py`).
+- AI evals use `pytest-rerunfailures` for transient API timeouts.
+
+### HCL (Terraform)
+
+- Terraform >= 1.6. Modules in `terraform/modules/`. Always run `terraform fmt -recursive` before committing.
+
+## CI/CD (GitHub Actions)
+
+- 18 workflows in `.github/workflows/`, one per framework.
+- Each workflow triggers on push/PR **only for its own path** (e.g., `cypress/**`), plus nightly schedules staggered across UTC hours.
+- All workflows support `workflow_dispatch` with framework-specific inputs (browser, markers, suite, demo number).
+- All test results upload JUnit XML to DataDog CI Visibility when `DD_API_KEY` is set.
+- OWASP ZAP baseline scan runs post-test in browser frameworks (`continue-on-error: true`).
+- When modifying a workflow, only change the workflow for the affected framework. Do not cross-wire triggers.
+
+## Running locally
+
+Use the root `Makefile` as the entry point:
+
+```bash
+make help              # List all targets and prerequisites
+make cypress-test      # Cypress E2E suite
+make selenium          # Selenium Java (headless Chrome)
+make cucumber          # Cucumber Java (headless Chrome)
+make cucumber-python   # Behave (headless Chrome)
+make ai-eval           # DeepEval RAG evaluation
+make postman           # Newman API tests
+make fastapi-service-test  # FastAPI pytest suite
+```
+
+Prerequisites vary by framework. Check `make help` for the full list.
+
+## Reporting
+
+- **JUnit XML**: All frameworks produce JUnit XML for CI consumption.
+- **Allure**: Java, C#, and Cypress frameworks generate Allure results. Reports deploy to GitHub Pages (`gh-pages` branch) in CI.
+- **DataDog**: Custom GAUGE metrics per framework (suite counts, AI eval scores, job agent stats). All utilities degrade gracefully without keys.
+- When adding a new test framework, include JUnit XML output and a DataDog reporter that follows the existing `utils/datadog_reporter` pattern.
+
+## What not to do
+
+- Do not add dependencies to one framework that create coupling with another framework's code or config.
+- Do not put selectors or UI interactions in test files — that belongs in page objects.
+- Do not hardcode test data, credentials, or environment URLs in source code.
+- Do not skip `.env.example` updates when introducing new environment variables.
+- Do not modify `BasePage` to add page-specific logic — extend it in a new class instead.
+- Do not create tests without proper tagging/grouping (`smoke`, `regression`, etc.).
