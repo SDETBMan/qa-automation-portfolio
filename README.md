@@ -51,9 +51,9 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`playwright`](./playwright/) | TypeScript · C# | Playwright 1.52 · TypeScript 5.4 · NUnit · .NET 8 | [→](./playwright/README.md) |
 | [`selenium-java`](./selenium-java/) | Java | Selenium 4 · TestNG · Maven · Java 17 | [→](./selenium-java/README.md) |
 | [`cucumber`](./cucumber/) | Java | Cucumber 7 · Karate 1.5 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
-| [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 20 | [→](./postman/README.md) |
+| [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 22 | [→](./postman/README.md) |
 | [`job-agent`](./job-agent/) | Python | Anthropic Claude · Tavily · AgentOps · Python 3.11 | [→](./job-agent/README.md) |
-| [`cypress`](./cypress/) | TypeScript | Cypress 13 · React 18 · Vite · Claude AI Test Generator · Node.js 20 | [→](./cypress/README.md) |
+| [`cypress`](./cypress/) | TypeScript | Cypress 15 · React 18 · Vite · Claude AI Test Generator · Node.js 22 | [→](./cypress/README.md) |
 | [`cucumber-python`](./cucumber_python/) | Python | Behave · Selenium 4 · Python 3.11 | [→](./cucumber_python/README.md) |
 | [`coding-agent`](./coding-agent/) | Python | Anthropic Claude · AgentOps · Python 3.11 | [→](./coding-agent/README.md) |
 | [`fastapi-service`](./fastapi-service/) | Python · JavaScript | FastAPI · MYGA annuity · Redis · Pytest · k6 · Python 3.11 | [→](./fastapi-service/README.md) |
@@ -193,7 +193,7 @@ pytest -v
 
 ### cypress (TypeScript E2E + Component)
 
-**Prerequisites:** [Node.js 20 LTS](https://nodejs.org)
+**Prerequisites:** [Node.js 22 LTS](https://nodejs.org)
 
 ```bash
 # From the repo root
@@ -219,7 +219,7 @@ npm run ai:generate "User adds two items to cart and verifies badge count"
 
 ### playwright (C# + TypeScript)
 
-**Prerequisites:** [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8) · [Node.js 20 LTS](https://nodejs.org)
+**Prerequisites:** [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8) · [Node.js 22 LTS](https://nodejs.org)
 
 ```bash
 cd playwright
@@ -290,7 +290,7 @@ mvn clean test -Pkarate -Dkarate.options="--tags @smoke"
 
 ### postman (Newman API tests)
 
-**Prerequisites:** [Node.js 20 LTS](https://nodejs.org)
+**Prerequisites:** [Node.js 22 LTS](https://nodejs.org)
 
 ```bash
 # From the repo root
@@ -632,7 +632,7 @@ qa-automation-portfolio/
 │   │       └── infra/              # reusable helpers · performance-hooks
 │   ├── src/test/resources/features/  # Cucumber: login · dashboard · inventory · cart · api · security
 │   └── docker-compose.yaml
-├── cypress/                            # Cypress 13 · TypeScript · React 18 · Vite · Claude AI · Node.js 20
+├── cypress/                            # Cypress 15 · TypeScript · React 18 · Vite · Claude AI · Node.js 22
 │   ├── ai-generator/                   # AI test generator (user story → .cy.ts via Claude RAG)
 │   │   └── generate-test.ts
 │   ├── cypress/
@@ -645,7 +645,7 @@ qa-automation-portfolio/
 │   ├── src/components/ProductCard.tsx  # React component under test
 │   ├── utils/datadog_reporter.ts       # GAUGE metrics reporter
 │   └── cypress.config.ts
-├── postman/                            # Postman Collection v2.1 · Newman · Node.js 20
+├── postman/                            # Postman Collection v2.1 · Newman · Node.js 22
 │   ├── collections/                   # jsonplaceholder.postman_collection.json: 10 requests, 4 folders
 │   ├── environments/                  # jsonplaceholder.postman_environment.json
 │   ├── results/                       # JUnit XML · HTML report (git-ignored)

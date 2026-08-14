@@ -2,7 +2,7 @@
 
 [![cypress CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cypress.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/cypress.yml)
 
-Cypress 13 · TypeScript 5 · React 18 · Vite · Node.js 20 · Claude AI Test Generator
+Cypress 15 · TypeScript 5 · React 18 · Vite · Node.js 22 · Claude AI Test Generator
 
 End-to-end tests against [SauceDemo](https://www.saucedemo.com/) plus isolated
 React component tests, all in TypeScript.

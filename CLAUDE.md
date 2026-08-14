@@ -16,7 +16,7 @@ Each directory is an independent framework. Changes to one should not break anot
 
 ```
 # Browser / E2E
-cypress/               TypeScript — Cypress 13, React 18, Vite
+cypress/               TypeScript — Cypress 15, React 18, Vite
 playwright/            C# + TypeScript — Playwright 1.52, .NET 8, NUnit
 selenium-java/         Java — Selenium 4, TestNG 7.10, Maven, Appium
 
@@ -115,7 +115,7 @@ Every browser framework uses POM with a shared `BasePage` superclass. Locators a
 
 ### TypeScript / Node.js (Cypress, Playwright TS, Postman)
 
-- Node.js 20 LTS. Use `npm ci` for deterministic installs.
+- Node.js 22 LTS. Use `npm ci` for deterministic installs.
 - Cypress: `cypress.config.ts` is the single config source. Custom commands must include `declare global` TypeScript augmentation.
 - Linting: Follow existing ESLint/TSConfig conventions in each sub-project.
 

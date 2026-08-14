@@ -2,7 +2,6 @@ name: Claims Diff
 
 on:
   push:
-    branches: [main]
     paths: ['claims-diff/**']
   pull_request:
     paths: ['claims-diff/**']
