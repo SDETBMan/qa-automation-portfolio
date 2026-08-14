@@ -42,6 +42,8 @@ test-results/
 !.claude/skills/
 !.claude/hooks/
 !.claude/settings.json
+# Ephemeral verification marker (session state, not source)
+.claude/hooks/.verified
 
 # ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/

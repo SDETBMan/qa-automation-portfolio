@@ -128,6 +128,9 @@ run() {
 
     if [[ $exit_code -eq 0 ]]; then
         echo "PASS [$framework]"
+        # Create verification marker so stop-gate allows Claude to finish
+        mkdir -p "$REPO_ROOT/.claude/hooks"
+        touch "$REPO_ROOT/.claude/hooks/.verified"
     else
         echo "FAIL [$framework] (exit code $exit_code)"
     fi

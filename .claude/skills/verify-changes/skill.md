@@ -32,7 +32,35 @@ bash .claude/skills/verify-changes/scripts/check.sh --run <framework-name>
 
 If the test command requires external services, API keys, or infrastructure that isn't available locally, skip it and note the skip reason.
 
-### Step 3 — Check for test weakening
+### Step 3 — Validate locators
+
+If any page object files were changed (files under `pages/` directories in browser frameworks), validate that selectors match real elements on SauceDemo:
+
+```bash
+cd playwright/tests/playwright-ts && npm ci --quiet && npx playwright install chromium 2>/dev/null
+cd "$REPO_ROOT"  # return to repo root
+node .claude/skills/verify-changes/scripts/validate-locators.mjs
+```
+
+The script extracts CSS selectors from changed page objects across all 5 browser frameworks, navigates to the corresponding SauceDemo pages, and checks that each selector matches at least one element. Conditional elements (error messages, cart badges) are reported but not marked as failures.
+
+If no page objects were changed, the script exits early. If saucedemo.com is unreachable, the script skips validation without failing.
+
+### Step 4 — Check for zero-assertion tests
+
+If any test files were changed, scan them for test functions with zero assertions:
+
+```bash
+bash .claude/skills/verify-changes/scripts/check-assertions.sh
+```
+
+The script detects test bodies across all browser frameworks and Python pytest that contain no assertion calls (`.should(`, `expect(`, `Assert.`, `assert`). Only flags tests with **zero** assertions — single-assertion tests are fine.
+
+For Cucumber/Behave, only `@Then` / `@then` steps are checked (action steps like `@When` / `@Given` are not expected to assert).
+
+**Known limitation:** Tests that delegate assertions to page object methods (e.g., `loginPage.isLoginButtonVisible()` which internally calls `.should('exist')`) appear assertion-free at the test level. The reviewer decides if the delegation is intentional.
+
+### Step 5 — Check for test weakening
 
 Read the diff of your changes and look for these test-weakening patterns:
 
@@ -44,11 +72,13 @@ Read the diff of your changes and look for these test-weakening patterns:
 
 If any weakening is found, flag it explicitly in your response with the file, line, and what was weakened.
 
-### Step 4 — Report results
+### Step 6 — Report results
 
 Summarize:
 - Frameworks affected and tests run
 - Pass / fail status for each
+- Locator validation results (pass / fail / conditional / skip counts, or "no page objects changed")
+- Zero-assertion test findings (count and locations, or "all tests have assertions")
 - Any test-weakening findings (or confirm none found)
 - Any frameworks skipped and why
 

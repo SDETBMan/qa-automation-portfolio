@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report site-monitor site-monitor-baseline clean
+.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report site-monitor site-monitor-baseline triage-failures analyze-quality audit-pr portfolio-health portfolio-health-quick clean
 
 # Print help when `make` is called with no target
 help:
@@ -61,6 +61,12 @@ help:
 	@echo "  make vuln-report          Generate unified vulnerability report (requires gh CLI)"
 	@echo "  make site-monitor         Run site drift detector against saucedemo.com"
 	@echo "  make site-monitor-baseline  Generate fresh selector baseline"
+	@echo "  ──── Automation (Claude Code) ────"
+	@echo "  make triage-failures XML=<dir>  Headless failure triage on JUnit XML"
+	@echo "  make analyze-quality        Headless quality dashboard analysis"
+	@echo "  make audit-pr               Headless PR audit (current branch vs main)"
+	@echo "  make portfolio-health       Agent SDK portfolio health assessment"
+	@echo "  make portfolio-health-quick Agent SDK quick health check"
 	@echo "  make clean                Remove build artefacts from all frameworks"
 	@echo ""
 	@echo "  Prerequisites:"
@@ -82,6 +88,8 @@ help:
 	@echo "    flakiness-detector — Python 3.11+"
 	@echo "    vuln-report      — Python 3.11+ · gh CLI authenticated"
 	@echo "    site-monitor     — Python 3.11+"
+	@echo "    triage/quality/audit — claude CLI authenticated"
+	@echo "    portfolio-health — Node.js 20+ · claude CLI authenticated"
 	@echo "    cypress          — Node.js 20+"
 	@echo "    k8s              — kubectl · running cluster or Kind (kind.sigs.k8s.io)"
 	@echo "    terraform        — Terraform >= 1.6 · AWS credentials · DataDog API/App keys"
@@ -344,6 +352,38 @@ terraform-destroy: terraform-init
 
 terraform-clean:
 	rm -rf terraform/.terraform terraform/.terraform.lock.hcl terraform/terraform.tfstate*
+
+# ── Automation (Claude Code headless + Agent SDK) ────────────────────────────
+
+triage-failures:
+	@echo ""
+	@echo ">>> [triage-failures] Running headless failure triage..."
+	bash automation/headless/triage-failures.sh $(XML)
+	@echo ""
+
+analyze-quality:
+	@echo ""
+	@echo ">>> [analyze-quality] Running headless quality analysis..."
+	bash automation/headless/analyze-quality.sh
+	@echo ""
+
+audit-pr:
+	@echo ""
+	@echo ">>> [audit-pr] Running headless PR audit (current branch vs main)..."
+	bash automation/headless/audit-pr.sh
+	@echo ""
+
+portfolio-health:
+	@echo ""
+	@echo ">>> [portfolio-health] Running Agent SDK health assessment..."
+	cd automation/agent-sdk && npm ci --quiet 2>/dev/null && npx tsx src/portfolio-health.ts
+	@echo ""
+
+portfolio-health-quick:
+	@echo ""
+	@echo ">>> [portfolio-health] Running quick health check..."
+	cd automation/agent-sdk && npm ci --quiet 2>/dev/null && npx tsx src/portfolio-health.ts --quick
+	@echo ""
 
 # ── Clean ─────────────────────────────────────────────────────────────────────
 
