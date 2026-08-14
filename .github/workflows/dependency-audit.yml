@@ -55,7 +55,7 @@ jobs:
         run: pip install -r dependency-audit/requirements.txt
 
       - name: Run audit (report only)
-        if: ${{ github.event.inputs.auto_update != 'true' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.auto_update != 'true' }}
         run: |
           cd dependency-audit
           ECOSYSTEM_FLAG=""
@@ -65,7 +65,7 @@ jobs:
           python run.py --repo-dir .. $ECOSYSTEM_FLAG --output report.md
 
       - name: Run audit with auto-update
-        if: ${{ github.event.inputs.auto_update == 'true' }}
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.auto_update == 'true' }}
         run: |
           cd dependency-audit
           ECOSYSTEM_FLAG=""

@@ -60,6 +60,11 @@ qms-evidence-collector/ Python — Click, ISO 9001, SOC 2, ISO/IEC 17025, DataDo
 terraform/             HCL — Terraform >= 1.6, AWS, DataDog
 k8s/                   YAML — Kubernetes manifests, Selenium Grid, Healenium
 
+# Automation (Claude Code)
+automation/headless/   Bash — claude -p scripts for CI pipelines
+automation/agent-sdk/  TypeScript — Agent SDK portfolio health orchestrator
+automation/routines/   Markdown — Routine prompts for cloud-managed schedules
+
 # Companion repos (external)
 # legal-funding-qa-agent  — Python, LangGraph, DSPy, Hypothesis, Claude
 # agentic-p2p-auditor     — Python, Claude (tool use), Decimal math
@@ -178,3 +183,5 @@ Prerequisites vary by framework. Check `make help` for the full list.
 - Do not skip `.env.example` updates when introducing new environment variables.
 - Do not modify `BasePage` to add page-specific logic — extend it in a new class instead.
 - Do not create tests without proper tagging/grouping (`smoke`, `regression`, etc.).
+- Do not add a new top-level directory or framework without updating `README.md` — add it to the Frameworks table, the Repo Structure tree, and the Quick Start section if it has a runnable entry point.
+

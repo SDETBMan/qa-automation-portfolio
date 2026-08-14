@@ -71,6 +71,7 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`failure-triage`](./failure-triage/) | Python | Anthropic Claude (tool use) · JUnit XML · DataDog · Python 3.11 | [→](./failure-triage/README.md) |
 | [`qms-evidence-collector`](./qms-evidence-collector/) | Python | Click · ISO 9001 · SOC 2 · ISO/IEC 17025 · DataDog · Python 3.11 | [→](./qms-evidence-collector/README.md) |
 | [`dependency-audit`](./dependency-audit/) | Python | Click · Requests · npm/PyPI/NuGet/Maven registries · Python 3.12 | [→](./dependency-audit/README.md) |
+| [`automation`](./automation/) | Bash · TypeScript | Claude Code headless mode · Agent SDK · Routines | — |
 
 ---
 
@@ -583,7 +584,8 @@ qa-automation-portfolio/
 │       ├── playwright-smoke-pr.yml # PR gate: @smoke Chromium only, 5-min timeout, fail-fast
 │       ├── k6-load-test.yml       # nightly k6 load test against fastapi-service
 │       ├── deploy-validate-rollback.yml  # Vercel health-check → smoke → auto-rollback
-│       └── visual-regression-update.yml  # Manual baseline update → PR for review
+│       ├── visual-regression-update.yml  # Manual baseline update → PR for review
+│       └── claude.yml                    # @claude trigger on PR/issue comments (write access)
 ├── ai-eval/                            # Python · Pytest · DeepEval · OpenAI · ChromaDB
 │   ├── rag/                            # RAG pipeline: document, embedder, retriever
 │   ├── datasets/golden_dataset.json    # Ground truth Q&A pairs (SauceDemo FAQ)
@@ -742,12 +744,35 @@ qa-automation-portfolio/
 │   ├── auditor/                        # scanner · checkers · updater · reporter
 │   ├── requirements.txt               # click, requests
 │   └── run.py                          # CLI: --repo-dir · --ecosystem · --update · --output
+├── automation/                            # Claude Code automation (headless, Agent SDK, routines)
+│   ├── headless/                          # Headless mode scripts (claude -p with structured output)
+│   │   ├── triage-failures.sh             # Pipe JUnit XML → Claude → root-cause clusters (JSON)
+│   │   ├── analyze-quality.sh             # quality-dashboard JSON → Claude → executive insights
+│   │   └── audit-pr.sh                    # PR diff → Claude → CLAUDE.md compliance review
+│   ├── agent-sdk/                         # Agent SDK (TypeScript, multi-step orchestration)
+│   │   ├── src/portfolio-health.ts        # Multi-turn health assessor (--quick | --standard | --full)
+│   │   └── package.json
+│   └── routines/                          # Routine prompts for claude.ai/code/routines
+│       ├── dependency-audit.md            # Daily 9am UTC — scan + auto-PR for outdated deps
+│       ├── pr-triage.md                   # GitHub PR opened — label + CLAUDE.md compliance review
+│       └── qms-weekly.md                  # Sundays 8am UTC — ISO/SOC evidence gap tracking
 ├── .claude/
-│   └── commands/                       # Claude Code custom slash commands
-│       ├── triage-failures.md          # /project:triage-failures — AI failure triage
-│       ├── review-tests.md            # /project:review-tests — QA best practice review
-│       └── gen-test.md                # /project:gen-test — AI test generation
-├── Makefile                            # One-command runner for all suites
+│   ├── commands/                          # Claude Code custom slash commands
+│   │   ├── triage-failures.md             # /project:triage-failures — AI failure triage
+│   │   ├── review-tests.md               # /project:review-tests — QA best practice review
+│   │   └── gen-test.md                    # /project:gen-test — AI test generation
+│   ├── hooks/                             # Claude Code hooks (deterministic guardrails)
+│   │   ├── block-main-push.sh             # PreToolUse/Bash — deny pushes to main
+│   │   ├── redact-secrets.sh              # PreToolUse/Bash — deny commands with secret patterns
+│   │   ├── auto-format.sh                 # PostToolUse/Edit|Write — terraform fmt, ruff format
+│   │   ├── stop-gate.sh                   # Stop — block until verify-changes has run
+│   │   └── preserve-state.sh              # SessionStart/compact — re-inject git state after compaction
+│   ├── skills/
+│   │   └── verify-changes/                # Verification skill (framework detection + test runner)
+│   └── settings.json                      # Hook registration
+├── .claude-plugin/
+│   └── plugin.json                        # Plugin manifest (qa-guardrails v1.0.0)
+├── Makefile                               # One-command runner for all suites
 ├── .gitignore
 └── README.md
 ```
@@ -960,4 +985,94 @@ Triggered via `workflow_dispatch` only (avoids heavy image pulls on every push).
 Input: framework → selenium-java | cucumber
 Steps: checkout → Kind cluster → JDK 17 → apply k8s manifests → wait for Available
        → port-forward → health check → mvn smoke tests → upload surefire reports
+```
+
+---
+
+## Claude Code Integration
+
+The repository includes a full Claude Code automation layer — deterministic hooks, headless CI scripts, an Agent SDK orchestrator, cloud routines, and a GitHub Action — packaged as a distributable plugin (`qa-guardrails`).
+
+### Hooks (Deterministic Guardrails)
+
+Five hooks enforce repository rules at the tool level. These fire on every matching action regardless of prompt compliance, making them reliable for unattended runs.
+
+| Hook | Event | What It Does |
+|---|---|---|
+| `block-main-push.sh` | `PreToolUse` / Bash | Parses `git push` commands and denies any push targeting `main` or `master`. Exit 2 blocks the command before execution. |
+| `redact-secrets.sh` | `PreToolUse` / Bash | Scans every Bash command for secret patterns (Stripe keys, AWS access keys, GitHub PATs, GitLab PATs, Slack tokens, credentials in URLs). Denies on match — never echoes the secret. |
+| `auto-format.sh` | `PostToolUse` / Edit\|Write | Runs `terraform fmt` on `.tf` files and `ruff format` (fallback: `black`) on `.py` files after every edit. Invalidates the `.verified` marker when test-related files change. |
+| `stop-gate.sh` | `Stop` | Blocks Claude from finishing when test-related files were changed but the verify-changes skill hasn't run. Checks a `.verified` marker file with a 4-hour TTL. Prevents `stop_hook_active` infinite loops. |
+| `preserve-state.sh` | `SessionStart` / compact | Prints branch, recent commits, uncommitted changes, staged files, and verification status to stdout after compaction — re-injecting ephemeral state that compaction loses. |
+
+**How the verification loop works:**
+
+```
+Edit test file → auto-format.sh deletes .verified marker
+                → stop-gate.sh blocks stop
+                → Claude runs verify-changes skill
+                → check.sh passes → creates .verified marker
+                → stop-gate.sh allows stop
+```
+
+### Headless Mode Scripts
+
+Three scripts use `claude -p` with `--output-format json` and `--json-schema` to pipe data through Claude and get structured, parseable output. Designed for CI pipelines.
+
+| Script | Input | Output | Use Case |
+|---|---|---|---|
+| `triage-failures.sh` | JUnit XML directory | JSON: root-cause clusters ranked by severity | Post-test failure analysis in CI (`if: failure()`) |
+| `analyze-quality.sh` | quality-dashboard JSON (or auto-runs it) | JSON: health rating, frameworks needing attention, recommendations | Scheduled quality reporting |
+| `audit-pr.sh` | PR diff (via `--pr N` or branch comparison) | JSON: risk level, CLAUDE.md compliance, review items | PR checks — uses `--bare` in `--ci` mode for deterministic output |
+
+```bash
+# CI example: triage failures after a test job fails
+make triage-failures XML=cypress/results
+
+# Deterministic PR audit for CI
+automation/headless/audit-pr.sh --pr 42 --ci -o review.json
+```
+
+### Agent SDK Orchestrator
+
+`automation/agent-sdk/src/portfolio-health.ts` uses the `@anthropic-ai/claude-code` SDK for multi-step health assessment. Unlike headless scripts (single prompt → single response), this is multi-turn: Claude decides what tools to run based on what it discovers.
+
+| Mode | Checks | Max Turns |
+|---|---|---|
+| `--quick` | Git status, recent commits, verification marker | 8 |
+| `--standard` | + dependency audit, site monitor, framework detection | 15 |
+| `--full` | + vulnerability scan, QMS evidence collection, flakiness analysis | 25 |
+
+```bash
+make portfolio-health          # standard assessment
+make portfolio-health-quick    # fast check
+```
+
+### Routines (Cloud-Managed Schedules)
+
+Three ready-to-use prompts for [claude.ai/code/routines](https://claude.ai/code/routines), running on Anthropic's infrastructure with no local machine required.
+
+| Routine | Trigger | What It Does |
+|---|---|---|
+| `dependency-audit.md` | Daily 9am UTC | Scans all 26 frameworks for outdated packages, creates PR for critical/major updates |
+| `pr-triage.md` | GitHub PR opened | Labels by framework, rates risk, posts CLAUDE.md compliance review |
+| `qms-weekly.md` | Sundays 8am UTC | Runs QMS evidence collector, tracks compliance gaps week-over-week, files issues |
+
+### GitHub Action (`claude.yml`)
+
+Responds to `@claude` mentions on PR comments, review comments, and issues. Claude has write access: it reads the context, makes code changes, pushes commits, and posts comments describing what it did.
+
+```
+@claude add retry logic to this flaky test
+@claude implement the spec in the linked issue
+@claude why is this test failing?
+```
+
+### Plugin Manifest
+
+The `.claude/` configuration is packaged as a distributable plugin (`qa-guardrails`) via `.claude-plugin/plugin.json`. The plugin bundles all hooks, skills, and commands into one installable unit scoped to QA/SDET repositories.
+
+```bash
+# Install on another repo
+/plugin install qa-guardrails
 ```

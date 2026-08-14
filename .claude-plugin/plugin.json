@@ -1,0 +1,17 @@
+{
+  "name": "qa-guardrails",
+  "version": "1.0.0",
+  "description": "Production-grade Claude Code guardrails for QA/SDET repositories. Deterministic hooks for branch protection, secret redaction, auto-formatting, test verification gating, and compaction state preservation. Scoped to test automation patterns (POM, BDD, CI workflows).",
+  "author": {
+    "name": "Brian Man"
+  },
+  "keywords": [
+    "qa",
+    "sdet",
+    "test-automation",
+    "guardrails",
+    "hooks",
+    "page-object-model",
+    "ci-cd"
+  ]
+}
