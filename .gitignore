@@ -34,9 +34,14 @@ test-results/
 *.app
 
 # ── Claude Code local settings ────────────────────────────────────────────────
+# Ignore .claude/ directories inside sub-frameworks (e.g., cypress/.claude/)
+*/.claude/
+# Ignore root .claude/ contents, then selectively re-include
 .claude/*
 !.claude/commands/
-**/.claude/
+!.claude/skills/
+!.claude/hooks/
+!.claude/settings.json
 
 # ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
