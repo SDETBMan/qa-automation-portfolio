@@ -112,10 +112,10 @@ jobs:
           retention-days: 7
 
       # ── TypeScript Playwright Tests ──────────────────────────────────────
-      - name: Set up Node.js 20
+      - name: Set up Node.js 22
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: playwright/tests/playwright-ts/package-lock.json
 

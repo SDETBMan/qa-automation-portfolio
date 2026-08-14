@@ -102,7 +102,7 @@ The repo includes two quality governance documents:
 | 12 | `pact-consumer` | TypeScript · Pact v13 · Vitest | Consumer-driven contract testing (8 interactions) |
 | 13 | `flakiness-detector` | Python · JUnit XML · Click · DataDog | Flaky test detection, scoring, and quarantine recommendations |
 | 14 | `vulnerability-aggregator` | Python · GitHub API · Dependabot · CodeQL · ZAP | Unified security scanning aggregation |
-| 15 | `cypress` | TypeScript · Cypress 13 · React 18 · Claude | E2E + component tests + AI test generator |
+| 15 | `cypress` | TypeScript · Cypress 15 · React 18 · Claude | E2E + component tests + AI test generator |
 | 16 | `quality-dashboard` | Python · JUnit XML · DataDog v2 · GH Actions API | Portfolio-wide quality KPI aggregation |
 | 17 | `failure-triage` | Python · Claude · `@beta_tool` · JUnit XML | AI-powered failure root cause clustering |
 | 18 | `fastapi-service` | Python · FastAPI · Redis · Pytest · k6 | REST API + MYGA annuity endpoints + Redis caching + full test suite + load tests |
@@ -508,7 +508,7 @@ Python has no native SelfHealingDriver SDK equivalent. Solution: Healenium's `hl
 ---
 
 ### Framework 15: `cypress` — TypeScript E2E + Component Testing + AI Test Generator
-**Stack:** TypeScript · Cypress 13 · React 18 · Vite · Anthropic Claude (AI test generator) · Node.js 20
+**Stack:** TypeScript · Cypress 15 · React 18 · Vite · Anthropic Claude (AI test generator) · Node.js 22
 **What it does:** End-to-end tests against SauceDemo plus isolated React component tests, all in TypeScript. Includes an AI test generator that takes plain-English user stories and produces runnable `.cy.ts` files using Claude with full framework context as RAG input.
 
 **Key features:**

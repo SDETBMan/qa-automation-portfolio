@@ -179,7 +179,7 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "Test Notification Failure: ${{ github.repository }}"
-          to: brian.padgett11@outlook.com
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
             Build Status: ${{ job.status }}

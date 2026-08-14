@@ -49,10 +49,10 @@ jobs:
       # cache: 'npm' + cache-dependency-path means the node_modules cache is
       # invalidated only when package-lock.json changes — typically seconds to
       # restore vs. 45+ seconds for a cold npm ci.
-      - name: Set up Node.js 20
+      - name: Set up Node.js 22
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: playwright/tests/playwright-ts/package-lock.json
 

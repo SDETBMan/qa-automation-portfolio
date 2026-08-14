@@ -9,7 +9,7 @@
     {
       "definition": {
         "type": "note",
-        "content": "## Cypress: E2E & Component Tests\nTypeScript · Cypress 13  |  Headless Chrome  |  `framework:cypress`",
+        "content": "## Cypress: E2E & Component Tests\nTypeScript · Cypress 15  |  Headless Chrome  |  `framework:cypress`",
         "background_color": "green",
         "font_size": "14",
         "text_align": "center",
