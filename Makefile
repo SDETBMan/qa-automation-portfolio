@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report site-monitor site-monitor-baseline triage-failures analyze-quality audit-pr portfolio-health portfolio-health-quick clean
+.PHONY: help all playwright selenium cucumber karate-perf cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report site-monitor site-monitor-baseline triage-failures analyze-quality audit-pr portfolio-health portfolio-health-quick clean
 
 # Print help when `make` is called with no target
 help:
@@ -126,6 +126,14 @@ cucumber:
 	cd cucumber && mvn clean test -Dheadless=true
 	@echo ""
 	@echo ">>> [cucumber] Done."
+	@echo ""
+
+karate-perf: ## Run Karate-Gatling performance tests (requires Java 17+, Maven)
+	@echo ""
+	@echo ">>> [karate-perf] Running Karate-Gatling performance simulation..."
+	cd cucumber && mvn test -Pperf
+	@echo ""
+	@echo ">>> [karate-perf] Done. Gatling report in cucumber/target/gatling/"
 	@echo ""
 
 cucumber-python:

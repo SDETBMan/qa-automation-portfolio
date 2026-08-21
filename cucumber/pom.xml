@@ -39,6 +39,10 @@
 
         <!-- Karate API Testing -->
         <karate.version>1.5.2</karate.version>
+
+        <!-- Karate-Gatling Performance Testing -->
+        <gatling-maven-plugin.version>4.9.6</gatling-maven-plugin.version>
+        <scala-maven-plugin.version>4.8.1</scala-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -178,6 +182,13 @@
         <dependency>
             <groupId>io.karatelabs</groupId>
             <artifactId>karate-junit5</artifactId>
+            <version>${karate.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.karatelabs</groupId>
+            <artifactId>karate-gatling</artifactId>
             <version>${karate.version}</version>
             <scope>test</scope>
         </dependency>
@@ -356,6 +367,64 @@
                                 <exclude>**/runners/TestRunner.java</exclude>
                                 <exclude>**/unit/*Test.java</exclude>
                             </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>perf</id>
+            <build>
+                <plugins>
+                    <!-- Skip functional tests when running perf profile -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <!-- Compile Scala simulation class -->
+                    <plugin>
+                        <groupId>net.alchim31.maven</groupId>
+                        <artifactId>scala-maven-plugin</artifactId>
+                        <version>${scala-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>testCompile</goal>
+                                </goals>
+                                <configuration>
+                                    <args>
+                                        <arg>-Jbackend:GenBCode</arg>
+                                        <arg>-Jopt:l:inline</arg>
+                                        <arg>-deprecation</arg>
+                                        <arg>-feature</arg>
+                                        <arg>-unchecked</arg>
+                                        <arg>-language:implicitConversions</arg>
+                                        <arg>-language:postfixOps</arg>
+                                    </args>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Run Gatling simulation -->
+                    <plugin>
+                        <groupId>io.gatling</groupId>
+                        <artifactId>gatling-maven-plugin</artifactId>
+                        <version>${gatling-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <simulationClass>karate.perf.KaratePerformanceSimulation</simulationClass>
                         </configuration>
                     </plugin>
                 </plugins>
