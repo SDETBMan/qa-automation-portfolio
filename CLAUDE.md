@@ -184,4 +184,5 @@ Prerequisites vary by framework. Check `make help` for the full list.
 - Do not modify `BasePage` to add page-specific logic — extend it in a new class instead.
 - Do not create tests without proper tagging/grouping (`smoke`, `regression`, etc.).
 - Do not add a new top-level directory or framework without updating `README.md` — add it to the Frameworks table, the Repo Structure tree, and the Quick Start section if it has a runnable entry point.
+- **Do not make claims about what exists (or doesn't exist) in the repo without reading the source first.** Before stating what metrics, tests, features, or configs a framework has, read the actual files. Memory and summaries drift — the code is the source of truth.
 
