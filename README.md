@@ -50,7 +50,7 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`agent-eval`](./agent-eval/) | Python | DeepEval · Pytest · OpenAI · Pydantic · Python 3.11 | [→](./agent-eval/README.md) |
 | [`playwright`](./playwright/) | TypeScript · C# | Playwright 1.52 · TypeScript 5.4 · NUnit · .NET 8 | [→](./playwright/README.md) |
 | [`selenium-java`](./selenium-java/) | Java | Selenium 4 · TestNG · Maven · Java 17 | [→](./selenium-java/README.md) |
-| [`cucumber`](./cucumber/) | Java | Cucumber 7 · Karate 1.5 · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
+| [`cucumber`](./cucumber/) | Java · Scala | Cucumber 7 · Karate 1.5 · Karate-Gatling · TestNG · Selenium 4 · Maven · Java 17 | [→](./cucumber/README.md) |
 | [`postman`](./postman/) | JSON · JavaScript | Postman Collection v2.1 · Newman 6 · Node.js 22 | [→](./postman/README.md) |
 | [`job-agent`](./job-agent/) | Python | Anthropic Claude · Tavily · AgentOps · Python 3.11 | [→](./job-agent/README.md) |
 | [`cypress`](./cypress/) | TypeScript | Cypress 15 · React 18 · Vite · Claude AI Test Generator · Node.js 22 | [→](./cypress/README.md) |
@@ -110,6 +110,7 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | **Cost & latency tracking** | — | — | — | — | ✅ per-call tokens · `latency_ms` → DataDog | ✅ per-turn tokens · `latency_ms` → DataDog | ✅ per-step tokens · `latency_ms` → DataDog | — | ✅ `latency_ms` · run counts → DataDog |
 | **Mobile (Appium)** | — | ✅ Android · iOS | ✅ Android · iOS | — | — | — | — | — | — |
 | **Performance (JMeter)** | — | ✅ Maven plugin | ✅ Maven plugin | — | — | — | — | — | — |
+| **Performance (Gatling)** | — | — | ✅ Karate-Gatling (`-Pperf`) | — | — | — | — | — | — |
 | **Database validation** | ✅ dbClient + dbAssertions (MySQL · PostgreSQL) | ✅ JDBC / MySQL | ✅ JDBC / MySQL | — | — | — | — | — | — |
 | **Security testing (OWASP)** | ✅ 4 test cases | ✅ 4 test cases | ✅ 3 BDD scenarios | — | — | — | — | — | — |
 | **Consumer-driven contracts (Pact)** | — | — | — | — | — | — | — | — | — |
@@ -277,8 +278,11 @@ mvn clean test -Dheadless=true -Dcucumber.filter.tags="@smoke"
 docker compose up -d
 mvn clean test -Dtarget=grid -Dheadless=true
 
-# Performance tests
+# Performance tests (JMeter)
 mvn jmeter:jmeter
+
+# Performance tests (Karate-Gatling load simulation)
+mvn test -Pperf
 
 # Karate API tests (all 13 features)
 mvn clean test -Pkarate
@@ -630,6 +634,7 @@ qa-automation-portfolio/
 │   │       ├── advanced/           # schema-validation · data-driven · headers-auth · error-handling
 │   │       ├── financial/          # mock server · transaction-lifecycle · pricing-calculations
 │   │       └── infra/              # reusable helpers · performance-hooks
+│   ├── src/test/scala/karate/perf/   # Karate-Gatling simulation (mvn test -Pperf)
 │   ├── src/test/resources/features/  # Cucumber: login · dashboard · inventory · cart · api · security
 │   └── docker-compose.yaml
 ├── cypress/                            # Cypress 15 · TypeScript · React 18 · Vite · Claude AI · Node.js 22

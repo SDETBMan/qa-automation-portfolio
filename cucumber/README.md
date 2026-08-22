@@ -22,7 +22,8 @@ A production-grade, thread-safe BDD testing framework built from scratch to demo
 * **API Testing Layer:** **RestAssured** step definitions and feature files validate backend endpoints alongside UI tests.
 * **Database Validation:** `DatabaseUtils` enables frontend-to-backend data integrity checks via JDBC.
 * **Slack Notifications:** `TestListener` dispatches suite summaries to a Slack channel via webhook on every execution.
-* **Performance Testing:** **JMeter** load test included, triggered optionally from the CI/CD pipeline.
+* **Performance Testing (JMeter):** JMeter load test included, triggered optionally from the CI/CD pipeline.
+* **Performance Testing (Gatling):** **Karate-Gatling** integration reuses existing Karate feature files as Gatling load test simulations with SLA assertions — zero test rewriting required.
 * **CI/CD Integration:** **GitHub Actions** pipeline with dispatch inputs for execution mode, browser, and JMeter toggle. Allure report auto-deployed to GitHub Pages.
 
 ## Tech Stack
@@ -38,7 +39,7 @@ A production-grade, thread-safe BDD testing framework built from scratch to demo
 | API Testing (UI steps) | RestAssured 5.4 |
 | API Testing (standalone) | Karate 1.5.2 |
 | Database | MySQL Connector 9.0 |
-| Performance | JMeter (Maven Plugin 3.8) |
+| Performance | JMeter (Maven Plugin 3.8) · Karate-Gatling 1.5.2 |
 | Reporting | Allure 2.27 + Extent Reports 5.1 |
 | Code Coverage | JaCoCo 0.8.12 |
 | CI/CD | GitHub Actions |
@@ -112,6 +113,14 @@ mvn clean test -Dtarget=ios
 mvn jmeter:jmeter
 ```
 
+### Performance Tests (Karate-Gatling)
+```bash
+# Run Gatling load simulation reusing Karate feature files
+mvn test -Pperf
+```
+
+Runs three Karate feature files (users, posts, comments) as concurrent Gatling load scenarios. Assertions fail the build if SLAs are violated (mean < 500ms, p95 < 2000ms, success > 95%). Gatling HTML report is generated in `target/gatling/`.
+
 ## CI/CD Pipeline
 
 The GitHub Actions pipeline triggers automatically on every push and pull request to `main` (headless Chrome). A manual `workflow_dispatch` trigger exposes additional controls:
@@ -132,6 +141,7 @@ On every run the pipeline: executes tests, generates an Allure report, deploys i
 | Extent Spark Report | `target/spark-reports/Spark.html` |
 | Cucumber HTML | `target/cucumber-reports/cucumber.html` |
 | JaCoCo Coverage | `target/site/jacoco/index.html` |
+| Gatling Load Report | `target/gatling/*/index.html` |
 
 ## Security Testing
 
@@ -238,7 +248,7 @@ src/
 │   │   │   └── TestListener.java      # Slack + DataDog on suite finish
 │   │   └── utils/
 │   │       └── DriverManager.java     # ThreadLocal factory: local/grid/BS/android/iOS
-│   └── karate/                        # ── Karate API Testing ──
+│   ├── karate/                        # ── Karate API Testing ──
 │       ├── KarateRunner.java          # JUnit5 runner (active with -Pkarate)
 │       ├── logback-test.xml           # Karate logging config
 │       ├── helpers/
@@ -260,6 +270,8 @@ src/
 │           ├── reusable/common.feature          # @ignore — shared helpers
 │           ├── reusable/auth.feature            # @ignore — auth helper
 │           └── performance/performance-hooks.feature
+├── test/scala/karate/perf/
+│   └── KaratePerformanceSimulation.scala  # Gatling simulation (mvn test -Pperf)
 └── test/resources/
     ├── features/                      # ── Cucumber features ──
     │   ├── login.feature
