@@ -9,7 +9,7 @@ A production-grade **conversational AI evaluation framework** built with **DeepE
 * **Six DeepEval conversational metrics:** `ConversationRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationalGEval` (graceful handling), `BiasMetric` (per-turn bias), and `ToxicityMetric` (per-turn toxicity). Each evaluating conversation quality from a different safety or quality dimension.
 * **Stateful chatbot under test:** `SwagSupportBot` accumulates the full message history across turns so the model resolves pronouns, follows topic switches, and acknowledges corrections, exactly like a real support bot. Each test gets a fresh bot instance via a function-scoped fixture.
 * **Conversation dataset:** `datasets/conversations.json` contains 7 multi-turn scenarios covering normal support queries, implicit reference resolution, context corrections, off-domain deflection, and adversarial prompt injection. Each scenario carries `smoke`, `regression`, `safety`, or `retention` tags.
-* **Pytest markers:** `smoke` (push-safe), `regression` (nightly), `safety`, and `retention`. Filter with `-m smoke`, `-m retention`, etc.
+* **Pytest markers:** `smoke` (push-safe), `regression` (nightly), `safety`, `retention`, and `canary` (negative-control metric validation). Filter with `-m smoke`, `-m retention`, `-m canary`, etc.
 * **DataDog observability:** Suite-level metrics plus per-turn `llm.conv.*` scores and per-API-call latency/token usage sent after every test teardown. Skips gracefully without `DD_API_KEY`.
 * **Transient-failure resilience:** `pytest-rerunfailures` retries up to 3× with 60 s delay to tolerate transient OpenAI API timeouts in CI.
 
@@ -41,8 +41,9 @@ A production-grade **conversational AI evaluation framework** built with **DeepE
 | `test_role_adherence.py` | `RoleAdherenceMetric` | Bot stays in character as a Swag Labs support agent across all turns |
 | `test_graceful_handling.py` | `ConversationalGEval` | Bot politely deflects out-of-domain queries and resists prompt injection without breaking character |
 | `test_safety.py` | `BiasMetric` · `ToxicityMetric` | Each response in a multi-turn conversation is free of bias and toxicity, even as adversarial context accumulates |
+| `test_canary.py` | `KnowledgeRetentionMetric` · `RoleAdherenceMetric` · `TurnRelevancyMetric` | Canary (negative-control) tests — hardcoded known-bad conversations with inverted assertions validate that each metric detects failures |
 
-All five test files are parametrized over the conversation dataset or inline safety conversations. Each scenario's tags map directly to pytest markers.
+All six test files are parametrized over the conversation dataset or inline safety/canary conversations. Each scenario's tags map directly to pytest markers. The canary file uses inverted assertions (score must be bad) to validate the metrics themselves.
 
 ## How to Run
 
@@ -61,6 +62,9 @@ pytest -m retention -v
 # Safety tests — out-of-scope deflection and prompt injection
 pytest -m safety -v
 
+# Canary tests — negative-control metric validation
+pytest -m canary -v
+
 # Full suite
 pytest -v
 ```
@@ -75,7 +79,7 @@ The `conv-eval.yml` workflow triggers on every push/PR to `main` that touches `c
 
 | Input | Description |
 |---|---|
-| `marker` | pytest marker filter: `smoke`, `regression`, `safety`, `retention`. Leave blank to run `smoke` (CI default). |
+| `marker` | pytest marker filter: `smoke`, `regression`, `safety`, `retention`, `canary`. Leave blank to run `smoke` (CI default). |
 
 **Pipeline steps:**
 
@@ -102,11 +106,12 @@ conv-eval/
 │   ├── test_knowledge_retention.py     # KnowledgeRetentionMetric
 │   ├── test_role_adherence.py          # RoleAdherenceMetric
 │   ├── test_graceful_handling.py       # ConversationalGEval (safety)
-│   └── test_safety.py                 # BiasMetric + ToxicityMetric (per-turn)
+│   ├── test_safety.py                 # BiasMetric + ToxicityMetric (per-turn)
+│   └── test_canary.py                # Canary (negative-control) tests — 3 metrics with inverted assertions
 ├── utils/
 │   └── datadog_reporter.py         # GAUGE metrics: test suite + per-eval scores + token/latency
 ├── conftest.py                     # Session fixtures: OpenAI client · function-scoped bot with teardown
-├── pytest.ini                      # markers: smoke · regression · safety · retention
+├── pytest.ini                      # markers: smoke · regression · safety · retention · canary
 └── requirements.txt
 ```
 
@@ -122,6 +127,9 @@ conv-eval/
 | `llm.conv.graceful_handling` | Per-scenario GEval graceful handling score (0–1) |
 | `llm.conv.bias` | Per-turn BiasMetric score (0–1) |
 | `llm.conv.toxicity` | Per-turn ToxicityMetric score (0–1) |
+| `llm.conv.canary.knowledge_retention` | Canary knowledge retention score — inverted assertion (0–1) |
+| `llm.conv.canary.role_adherence` | Canary role adherence score — inverted assertion (0–1) |
+| `llm.conv.canary.turn_relevancy` | Canary turn relevancy score — inverted assertion (0–1) |
 | `llm.api.latency_ms` | Per-API-call latency (every chat turn) |
 | `llm.api.prompt_tokens` | Per-call prompt token count |
 | `llm.api.completion_tokens` | Per-call completion token count |

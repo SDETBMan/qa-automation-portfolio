@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       marker:
-        description: 'pytest marker filter (smoke | regression | safety | retention | leave blank for all)'
+        description: 'pytest marker filter (smoke | regression | safety | retention | canary | leave blank for all)'
         required: false
         default: ''
 

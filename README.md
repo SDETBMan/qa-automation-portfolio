@@ -795,9 +795,9 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `cucumber.yml` | push · PR · nightly 04:00 UTC | execution mode · browser · JMeter toggle |
 | `karate.yml` | push · PR · nightly 04:00 UTC | karate_env (dev · staging) · karate_tags filter |
 | `cypress.yml` | push · PR · nightly 05:00 UTC | browser (chrome · firefox · edge · electron) · test type (e2e · component · all) |
-| `ai-eval.yml` | push · PR · nightly 05:00 UTC | pytest marker filter (smoke · regression · safety) |
-| `conv-eval.yml` | push · PR · nightly 06:00 UTC | pytest marker filter (smoke · regression · safety · retention) |
-| `agent-eval.yml` | push · PR · nightly 07:00 UTC | pytest marker filter (smoke · regression · safety) |
+| `ai-eval.yml` | push · PR · nightly 05:00 UTC | pytest marker filter (smoke · regression · safety · canary) |
+| `conv-eval.yml` | push · PR · nightly 06:00 UTC | pytest marker filter (smoke · regression · safety · retention · canary) |
+| `agent-eval.yml` | push · PR · nightly 07:00 UTC | pytest marker filter (smoke · regression · canary) |
 | `postman-newman.yml` | push · PR · nightly 08:00 UTC | folder filter (Smoke · Users · Posts · Integration Flow) |
 | `job-agent.yml` | nightly 09:00 UTC · `workflow_dispatch` | role_filter keyword (e.g. SDET · QA Lead) |
 | `cucumber-python.yml` | push · PR · nightly 05:00 UTC | execution mode (local · grid · browserstack) · browser · tag filter |
@@ -838,9 +838,9 @@ Two DataDog features run across all frameworks:
 
 | Framework | DataDog metrics |
 |---|---|
-| `ai-eval` | `llm.eval.answer_relevancy` · `llm.eval.faithfulness` · `llm.eval.hallucination` · `llm.eval.safety` · `llm.eval.bias` · `llm.eval.json_correctness` |
-| `conv-eval` | `llm.conv.turn_relevancy` · `llm.conv.knowledge_retention` · `llm.conv.role_adherence` · `llm.conv.graceful_handling` · `llm.conv.bias` · `llm.conv.toxicity` |
-| `agent-eval` | `llm.agent.tool_correctness` · `llm.agent.task_completion` · `llm.agent.bias` · `llm.agent.toxicity` |
+| `ai-eval` | `llm.eval.answer_relevancy` · `llm.eval.faithfulness` · `llm.eval.hallucination` · `llm.eval.safety` · `llm.eval.bias` · `llm.eval.json_correctness` · `llm.eval.canary.*` (5 metrics) |
+| `conv-eval` | `llm.conv.turn_relevancy` · `llm.conv.knowledge_retention` · `llm.conv.role_adherence` · `llm.conv.graceful_handling` · `llm.conv.bias` · `llm.conv.toxicity` · `llm.conv.canary.*` (3 metrics) |
+| `agent-eval` | `llm.agent.tool_correctness` · `llm.agent.task_completion` · `llm.agent.bias` · `llm.agent.toxicity` · `llm.agent.canary.*` (2 metrics) |
 | `job-agent` | `llm.job_agent.jobs_found` · `llm.job_agent.jobs_scored` · `llm.job_agent.cover_letters_drafted` · `llm.job_agent.duration_ms` |
 | all four + job-agent | `llm.api.latency_ms` |
 | `fastapi-service` | `cache.hits` · `cache.misses` |
