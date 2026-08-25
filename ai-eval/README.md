@@ -9,7 +9,7 @@ A production-grade **LLM evaluation framework** built with **DeepEval + Pytest**
 * **Ten DeepEval metrics:** `AnswerRelevancyMetric`, `FaithfulnessMetric`, `HallucinationMetric`, `HallucinationMetric` (aggregate benchmark), `ToxicityMetric` (safety), `BiasMetric` (bias), `JsonCorrectnessMetric`, `ContextualPrecisionMetric`, `ContextualRecallMetric`, `ContextualRelevancyMetric`: each with a configurable threshold and GPT-4o-mini as the LLM judge.
 * **Full RAG pipeline under test:** ChromaDB (in-memory, ephemeral) + OpenAI `text-embedding-3-small` for semantic retrieval; GPT-4o-mini for answer generation. The entire pipeline is exercised end-to-end on every eval run.
 * **Golden dataset:** `datasets/golden_dataset.json` contains ground-truth Q&A pairs covering the SauceDemo FAQ (products, checkout, shipping, returns, accounts). Each case carries `smoke` or `regression` tags consumed directly by pytest markers.
-* **Pytest markers:** `smoke` (fast, push-safe), `regression` (full suite, nightly), `safety` (toxicity and bias), `retrieval` (contextual metrics). Filter with `-m smoke`, `-m regression`, or `-m retrieval`.
+* **Pytest markers:** `smoke` (fast, push-safe), `regression` (full suite, nightly), `safety` (toxicity and bias), `retrieval` (contextual metrics), `canary` (negative-control metric validation). Filter with `-m smoke`, `-m regression`, `-m retrieval`, or `-m canary`.
 * **DataDog observability:** Suite-level pass/fail/skip/duration metrics plus per-call `llm.eval.*` scores and `llm.api.latency_ms` / token usage metrics sent on every assertion. Skips gracefully without `DD_API_KEY`.
 * **Transient-failure resilience:** `pytest-rerunfailures` retries up to 5× with 60 s delay (`--reruns 5 --reruns-delay 60`) to tolerate transient OpenAI API timeouts in CI.
 
@@ -37,8 +37,9 @@ A production-grade **LLM evaluation framework** built with **DeepEval + Pytest**
 | `test_json_correctness.py` | `JsonCorrectnessMetric` | 0.9 | Answer matches expected Pydantic schema when structured output is requested |
 | `test_hallucination_benchmark.py` | `HallucinationMetric` (aggregate) | 80% pass rate | Aggregate benchmark — all 10 cases run, sentinel test asserts >= 80% pass rate |
 | `test_retrieval_quality.py` | `ContextualPrecisionMetric`, `ContextualRecallMetric`, `ContextualRelevancyMetric` | 0.7 / 0.7 / 0.05 | Retriever chunk relevance, coverage, and alignment — relevancy threshold is lower because coarse FAQ chunks yield low sentence-level relevancy ratios |
+| `test_canary.py` | `GEval` (Faithfulness) · `HallucinationMetric` · `AnswerRelevancyMetric` · `BiasMetric` · `ToxicityMetric` | inverted | Canary (negative-control) tests — hardcoded known-bad inputs with inverted assertions validate that each metric detects failures |
 
-All eight test files are parametrized over the golden dataset or inline safety cases. The seven per-case files fail individually; the hallucination benchmark only fails at the aggregate level.
+All nine test files are parametrized over the golden dataset or inline safety/canary cases. The seven per-case files fail individually; the hallucination benchmark only fails at the aggregate level. The canary file uses inverted assertions (score must be bad) to validate the metrics themselves.
 
 ## How to Run
 
@@ -53,6 +54,9 @@ pytest -m smoke -v
 
 # Safety tests only
 pytest -m safety -v
+
+# Canary tests — negative-control metric validation
+pytest -m canary -v
 
 # Retrieval quality tests only
 pytest -m retrieval -v
@@ -74,7 +78,7 @@ The `ai-eval.yml` workflow triggers on every push/PR to `main` that touches `ai-
 
 | Input | Description |
 |---|---|
-| `marker` | pytest marker filter: `smoke`, `regression`, `safety`. Leave blank to run `smoke` (CI default). |
+| `marker` | pytest marker filter: `smoke`, `regression`, `safety`, `canary`. Leave blank to run `smoke` (CI default). |
 
 **Pipeline steps:**
 
@@ -101,13 +105,14 @@ ai-eval/
 │   ├── test_bias.py                # BiasMetric (threshold 0.5)
 │   ├── test_json_correctness.py    # JsonCorrectnessMetric (threshold 0.9)
 │   ├── test_hallucination_benchmark.py  # HallucinationMetric aggregate benchmark (80% pass rate)
-│   └── test_retrieval_quality.py    # ContextualPrecision/Recall/Relevancy (threshold 0.7)
+│   ├── test_retrieval_quality.py    # ContextualPrecision/Recall/Relevancy (threshold 0.7)
+│   └── test_canary.py               # Canary (negative-control) tests — 5 metrics with inverted assertions
 ├── rag/
 │   └── document.py                 # SauceDemo FAQ chunks (knowledge base)
 ├── utils/
 │   └── datadog_reporter.py         # GAUGE metrics: test suite + per-eval scores
 ├── conftest.py                     # Session fixtures: OpenAI client · ChromaDB · retriever · answer_generator
-├── pytest.ini                      # markers: smoke · regression · safety
+├── pytest.ini                      # markers: smoke · regression · safety · canary
 └── requirements.txt
 ```
 
@@ -129,6 +134,11 @@ ai-eval/
 | `llm.eval.contextual_precision` | Per-case ContextualPrecisionMetric score (0–1) |
 | `llm.eval.contextual_recall` | Per-case ContextualRecallMetric score (0–1) |
 | `llm.eval.contextual_relevancy` | Per-case ContextualRelevancyMetric score (0–1) |
+| `llm.eval.canary.faithfulness` | Canary faithfulness score — inverted assertion (0–1) |
+| `llm.eval.canary.hallucination` | Canary hallucination score — inverted assertion (0–1) |
+| `llm.eval.canary.answer_relevancy` | Canary answer relevancy score — inverted assertion (0–1) |
+| `llm.eval.canary.bias` | Canary bias score — inverted assertion (0–1) |
+| `llm.eval.canary.toxicity` | Canary toxicity score — inverted assertion (0–1) |
 | `llm.api.latency_ms` | Per-call answer generation latency |
 | `llm.api.prompt_tokens` | Per-call prompt token count |
 | `llm.api.completion_tokens` | Per-call completion token count |
