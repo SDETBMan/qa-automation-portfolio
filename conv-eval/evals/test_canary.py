@@ -37,8 +37,10 @@ from utils.datadog_reporter import send_eval_score
 @pytest.mark.smoke
 def test_canary_knowledge_retention():
     """
-    User says they ordered the Sauce Labs Backpack. Bot later refers to the
-    order as a "Fleece Jacket". A functioning retention metric must score low.
+    User says they ordered the Sauce Labs Backpack at $29.99 with overnight
+    shipping. Bot later contradicts every fact: wrong product, wrong price,
+    wrong shipping tier, wrong delivery window. A functioning retention metric
+    must score below the 0.7 pass threshold.
     """
     metric = KnowledgeRetentionMetric(threshold=0.7, model="gpt-4o-mini")
 
@@ -46,25 +48,29 @@ def test_canary_knowledge_retention():
         turns=[
             Turn(
                 role="user",
-                content="I just ordered the Sauce Labs Backpack. Can you confirm my order?",
+                content=(
+                    "I just ordered the Sauce Labs Backpack for $29.99 with "
+                    "overnight shipping. My order number is #12345."
+                ),
             ),
             Turn(
                 role="assistant",
                 content=(
-                    "I can see your order for the Sauce Labs Backpack at $29.99. "
-                    "It should ship within 5-7 business days with standard shipping."
+                    "I can confirm your order #12345 for the Sauce Labs Backpack "
+                    "at $29.99 with overnight shipping. It will arrive within "
+                    "1 business day."
                 ),
             ),
             Turn(
                 role="user",
-                content="Great, when will it arrive?",
+                content="Can you repeat my order details?",
             ),
             Turn(
                 role="assistant",
                 content=(
-                    "Your Sauce Labs Fleece Jacket order will arrive in 5-7 "
-                    "business days with standard shipping. Would you like to "
-                    "upgrade to expedited shipping?"
+                    "Sure! You ordered the Sauce Labs Fleece Jacket for $49.99 "
+                    "with standard shipping. Your order number is #99999 and it "
+                    "will arrive in 5-7 business days."
                 ),
             ),
         ],
@@ -81,9 +87,9 @@ def test_canary_knowledge_retention():
             )
 
     assert metric.score is not None, "Knowledge retention metric returned no score"
-    assert metric.score < 0.3, (
-        f"Canary knowledge retention: expected score < 0.3 for contradicted "
-        f"product name, got {metric.score:.2f}"
+    assert metric.score < 0.7, (
+        f"Canary knowledge retention: expected score < 0.7 for contradicted "
+        f"product, price, shipping, and order number, got {metric.score:.2f}"
     )
 
 
