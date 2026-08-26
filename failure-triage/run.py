@@ -4,6 +4,11 @@ run.py — Failure triage agent CLI entry point.
 Usage:
     python run.py --xml-dir ../flakiness-detector/fixtures/
     python run.py --xml-dir ./results/ --output triage_report.json
+
+    # Multi-framework correlation
+    python run.py --xml-dir ../cypress/results --xml-dir ../selenium-java/results
+    python run.py --xml-dir ./cypress-results --framework cypress \
+                  --xml-dir ./selenium-results --framework selenium
 """
 
 from __future__ import annotations
@@ -22,8 +27,18 @@ def main() -> None:
     parser.add_argument(
         "--xml-dir",
         type=Path,
+        action="append",
+        dest="xml_dirs",
         required=True,
-        help="Directory containing JUnit XML result files",
+        help="Directory containing JUnit XML result files (repeatable for multi-framework)",
+    )
+    parser.add_argument(
+        "--framework",
+        type=str,
+        action="append",
+        dest="frameworks",
+        default=None,
+        help="Framework label for each --xml-dir (repeatable, must match --xml-dir count)",
     )
     parser.add_argument(
         "--output",
@@ -38,12 +53,31 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    if not args.xml_dir.exists():
-        print(f"[ERROR] XML directory not found: {args.xml_dir}")
-        return
+    xml_dirs: list[Path] = args.xml_dirs
+    frameworks: list[str] | None = args.frameworks
+
+    # Validate framework labels match xml-dir count when provided
+    if frameworks and len(frameworks) != len(xml_dirs):
+        parser.error(
+            f"--framework count ({len(frameworks)}) must match "
+            f"--xml-dir count ({len(xml_dirs)})"
+        )
+
+    # Derive framework names from directory paths if not provided
+    if not frameworks:
+        frameworks = [d.resolve().parent.name if d.name == "results" else d.resolve().name for d in xml_dirs]
+
+    # Validate all directories exist
+    for d in xml_dirs:
+        if not d.exists():
+            print(f"[ERROR] XML directory not found: {d}")
+            return
+
+    # Build (path, framework_name) tuples
+    xml_sources = list(zip(xml_dirs, frameworks))
 
     report = run_triage(
-        xml_dir=str(args.xml_dir),
+        xml_sources=xml_sources,
         output_path=str(args.output),
         verbose=not args.quiet,
     )

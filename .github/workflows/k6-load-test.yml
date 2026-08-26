@@ -73,3 +73,21 @@ jobs:
           path: fastapi-service/k6-slo-report.json
           retention-days: 30
           if-no-files-found: ignore
+
+      - name: Validate SLO results
+        if: always()
+        run: |
+          if [ ! -f k6-slo-report.json ]; then
+            echo "::error::SLO report not found — k6 handleSummary may have failed"
+            exit 1
+          fi
+
+          FAILED=$(python3 -c "
+          import json, sys
+          report = json.load(open('k6-slo-report.json'))
+          failures = [r for r in report['slo_results'] if not r['passed']]
+          for f in failures:
+              print(f\"::error::SLO FAILED — {f['scenario']}: p95={f['p95_actual']}ms (target {f['p95_target']}ms), p99={f['p99_actual']}ms (target {f['p99_target']}ms)\")
+          sys.exit(1 if failures else 0)
+          ")
+          echo "All SLO thresholds passed"

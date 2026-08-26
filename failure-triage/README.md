@@ -80,14 +80,16 @@ The agent uses `client.beta.messages.tool_runner` — the SDK manages the tool-u
 
 ```json
 {
-  "summary": { "total_tests": 24, "total_failures": 4, "clusters": 2 },
+  "summary": { "total_tests": 24, "total_failures": 4, "clusters": 2, "cross_framework_incidents": 1 },
   "clusters": [
     {
       "root_cause": "assertion_error",
       "count": 3,
-      "severity": "MEDIUM",
+      "severity": "HIGH",
       "affected_suites": ["test_inventory", "test_checkout"],
-      "suggested_action": "Review recent product data changes — sort order and price assertions failing",
+      "affected_frameworks": ["cypress", "selenium"],
+      "is_cross_framework": true,
+      "suggested_action": "Review recent product data changes — sort order and price assertions failing across frameworks",
       "examples": [
         { "test": "test_sort_products", "message": "AssertionError: sort order mismatch" }
       ]
@@ -97,13 +99,15 @@ The agent uses `client.beta.messages.tool_runner` — the SDK manages the tool-u
       "count": 1,
       "severity": "HIGH",
       "affected_suites": ["test_login"],
+      "affected_frameworks": ["playwright"],
+      "is_cross_framework": false,
       "suggested_action": "Check login page load time — may need increased wait timeout or server investigation",
       "examples": [
         { "test": "test_slow_login", "message": "TimeoutError: login page did not load within 10s" }
       ]
     }
   ],
-  "priority_order": ["timeout", "assertion_error"],
+  "priority_order": ["assertion_error", "timeout"],
   "timestamp": "2026-07-29T12:00:00+00:00"
 }
 ```
@@ -121,6 +125,14 @@ python run.py --xml-dir ./results/ --output triage_report.json
 
 # Quiet mode (report only, no agent output)
 python run.py --xml-dir ./results/ --quiet
+
+# Multi-framework correlation (auto-derives framework names from paths)
+python run.py --xml-dir ../cypress/results --xml-dir ../selenium-java/results
+
+# Multi-framework with explicit labels
+python run.py --xml-dir ./cypress-results --framework cypress \
+              --xml-dir ./selenium-results --framework selenium \
+              --xml-dir ./playwright-results --framework playwright
 ```
 
 **Requirements:**
@@ -136,7 +148,8 @@ python run.py --xml-dir ./results/ --quiet
 
 This agent demonstrates a concrete GenAI artifact beyond "I use Claude for coding":
 
-- **Tool-use architecture**: 4 tools with `@beta_tool` decorator for auto JSON schema
+- **Cross-framework correlation**: Multi-directory input detects systemic failures across Cypress, Selenium, Playwright simultaneously
+- **Tool-use architecture**: 5 tools with `@beta_tool` decorator for auto JSON schema
 - **SDK-managed loop**: `client.beta.messages.tool_runner` handles the agentic cycle
 - **Structured output**: JSON report with typed root cause categories and severity levels
 - **Operational integration**: DataDog metrics for triage trends over time
@@ -144,11 +157,24 @@ This agent demonstrates a concrete GenAI artifact beyond "I use Claude for codin
 
 ---
 
+## DataDog Metrics
+
+| Metric | Description |
+|--------|-------------|
+| `triage.total_failures` | Total test failures triaged |
+| `triage.cluster_count` | Number of root cause clusters identified |
+| `triage.root_cause` | Failure count per root cause category (tagged `root_cause:<category>`) |
+| `triage.cross_framework_incidents` | Number of clusters affecting 2+ frameworks |
+
+All metrics tagged with `framework:failure-triage`, `service:qa-automation-portfolio`, `env:ci`.
+
+---
+
 ## Architecture
 
 ```
 failure-triage/
-├── tools.py              # 4 @beta_tool functions (read_test_results, search, read_source, write_report)
+├── tools.py              # 5 @beta_tool functions (read_test_results, read_multi_framework_results, search, read_source, write_report)
 ├── triage_agent.py       # Agent loop using client.beta.messages.tool_runner
 ├── run.py                # CLI entry point
 ├── datadog_reporter.py   # Send triage metrics to DataDog v2 API

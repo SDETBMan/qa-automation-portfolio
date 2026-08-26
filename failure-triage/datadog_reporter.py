@@ -6,9 +6,10 @@ per-root-cause failure counts.  Follows the same graceful-skip
 pattern as every other framework in the monorepo.
 
 Metrics:
-  triage.total_failures    Total test failures triaged
-  triage.cluster_count     Number of root cause clusters identified
-  triage.root_cause        Failure count per root cause category
+  triage.total_failures              Total test failures triaged
+  triage.cluster_count               Number of root cause clusters identified
+  triage.root_cause                  Failure count per root cause category
+  triage.cross_framework_incidents   Number of clusters affecting 2+ frameworks
 """
 
 from __future__ import annotations
@@ -74,6 +75,10 @@ def send_triage_metrics(report: dict) -> None:
         _gauge("triage.total_failures", summary.get("total_failures", 0), tags),
         _gauge("triage.cluster_count",  summary.get("clusters", 0),       tags),
     ]
+
+    cross_fw = summary.get("cross_framework_incidents")
+    if cross_fw is not None:
+        series.append(_gauge("triage.cross_framework_incidents", cross_fw, tags))
 
     # Per-root-cause metrics
     for cluster in clusters:

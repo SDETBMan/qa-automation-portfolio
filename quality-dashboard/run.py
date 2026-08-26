@@ -81,6 +81,7 @@ def _build_report(aggregate: AggregateKPI) -> dict:
             "total_failed": aggregate.total_failed,
             "flakiness_rate": aggregate.flakiness_rate,
             "mttd_seconds": aggregate.mttd_seconds,
+            "mttr_seconds": aggregate.mttr_seconds,
             "suite_stability": aggregate.suite_stability,
         },
         "frameworks": [],
@@ -187,6 +188,7 @@ def run_from_github(repo: str, output: Path | None = None) -> dict:
     """
     from github_actions import (
         compute_mttd_from_runs,
+        compute_mttr_from_runs,
         fetch_historical_pass_rates,
         fetch_workflow_runs,
     )
@@ -205,12 +207,19 @@ def run_from_github(repo: str, output: Path | None = None) -> dict:
     print(f"Fetching workflow data from {repo}...")
     all_runs: list[dict] = []
     pass_rates: list[float] = []
+    per_workflow_mttrs: list[float] = []
 
     for wf in workflows:
         runs = fetch_workflow_runs(repo, wf, limit=10)
         all_runs.extend(runs)
         rates = fetch_historical_pass_rates(repo, wf, limit=10)
         pass_rates.extend(rates)
+
+        # Compute per-workflow MTTR (avoid cross-workflow false recoveries)
+        wf_mttr = compute_mttr_from_runs(runs)
+        if wf_mttr is not None:
+            per_workflow_mttrs.append(wf_mttr)
+
         success = sum(1 for r in runs if r.get("conclusion") == "success")
         failure = sum(1 for r in runs if r.get("conclusion") == "failure")
         print(f"  [{wf}] {len(runs)} runs, {success} success, {failure} failure")
@@ -219,14 +228,21 @@ def run_from_github(repo: str, output: Path | None = None) -> dict:
     mttd = compute_mttd_from_runs(all_runs)
     stability = compute_suite_stability(pass_rates) if pass_rates else 0.0
 
+    # Average per-workflow MTTR values (excluding workflows with no recovery pairs)
+    import statistics
+    mttr: float | None = None
+    if per_workflow_mttrs:
+        mttr = round(statistics.mean(per_workflow_mttrs), 1)
+
     timestamp = datetime.now(timezone.utc).isoformat()
-    print(f"\n  MTTD: {mttd}s  Suite Stability: {stability:.2%}")
+    print(f"\n  MTTD: {mttd}s  MTTR: {mttr}s  Suite Stability: {stability:.2%}")
 
     report = {
         "report": "Quality KPI Dashboard (GitHub Actions)",
         "timestamp": timestamp,
         "aggregate": {
             "mttd_seconds": mttd,
+            "mttr_seconds": mttr,
             "suite_stability": stability,
             "total_workflow_runs": len(all_runs),
         },

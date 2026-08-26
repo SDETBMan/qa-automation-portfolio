@@ -69,6 +69,7 @@ class AggregateKPI:
     total_failed: int
     flakiness_rate: float          # from flakiness-detector data if available
     mttd_seconds: float | None     # mean time to detect (commit → CI failure)
+    mttr_seconds: float | None     # mean time to recovery (failure → next pass)
     suite_stability: float         # pass rate over last N runs
     timestamp: str
 
@@ -128,6 +129,7 @@ def compute_aggregate_kpi(
     framework_kpis: list[FrameworkKPI],
     flakiness_rate: float = 0.0,
     mttd_seconds: float | None = None,
+    mttr_seconds: float | None = None,
     suite_stability: float = 0.0,
     timestamp: str = "",
 ) -> AggregateKPI:
@@ -137,6 +139,7 @@ def compute_aggregate_kpi(
         framework_kpis: List of FrameworkKPI objects.
         flakiness_rate: Portfolio-wide flakiness rate (0–1).
         mttd_seconds: Mean time to detect (commit → CI failure), in seconds.
+        mttr_seconds: Mean time to recovery (failure → next pass), in seconds.
         suite_stability: Pass rate trend over last N runs (0–1).
         timestamp: ISO 8601 timestamp for the report.
     """
@@ -157,6 +160,7 @@ def compute_aggregate_kpi(
         total_failed=total_failed,
         flakiness_rate=flakiness_rate,
         mttd_seconds=mttd_seconds,
+        mttr_seconds=mttr_seconds,
         suite_stability=suite_stability,
         timestamp=timestamp,
     )
