@@ -92,14 +92,12 @@ def test_canary_faithfulness():
 def test_canary_hallucination():
     """
     Output fabricates drone delivery and teleportation services that contradict
-    the context (USPS/FedEx only, no same-day). Multiple context items ensure
-    the HallucinationMetric (score = fraction of contradicted contexts) produces
-    a nonzero score.
+    the context (USPS/FedEx only, no same-day). HallucinationMetric (DeepEval
+    4.2+) scores 1 = no hallucination (pass), 0 = hallucinated (fail). A
+    functioning metric must produce a low score for this fabricated output.
     """
     metric = HallucinationMetric(threshold=0.5, model="gpt-4o-mini")
 
-    # Use multiple context items so partial contradictions produce a nonzero
-    # score (HallucinationMetric = fraction of contradicted contexts).
     test_case = LLMTestCase(
         input="What shipping options does Swag Labs offer?",
         actual_output=(
@@ -126,8 +124,11 @@ def test_canary_hallucination():
             )
 
     assert metric.score is not None, "Hallucination metric returned no score"
-    assert metric.score > 0.3, (
-        f"Canary hallucination: expected score > 0.3 for fabricated delivery "
+    # HallucinationMetric (DeepEval 4.2+): score direction unified with other
+    # metrics — 1 = pass (no hallucination), 0 = fail (hallucinated).
+    # For fabricated output, we expect a low score.
+    assert metric.score <= 0.5, (
+        f"Canary hallucination: expected score <= 0.5 for fabricated delivery "
         f"methods, got {metric.score:.2f}"
     )
 
