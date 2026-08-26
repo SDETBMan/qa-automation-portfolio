@@ -844,8 +844,8 @@ Two DataDog features run across all frameworks:
 | `job-agent` | `llm.job_agent.jobs_found` · `llm.job_agent.jobs_scored` · `llm.job_agent.cover_letters_drafted` · `llm.job_agent.duration_ms` |
 | all four + job-agent | `llm.api.latency_ms` |
 | `fastapi-service` | `cache.hits` · `cache.misses` |
-| `quality-dashboard` | `kpi.pass_rate` · `kpi.failure_density` · `kpi.avg_duration_s` · `kpi.p95_duration_s` · `kpi.total_tests` · `kpi.suite_stability` · `kpi.flakiness_rate` · `kpi.mttd_seconds` |
-| `failure-triage` | `triage.total_failures` · `triage.cluster_count` · `triage.root_cause` (per category) |
+| `quality-dashboard` | `kpi.pass_rate` · `kpi.failure_density` · `kpi.avg_duration_s` · `kpi.p95_duration_s` · `kpi.total_tests` · `kpi.suite_stability` · `kpi.flakiness_rate` · `kpi.mttd_seconds` · `kpi.mttr_seconds` |
+| `failure-triage` | `triage.total_failures` · `triage.cluster_count` · `triage.root_cause` (per category) · `triage.cross_framework_incidents` |
 | `qms-evidence-collector` | `qms.clauses_covered` · `qms.evidence_files` · `qms.iso9001_clauses` · `qms.soc2_controls` · `qms.iso17025_clauses` |
 
 All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues, while the CI stays green.

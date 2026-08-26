@@ -15,6 +15,7 @@ Metrics emitted:
   kpi.suite_stability     Pass rate over last N runs
   kpi.flakiness_rate      Flaky test percentage
   kpi.mttd_seconds        Mean time to detect (commit → failure)
+  kpi.mttr_seconds        Mean time to recovery (failure → next pass)
 
 Each metric tagged with framework:<name> for per-framework breakdown
 plus framework:aggregate for the roll-up.
@@ -113,4 +114,6 @@ def send_aggregate_kpis(agg: AggregateKPI) -> None:
     ]
     if agg.mttd_seconds is not None:
         series.append(_gauge("kpi.mttd_seconds", agg.mttd_seconds, tags))
+    if agg.mttr_seconds is not None:
+        series.append(_gauge("kpi.mttr_seconds", agg.mttr_seconds, tags))
     _post(series)

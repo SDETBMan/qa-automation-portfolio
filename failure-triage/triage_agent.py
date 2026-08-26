@@ -17,7 +17,13 @@ from pathlib import Path
 
 from anthropic import Anthropic
 
-from tools import read_source_file, read_test_results, search_failure_patterns, write_triage_report
+from tools import (
+    read_multi_framework_results,
+    read_source_file,
+    read_test_results,
+    search_failure_patterns,
+    write_triage_report,
+)
 
 MODEL = "claude-sonnet-4-20250514"
 
@@ -42,23 +48,35 @@ SEVERITY LEVELS:
   - MEDIUM:   Non-critical path affected — can ship with known issue
   - LOW:      Cosmetic or edge case — fix in next sprint
 
+CROSS-FRAMEWORK CORRELATION:
+  When failures from multiple frameworks share the same error pattern, page,
+  or component, cluster them together as a cross-framework incident. Flag
+  cross-framework incidents with higher severity — simultaneous failures
+  across frameworks indicate systemic issues (e.g., a UI change breaking
+  Cypress, Selenium, and Playwright at the same time).
+
 INSTRUCTIONS:
-1. Use read_test_results to parse all JUnit XML files in the input directory.
+1. Use read_test_results (single directory) or read_multi_framework_results
+   (multiple directories) to parse all JUnit XML files.
 2. Identify all failures and errors from the results.
 3. Use search_failure_patterns to search for common patterns across failures.
 4. Optionally use read_source_file to inspect test source code for context.
 5. Cluster failures by root cause category.
 6. For each cluster: count affected tests, assess severity, list affected suites,
-   provide a suggested action, and include 1-2 example failure messages.
-7. Rank clusters by severity (CRITICAL > HIGH > MEDIUM > LOW) then by count.
-8. Use write_triage_report to output the final JSON report.
+   list affected frameworks, provide a suggested action, and include 1-2 example
+   failure messages.
+7. Mark clusters as cross-framework (is_cross_framework: true) when 2+ frameworks
+   are affected.
+8. Rank clusters by severity (CRITICAL > HIGH > MEDIUM > LOW) then by count.
+9. Use write_triage_report to output the final JSON report.
 
 OUTPUT JSON SCHEMA:
 {
   "summary": {
     "total_tests": <int>,
     "total_failures": <int>,
-    "clusters": <int>
+    "clusters": <int>,
+    "cross_framework_incidents": <int>
   },
   "clusters": [
     {
@@ -66,6 +84,8 @@ OUTPUT JSON SCHEMA:
       "count": <int>,
       "severity": "<CRITICAL|HIGH|MEDIUM|LOW>",
       "affected_suites": ["suite1", "suite2"],
+      "affected_frameworks": ["cypress", "selenium"],
+      "is_cross_framework": <bool>,
       "suggested_action": "<what to do to fix>",
       "examples": [
         { "test": "<test_name>", "message": "<failure_message>" }
@@ -101,35 +121,71 @@ def get_client() -> Anthropic:
 
 
 def run_triage(
-    xml_dir: str,
+    xml_sources: list[tuple[Path, str]] | None = None,
     output_path: str = "triage_report.json",
     verbose: bool = True,
+    *,
+    xml_dir: str | None = None,
 ) -> dict:
     """Run the failure triage agent on JUnit XML results.
 
     Args:
-        xml_dir: Path to directory containing JUnit XML files.
+        xml_sources: List of (path, framework_name) tuples for multi-framework
+                     correlation mode. Takes precedence over xml_dir.
         output_path: Path to write the triage report JSON.
         verbose: If True, print agent messages to stdout.
+        xml_dir: Path to a single directory containing JUnit XML files
+                 (backward-compatible mode). Used when xml_sources is None.
 
     Returns:
         The triage report as a dict, or empty dict on failure.
     """
+    # Backward compatibility: convert single xml_dir to xml_sources
+    if xml_sources is None:
+        if xml_dir is None:
+            raise ValueError("Either xml_sources or xml_dir must be provided.")
+        xml_sources = [(Path(xml_dir), Path(xml_dir).name)]
+
     client = get_client()
-    tools = [read_test_results, search_failure_patterns, read_source_file, write_triage_report]
+    multi_framework = len(xml_sources) > 1
+    tools = [read_test_results, read_multi_framework_results,
+             search_failure_patterns, read_source_file, write_triage_report]
 
     timestamp = datetime.now(timezone.utc).isoformat()
-    task_message = (
-        f"Triage the test results in this directory: {xml_dir}\n\n"
-        f"Write the triage report to: {output_path}\n\n"
-        f"Use timestamp: {timestamp}\n\n"
-        f"Start by reading all test results, then analyze failures, "
-        f"cluster by root cause, and produce the final report."
-    )
+
+    if multi_framework:
+        dirs_json = json.dumps([
+            {"path": str(p), "framework": fw} for p, fw in xml_sources
+        ])
+        framework_names = [fw for _, fw in xml_sources]
+        task_message = (
+            f"Triage the test results from multiple frameworks.\n\n"
+            f"Use read_multi_framework_results with this JSON:\n{dirs_json}\n\n"
+            f"Frameworks being correlated: {', '.join(framework_names)}\n\n"
+            f"Write the triage report to: {output_path}\n\n"
+            f"Use timestamp: {timestamp}\n\n"
+            f"Start by reading all test results across all frameworks, then "
+            f"analyze failures, look for cross-framework patterns (same error "
+            f"across multiple frameworks), cluster by root cause, and produce "
+            f"the final report with cross-framework correlation."
+        )
+    else:
+        single_dir = str(xml_sources[0][0])
+        task_message = (
+            f"Triage the test results in this directory: {single_dir}\n\n"
+            f"Write the triage report to: {output_path}\n\n"
+            f"Use timestamp: {timestamp}\n\n"
+            f"Start by reading all test results, then analyze failures, "
+            f"cluster by root cause, and produce the final report."
+        )
 
     if verbose:
         print(f"Starting failure triage agent...")
-        print(f"  XML directory: {xml_dir}")
+        if multi_framework:
+            for p, fw in xml_sources:
+                print(f"  [{fw}] {p}")
+        else:
+            print(f"  XML directory: {xml_sources[0][0]}")
         print(f"  Output: {output_path}")
         print()
 
@@ -165,6 +221,9 @@ def run_triage(
                 print(f"  Total tests: {summary.get('total_tests', '?')}")
                 print(f"  Total failures: {summary.get('total_failures', '?')}")
                 print(f"  Root cause clusters: {summary.get('clusters', '?')}")
+                cross_fw = summary.get("cross_framework_incidents", 0)
+                if cross_fw > 0:
+                    print(f"  Cross-framework incidents: {cross_fw}")
             return report
         except (json.JSONDecodeError, Exception):
             pass

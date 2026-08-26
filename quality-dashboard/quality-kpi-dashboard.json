@@ -1,6 +1,6 @@
 {
   "title": "Quality KPIs: Portfolio-Wide Test Health",
-  "description": "VP-level quality KPIs aggregated across all frameworks — pass rate, failure density, MTTD, suite stability, flakiness rate, and execution duration trends  |  framework:aggregate + per-framework breakdown",
+  "description": "VP-level quality KPIs aggregated across all frameworks — pass rate, failure density, MTTD, MTTR, suite stability, flakiness rate, and execution duration trends  |  framework:aggregate + per-framework breakdown",
   "layout_type": "ordered",
   "template_variables": [
     { "name": "env", "prefix": "env", "available_values": ["ci"], "default": "ci" },
@@ -10,7 +10,7 @@
     {
       "definition": {
         "type": "note",
-        "content": "## Quality KPIs: Portfolio-Wide Test Health\nAggregated quality metrics across all test frameworks  |  Pass Rate · Failure Density · MTTD · Suite Stability · Flakiness  |  `framework:aggregate`",
+        "content": "## Quality KPIs: Portfolio-Wide Test Health\nAggregated quality metrics across all test frameworks  |  Pass Rate · Failure Density · MTTD · MTTR · Suite Stability · Flakiness  |  `framework:aggregate`",
         "background_color": "vivid_blue",
         "font_size": "14",
         "text_align": "center",
@@ -275,6 +275,54 @@
         "yaxis": { "include_zero": true, "label": "seconds" }
       },
       "layout": { "x": 8, "y": 12, "width": 4, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "MTTR (seconds)",
+        "title_size": "16",
+        "title_align": "left",
+        "autoscale": true,
+        "custom_unit": "s",
+        "precision": 0,
+        "requests": [
+          {
+            "response_format": "scalar",
+            "queries": [{ "name": "q1", "data_source": "metrics", "query": "avg:kpi.mttr_seconds{framework:aggregate}", "aggregator": "last" }],
+            "formulas": [{ "formula": "q1" }],
+            "conditional_formats": [
+              { "comparator": "<=", "value": 600, "palette": "white_on_green" },
+              { "comparator": "<=", "value": 1800, "palette": "white_on_yellow" },
+              { "comparator": ">", "value": 1800, "palette": "white_on_red" }
+            ]
+          }
+        ]
+      },
+      "layout": { "x": 0, "y": 14, "width": 4, "height": 2 }
+    },
+    {
+      "definition": {
+        "type": "timeseries",
+        "title": "MTTR Trend (Seconds)",
+        "title_size": "16",
+        "title_align": "left",
+        "show_legend": false,
+        "requests": [
+          {
+            "response_format": "timeseries",
+            "queries": [
+              { "name": "mttr", "data_source": "metrics", "query": "avg:kpi.mttr_seconds{framework:aggregate}" }
+            ],
+            "formulas": [
+              { "formula": "mttr" }
+            ],
+            "display_type": "line",
+            "style": { "palette": "warm", "line_type": "solid", "line_width": "normal" }
+          }
+        ],
+        "yaxis": { "include_zero": true, "label": "seconds" }
+      },
+      "layout": { "x": 4, "y": 14, "width": 8, "height": 2 }
     }
   ]
 }

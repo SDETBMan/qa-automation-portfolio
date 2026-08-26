@@ -106,6 +106,62 @@ def compute_mttd_from_runs(runs: list[dict]) -> float | None:
     return round(statistics.mean(failure_durations), 1)
 
 
+def compute_mttr_from_runs(runs: list[dict]) -> float | None:
+    """Compute Mean Time to Recovery from workflow runs.
+
+    MTTR = average seconds from a failed run's creation to the next
+    successful run's completion.  For each failed run, the first
+    chronologically subsequent run with conclusion=="success" is used.
+
+    Args:
+        runs: List of workflow run dicts from fetch_workflow_runs(),
+              ordered newest-first (GitHub API default).
+
+    Returns:
+        Average MTTR in seconds, or None if no recovery pairs found.
+    """
+    # Sort oldest-first so we can scan forward for recovery
+    sorted_runs = sorted(
+        [r for r in runs if r.get("created_at")],
+        key=lambda r: r["created_at"],
+    )
+
+    recovery_durations: list[float] = []
+
+    for i, run in enumerate(sorted_runs):
+        if run.get("conclusion") != "failure":
+            continue
+        failure_created = run.get("created_at")
+        if not failure_created:
+            continue
+
+        # Find the next successful run after this failure
+        for j in range(i + 1, len(sorted_runs)):
+            if sorted_runs[j].get("conclusion") == "success":
+                recovery_updated = sorted_runs[j].get("updated_at")
+                if not recovery_updated:
+                    break
+                try:
+                    start = datetime.fromisoformat(
+                        failure_created.replace("Z", "+00:00")
+                    )
+                    end = datetime.fromisoformat(
+                        recovery_updated.replace("Z", "+00:00")
+                    )
+                    delta = (end - start).total_seconds()
+                    if delta > 0:
+                        recovery_durations.append(delta)
+                except (ValueError, TypeError):
+                    pass
+                break
+
+    if not recovery_durations:
+        return None
+
+    import statistics
+    return round(statistics.mean(recovery_durations), 1)
+
+
 def fetch_historical_pass_rates(
     repo: str,
     workflow: str,

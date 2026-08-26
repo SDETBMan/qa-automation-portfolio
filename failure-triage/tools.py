@@ -93,6 +93,82 @@ def read_test_results(xml_path: str) -> str:
 
 
 @beta_tool
+def read_multi_framework_results(xml_dirs_json: str) -> str:
+    """Parse JUnit XML files from multiple framework directories.
+
+    Each result line is prefixed with [framework_name] so failures can
+    be correlated across frameworks.
+
+    Args:
+        xml_dirs_json: JSON array of objects with "path" and "framework" keys.
+                       Example: [{"path": "/results/cypress", "framework": "cypress"}]
+    """
+    try:
+        entries = json.loads(xml_dirs_json)
+    except json.JSONDecodeError as exc:
+        return f"ERROR: invalid JSON — {exc}"
+
+    all_lines: list[str] = []
+    total_pass = 0
+    total_fail = 0
+    total_skip = 0
+    total_error = 0
+
+    for entry in entries:
+        dir_path = Path(entry["path"])
+        framework = entry.get("framework", dir_path.name)
+
+        if not dir_path.exists():
+            all_lines.append(f"\n[{framework}] ERROR: path not found — {dir_path}")
+            continue
+
+        try:
+            runs = parse_directory(dir_path) if dir_path.is_dir() else [parse_junit_xml(dir_path)]
+        except Exception as exc:
+            all_lines.append(f"\n[{framework}] ERROR parsing XML: {exc}")
+            continue
+
+        if not runs:
+            all_lines.append(f"\n[{framework}] No test results found.")
+            continue
+
+        for run in runs:
+            all_lines.append(f"\n=== [{framework}] Run: {run.run_id} ({len(run.results)} tests) ===")
+            for r in run.results:
+                status_icon = {
+                    "passed": "PASS",
+                    "failed": "FAIL",
+                    "skipped": "SKIP",
+                    "error": "ERROR",
+                }.get(r.status, r.status.upper())
+
+                line = f"  [{framework}] [{status_icon}] {r.suite}::{r.name} ({r.time_s}s)"
+                if r.message:
+                    line += f"\n         [{framework}] Message: {r.message}"
+                all_lines.append(line)
+
+                if r.status == "passed":
+                    total_pass += 1
+                elif r.status == "failed":
+                    total_fail += 1
+                elif r.status == "skipped":
+                    total_skip += 1
+                elif r.status == "error":
+                    total_error += 1
+
+    total = total_pass + total_fail + total_skip + total_error
+    summary = (
+        f"\n--- Multi-Framework Summary ---\n"
+        f"Total: {total}  |  Pass: {total_pass}  |  Fail: {total_fail}  "
+        f"|  Skip: {total_skip}  |  Error: {total_error}\n"
+        f"Frameworks: {', '.join(e.get('framework', '?') for e in entries)}"
+    )
+    all_lines.insert(0, summary)
+
+    return "\n".join(all_lines)
+
+
+@beta_tool
 def search_failure_patterns(results_text: str, pattern: str) -> str:
     """Search test failure messages for a specific pattern (regex).
 

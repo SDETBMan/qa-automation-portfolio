@@ -17,6 +17,7 @@ Aggregates test results across all frameworks in the monorepo, computes derived 
 | **Suite Stability** | `mean(pass_rates[-N:])` | Pass rate trend over last N runs — detects deteriorating suites | Historical runs |
 | **Flakiness Rate** | `flaky_tests / total` | Percentage of tests exhibiting intermittent pass/fail — from flakiness-detector | flakiness-detector |
 | **MTTD** | `mean(conclusion_time - push_time)` | Mean Time to Detect — seconds from code push to CI failure notification | GitHub Actions API |
+| **MTTR** | `mean(next_pass.updated_at - failure.created_at)` | Mean Time to Recovery — seconds from failure to next successful run | GitHub Actions API |
 | **Total Tests** | `sum(total)` | Portfolio-wide test count across all frameworks | JUnit XML |
 
 ---
@@ -55,6 +56,7 @@ The `quality-kpi-dashboard.json` file can be imported directly into DataDog (Das
 |-----|--------|-------------|
 | 0 | Header note | "Quality KPIs: Portfolio-Wide Test Health" |
 | 1 | 4 gauge widgets | Overall Pass Rate · Failure Density · Suite Stability · MTTD |
+| 6 | MTTR gauge + trend | MTTR (seconds) gauge · MTTR Trend line |
 | 2 | Timeseries | Pass rate trend over time, per framework (stacked line chart) |
 | 3 | Timeseries | Test execution duration trends (p95) |
 | 4 | Top list + Heatmap | Frameworks ranked by failure density (worst first) + Test outcomes heatmap |
@@ -76,6 +78,7 @@ All widgets use conditional formatting: green (healthy) → yellow (warning) →
 | `kpi.suite_stability` | Pass rate over last N runs | `framework:aggregate` |
 | `kpi.flakiness_rate` | Flaky test percentage | `framework:aggregate` |
 | `kpi.mttd_seconds` | Mean time to detect (commit → failure) | `framework:aggregate` |
+| `kpi.mttr_seconds` | Mean time to recovery (failure → next pass) | `framework:aggregate` |
 
 All metrics tagged with `service:qa-automation-portfolio`, `env:ci`.
 
