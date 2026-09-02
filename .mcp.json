@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "qa-tools": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["qa-mcp-server/server.py"]
+    }
+  }
+}

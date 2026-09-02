@@ -52,6 +52,10 @@ quality-dashboard/     Python — JUnit XML, DataDog v2 API, GitHub Actions API
 site-monitor/          Python — BeautifulSoup, Click, DataDog, Requests
 vulnerability-aggregator/ Python — GitHub API, Dependabot, CodeQL, ZAP
 dependency-audit/      Python — Click, npm/PyPI/NuGet/Maven registries
+branch-collision-monitor/ Python — GitHub API (gh CLI), Anthropic Claude, DataDog
+
+# MCP Server
+qa-mcp-server/         Python — FastMCP, psycopg2, Pydantic, DataDog
 
 # QMS & Compliance
 qms-evidence-collector/ Python — Click, ISO 9001, SOC 2, ISO/IEC 17025, DataDog
