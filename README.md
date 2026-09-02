@@ -23,6 +23,7 @@
 [![flakiness-detector CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/flakiness-detector.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/flakiness-detector.yml)
 [![site-monitor CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml)
 [![qms-evidence-collector CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/qms-evidence-collector.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/qms-evidence-collector.yml)
+[![branch-collision-monitor CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/branch-collision-monitor.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/branch-collision-monitor.yml)
 [![CodeQL](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml)
 
 A monorepo housing twenty-six independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, compliance evidence collection, dependency auditing, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers. See [`QA-OPERATING-MODEL.md`](./QA-OPERATING-MODEL.md) for the portfolio-wide quality standards and [`ISO-9001-QUALITY-MANUAL.md`](./ISO-9001-QUALITY-MANUAL.md) for the ISO 9001:2015 clause-aligned quality manual.
@@ -70,7 +71,9 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`quality-dashboard`](./quality-dashboard/) | Python | JUnit XML · DataDog v2 API · GitHub Actions API · Python 3.11 | [→](./quality-dashboard/README.md) |
 | [`failure-triage`](./failure-triage/) | Python | Anthropic Claude (tool use) · JUnit XML · DataDog · Python 3.11 | [→](./failure-triage/README.md) |
 | [`qms-evidence-collector`](./qms-evidence-collector/) | Python | Click · ISO 9001 · SOC 2 · ISO/IEC 17025 · DataDog · Python 3.11 | [→](./qms-evidence-collector/README.md) |
+| [`branch-collision-monitor`](./branch-collision-monitor/) | Python | GitHub API (gh CLI) · Anthropic Claude · DataDog · Python 3.11 | [→](./branch-collision-monitor/README.md) |
 | [`dependency-audit`](./dependency-audit/) | Python | Click · Requests · npm/PyPI/NuGet/Maven registries · Python 3.12 | [→](./dependency-audit/README.md) |
+| [`qa-mcp-server`](./qa-mcp-server/) | Python | MCPServer · psycopg2 · Pydantic · DataDog · Python 3.11 | [→](./qa-mcp-server/README.md) |
 | [`automation`](./automation/) | Bash · TypeScript | Claude Code headless mode · Agent SDK · Routines | — |
 
 ---
@@ -557,6 +560,50 @@ python run.py --output drift-report.md
 pytest tests/ -v
 ```
 
+### branch-collision-monitor
+
+**Prerequisites:** [Python 3.11+](https://python.org) · `gh` CLI authenticated (`gh auth login`)
+
+```bash
+# From the repo root
+make branch-collisions
+
+# Or manually
+cd branch-collision-monitor
+pip install -r requirements.txt
+
+# Analyze a repository for branch collisions
+python run.py --repo SDETBMan/qa-automation-portfolio
+
+# JSON + Markdown file output
+python run.py --repo SDETBMan/qa-automation-portfolio --output report --format both
+
+# With Claude semantic conflict analysis
+python run.py --repo SDETBMan/qa-automation-portfolio --semantic --max-semantic 5
+
+# Run tests
+pytest tests/ -v
+```
+
+### qa-mcp-server
+
+**Prerequisites:** [Python 3.11+](https://python.org) · (Optional) PostgreSQL for `inspect_db`
+
+```bash
+# Run tests
+make mcp-server-test
+
+# Or manually
+cd qa-mcp-server
+pip install -r requirements.txt
+pytest tests/ -v
+
+# Test with MCP Inspector
+mcp dev server.py
+```
+
+Claude Code auto-discovers the server via `.mcp.json` in the repo root. Five tools are exposed: `parse_junit_xml`, `analyze_flakiness`, `compute_quality_kpis`, `diff_claims`, `inspect_db`.
+
 ---
 
 ## Repo Structure
@@ -745,10 +792,19 @@ qa-automation-portfolio/
 │   ├── mappings/clause_registry.json   # Artifact-to-clause definitions (10 artifact types)
 │   ├── tests/                          # 48 tests: scanner, mapper, reporter
 │   └── run.py                          # CLI: --repo-dir · --output · --standard · --format
+├── branch-collision-monitor/           # Python · GitHub API (gh CLI) · Anthropic Claude
+│   ├── monitor/                        # github_api · analyzer · reporter · semantic · datadog
+│   ├── tests/                          # Scoring, diff parsing, report format tests (63 tests)
+│   └── run.py                          # CLI: --repo · --base · --limit · --format · --semantic
 ├── dependency-audit/                   # Python · Click · Requests · cross-ecosystem auditor
 │   ├── auditor/                        # scanner · checkers · updater · reporter
 │   ├── requirements.txt               # click, requests
 │   └── run.py                          # CLI: --repo-dir · --ecosystem · --update · --output
+├── qa-mcp-server/                      # Python · MCPServer · psycopg2 · MCP tools over stdio
+│   ├── server.py                       # MCPServer server, sys.path setup, tool registration
+│   ├── tools/                          # junit_parser · flakiness · quality_kpi · claims_diff · db_inspector
+│   ├── utils/                          # datadog_reporter (optional DD metrics)
+│   └── tests/                          # 46 tests: tool wrappers, DB guardrails
 ├── automation/                            # Claude Code automation (headless, Agent SDK, routines)
 │   ├── headless/                          # Headless mode scripts (claude -p with structured output)
 │   │   ├── triage-failures.sh             # Pipe JUnit XML → Claude → root-cause clusters (JSON)
@@ -820,6 +876,7 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `azure-pipelines.yml` | PR (Azure DevOps) | ADO YAML equivalent of GHA smoke gate (playwright) |
 | `deploy-validate-rollback.yml` | `workflow_dispatch` · `workflow_call` | deployment URL · Vercel project ID · auto-rollback toggle |
 | `visual-regression-update.yml` | `workflow_dispatch` | browser project (chromium · firefox · webkit) |
+| `branch-collision-monitor.yml` | daily 07:00 UTC · push · PR (paths: `branch-collision-monitor/**`) · `workflow_dispatch` | — |
 | `dependency-audit.yml` | weekly Sunday 04:00 UTC · `workflow_dispatch` | auto-update toggle · ecosystem filter (npm · pip · nuget · maven) |
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
@@ -847,6 +904,7 @@ Two DataDog features run across all frameworks:
 | `quality-dashboard` | `kpi.pass_rate` · `kpi.failure_density` · `kpi.avg_duration_s` · `kpi.p95_duration_s` · `kpi.total_tests` · `kpi.suite_stability` · `kpi.flakiness_rate` · `kpi.mttd_seconds` · `kpi.mttr_seconds` |
 | `failure-triage` | `triage.total_failures` · `triage.cluster_count` · `triage.root_cause` (per category) · `triage.cross_framework_incidents` |
 | `qms-evidence-collector` | `qms.clauses_covered` · `qms.evidence_files` · `qms.iso9001_clauses` · `qms.soc2_controls` · `qms.iso17025_clauses` |
+| `qa-mcp-server` | `mcp.tool_invocations` · `mcp.tool_errors` · `mcp.tool_duration_ms` |
 
 All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues, while the CI stays green.
 
@@ -996,7 +1054,19 @@ Steps: checkout → Kind cluster → JDK 17 → apply k8s manifests → wait for
 
 ## Claude Code Integration
 
-The repository includes a full Claude Code automation layer — deterministic hooks, headless CI scripts, an Agent SDK orchestrator, cloud routines, and a GitHub Action — packaged as a distributable plugin (`qa-guardrails`).
+The repository includes a full Claude Code automation layer — an MCP server, deterministic hooks, headless CI scripts, an Agent SDK orchestrator, cloud routines, and a GitHub Action — packaged as a distributable plugin (`qa-guardrails`).
+
+### MCP Server (`qa-mcp-server`)
+
+A MCPServer server exposing five QA tools over stdio transport. Auto-registered with Claude Code via `.mcp.json` in the repo root.
+
+| Tool | What It Does |
+|---|---|
+| `parse_junit_xml` | Parse JUnit XML files into structured JSON (summary + per-test results) |
+| `analyze_flakiness` | Detect flaky tests across multiple CI runs from JUnit XML |
+| `compute_quality_kpis` | Compute pass rate, failure density, and duration KPIs |
+| `diff_claims` | Compare two claims CSV files with field-level diffs |
+| `inspect_db` | Read-only Postgres queries with 5 safety guardrail layers |
 
 ### Hooks (Deterministic Guardrails)
 

@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber karate-perf cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report site-monitor site-monitor-baseline triage-failures analyze-quality audit-pr portfolio-health portfolio-health-quick clean
+.PHONY: help all playwright selenium cucumber karate-perf cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report site-monitor site-monitor-baseline branch-collisions branch-collisions-semantic mcp-server-test triage-failures analyze-quality audit-pr portfolio-health portfolio-health-quick clean
 
 # Print help when `make` is called with no target
 help:
@@ -61,6 +61,9 @@ help:
 	@echo "  make vuln-report          Generate unified vulnerability report (requires gh CLI)"
 	@echo "  make site-monitor         Run site drift detector against saucedemo.com"
 	@echo "  make site-monitor-baseline  Generate fresh selector baseline"
+	@echo "  make branch-collisions      Run branch collision analysis (requires gh CLI)"
+	@echo "  make branch-collisions-semantic  Branch collisions with Claude semantic analysis"
+	@echo "  make mcp-server-test        Run qa-mcp-server pytest suite"
 	@echo "  ──── Automation (Claude Code) ────"
 	@echo "  make triage-failures XML=<dir>  Headless failure triage on JUnit XML"
 	@echo "  make analyze-quality        Headless quality dashboard analysis"
@@ -88,6 +91,8 @@ help:
 	@echo "    flakiness-detector — Python 3.11+"
 	@echo "    vuln-report      — Python 3.11+ · gh CLI authenticated"
 	@echo "    site-monitor     — Python 3.11+"
+	@echo "    branch-collisions — Python 3.11+ · gh CLI authenticated"
+	@echo "    mcp-server-test  — Python 3.11+"
 	@echo "    triage/quality/audit — claude CLI authenticated"
 	@echo "    portfolio-health — Node.js 20+ · claude CLI authenticated"
 	@echo "    cypress          — Node.js 20+"
@@ -336,6 +341,35 @@ site-monitor-baseline:
 		python run.py --update-baseline
 	@echo ""
 	@echo ">>> [site-monitor] Done. Baseline written to site-monitor/baseline.json"
+	@echo ""
+
+# ── Branch Collision Monitor ─────────────────────────────────────────────────
+
+branch-collisions:
+	@echo ""
+	@echo ">>> [branch-collision-monitor] Running branch collision analysis..."
+	cd branch-collision-monitor && pip install -r requirements.txt -q && \
+		python run.py --repo SDETBMan/qa-automation-portfolio
+	@echo ""
+	@echo ">>> [branch-collision-monitor] Done."
+	@echo ""
+
+branch-collisions-semantic:
+	@echo ""
+	@echo ">>> [branch-collision-monitor] Running branch collision analysis with semantic analysis..."
+	cd branch-collision-monitor && pip install -r requirements.txt -q && \
+		python run.py --repo SDETBMan/qa-automation-portfolio --semantic --max-semantic 10
+	@echo ""
+	@echo ">>> [branch-collision-monitor] Done."
+	@echo ""
+
+# ── QA MCP Server ──────────────────────────────────────────────────────────
+
+mcp-server-test:
+	@echo ""
+	@echo ">>> [qa-mcp-server] Running tests..."
+	cd qa-mcp-server && pip install -r requirements.txt -q && \
+		pytest tests/ -v
 	@echo ""
 
 ## ── Terraform ────────────────────────────────────────────────────────────────
