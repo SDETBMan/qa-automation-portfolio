@@ -1,0 +1,9 @@
+.env
+output/*.json
+output/*.md
+!output/.gitkeep
+__pycache__/
+**/__pycache__/
+*.pyc
+.venv/
+.pytest_cache/

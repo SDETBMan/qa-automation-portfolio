@@ -2,7 +2,7 @@
 
 ## Repository overview
 
-Polyglot monorepo with 26 independent QA/SDET frameworks across 6 languages (TypeScript, Java, C#, Python, JavaScript, HCL), plus 3 companion repos. Each sub-project is self-contained with its own dependencies, config, tests, and CI workflow. The repo targets SauceDemo, a Shopify test store, and custom FastAPI services as systems under test.
+Polyglot monorepo with 27 independent QA/SDET frameworks across 6 languages (TypeScript, Java, C#, Python, JavaScript, HCL), plus 3 companion repos. Each sub-project is self-contained with its own dependencies, config, tests, and CI workflow. The repo targets SauceDemo, a Shopify test store, and custom FastAPI services as systems under test.
 
 ## Branching and commits
 
@@ -38,6 +38,7 @@ agent-eval/            Python — DeepEval, Pytest, OpenAI, Pydantic
 job-agent/             Python — Anthropic Claude, Tavily, AgentOps
 coding-agent/          Python — Anthropic Claude, AgentOps
 failure-triage/        Python — Anthropic Claude (tool use), JUnit XML, DataDog
+stagehand-agent/       Python — Stagehand, Playwright, Browserbase, Pydantic
 
 # LLM Frameworks
 langchain-rag/         Python — LangChain 0.3, LCEL, ChromaDB, Langfuse

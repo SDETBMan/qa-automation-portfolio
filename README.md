@@ -24,9 +24,10 @@
 [![site-monitor CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/site-monitor.yml)
 [![qms-evidence-collector CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/qms-evidence-collector.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/qms-evidence-collector.yml)
 [![branch-collision-monitor CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/branch-collision-monitor.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/branch-collision-monitor.yml)
+[![stagehand-agent CI](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/stagehand-agent.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/stagehand-agent.yml)
 [![CodeQL](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml/badge.svg)](https://github.com/SDETBMan/qa-automation-portfolio/actions/workflows/codeql.yml)
 
-A monorepo housing twenty-six independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, compliance evidence collection, dependency auditing, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers. See [`QA-OPERATING-MODEL.md`](./QA-OPERATING-MODEL.md) for the portfolio-wide quality standards and [`ISO-9001-QUALITY-MANUAL.md`](./ISO-9001-QUALITY-MANUAL.md) for the ISO 9001:2015 clause-aligned quality manual.
+A monorepo housing twenty-seven independent, production-grade frameworks spanning test automation, AI agents, API services, contract testing, flakiness detection, site drift monitoring, vulnerability aggregation, compliance evidence collection, dependency auditing, and cloud infrastructure — each showcasing a distinct engineering discipline used by senior SDETs and platform engineers. See [`QA-OPERATING-MODEL.md`](./QA-OPERATING-MODEL.md) for the portfolio-wide quality standards and [`ISO-9001-QUALITY-MANUAL.md`](./ISO-9001-QUALITY-MANUAL.md) for the ISO 9001:2015 clause-aligned quality manual.
 
 ---
 
@@ -74,6 +75,7 @@ Three additional repositories outside this monorepo, focused on adversarial AI t
 | [`branch-collision-monitor`](./branch-collision-monitor/) | Python | GitHub API (gh CLI) · Anthropic Claude · DataDog · Python 3.11 | [→](./branch-collision-monitor/README.md) |
 | [`dependency-audit`](./dependency-audit/) | Python | Click · Requests · npm/PyPI/NuGet/Maven registries · Python 3.12 | [→](./dependency-audit/README.md) |
 | [`qa-mcp-server`](./qa-mcp-server/) | Python | MCPServer · psycopg2 · Pydantic · DataDog · Python 3.11 | [→](./qa-mcp-server/README.md) |
+| [`stagehand-agent`](./stagehand-agent/) | Python | Stagehand · Playwright · Browserbase · Pydantic · Python 3.11 | [→](./stagehand-agent/README.md) |
 | [`automation`](./automation/) | Bash · TypeScript | Claude Code headless mode · Agent SDK · Routines | — |
 
 ---
@@ -585,6 +587,28 @@ python run.py --repo SDETBMan/qa-automation-portfolio --semantic --max-semantic 
 pytest tests/ -v
 ```
 
+### stagehand-agent
+
+**Prerequisites:** [Python 3.11+](https://python.org) · (Optional) Browserbase API key + model API key for AI-driven mode
+
+```bash
+# Run unit tests (no API keys needed)
+make stagehand-agent-test
+
+# Or manually
+cd stagehand-agent
+pip install -r requirements.txt
+pip install pytest pytest-asyncio
+pytest tests/ -v
+
+# Traditional mode (local Playwright, no API keys)
+python run.py --mode traditional
+
+# Full comparison (requires Browserbase + model API keys in .env)
+cp .env.example .env  # fill in keys
+python run.py --mode compare
+```
+
 ### qa-mcp-server
 
 **Prerequisites:** [Python 3.11+](https://python.org) · (Optional) PostgreSQL for `inspect_db`
@@ -796,6 +820,13 @@ qa-automation-portfolio/
 │   ├── monitor/                        # github_api · analyzer · reporter · semantic · datadog
 │   ├── tests/                          # Scoring, diff parsing, report format tests (63 tests)
 │   └── run.py                          # CLI: --repo · --base · --limit · --format · --semantic
+├── stagehand-agent/                   # Python · Stagehand · Playwright · Browserbase
+│   ├── pages/                          # POM: BasePage · LoginPage · InventoryPage · CartPage · CheckoutPage
+│   ├── agent/                          # AI-driven: StagehandRunner · Pydantic schemas
+│   ├── traditional/                    # Deterministic: PlaywrightRunner via POM
+│   ├── comparison/                     # metrics · runner · reporter
+│   ├── tests/                          # 60 tests: schemas, metrics, runners, reporter, orchestrator
+│   └── run.py                          # CLI: --mode · --scenarios · --output · --format
 ├── dependency-audit/                   # Python · Click · Requests · cross-ecosystem auditor
 │   ├── auditor/                        # scanner · checkers · updater · reporter
 │   ├── requirements.txt               # click, requests
@@ -877,11 +908,12 @@ Each workflow has **path filters** so a push to `selenium-java/` only triggers t
 | `deploy-validate-rollback.yml` | `workflow_dispatch` · `workflow_call` | deployment URL · Vercel project ID · auto-rollback toggle |
 | `visual-regression-update.yml` | `workflow_dispatch` | browser project (chromium · firefox · webkit) |
 | `branch-collision-monitor.yml` | daily 07:00 UTC · push · PR (paths: `branch-collision-monitor/**`) · `workflow_dispatch` | — |
+| `stagehand-agent.yml` | push · PR (paths: `stagehand-agent/**`) · `workflow_dispatch` | mode (traditional · ai · compare) |
 | `dependency-audit.yml` | weekly Sunday 04:00 UTC · `workflow_dispatch` | auto-update toggle · ecosystem filter (npm · pip · nuget · maven) |
 
 All three browser-test workflows include an **OWASP ZAP Baseline Scan** step (`if: always()`, `continue-on-error: true`) that runs a passive scan against saucedemo.com after tests complete. ZAP findings never block green CI since we do not control the target site. The HTML scan report is uploaded as a workflow artifact.
 
-> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, `agent-eval.yml`, `langchain-rag.yml`, and `dspy-optimizer.yml`. `ANTHROPIC_API_KEY` and `TAVILY_API_KEY` are required for `job-agent.yml`; `ANTHROPIC_API_KEY` alone is required for `langgraph-agent.yml` and the cypress AI test generator (`npm run ai:generate`). `dspy-vertex` requires GCP credentials (`GOOGLE_APPLICATION_CREDENTIALS` or `gcloud auth`). `VERCEL_TOKEN` is required for `deploy-validate-rollback.yml`. `SHOPIFY_STORE_URL` is required for Shopify E2E tests. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it. The three new AI framework workflows (`langchain-rag`, `langgraph-agent`, `dspy-optimizer`) only call APIs on `workflow_dispatch` — lint runs for free on every push/PR.
+> **Secrets required:** `OPENAI_API_KEY` must be added to **Settings → Secrets → Actions** for `ai-eval.yml`, `conv-eval.yml`, `agent-eval.yml`, `langchain-rag.yml`, and `dspy-optimizer.yml`. `ANTHROPIC_API_KEY` and `TAVILY_API_KEY` are required for `job-agent.yml`; `ANTHROPIC_API_KEY` alone is required for `langgraph-agent.yml` and the cypress AI test generator (`npm run ai:generate`). `BROWSERBASE_API_KEY`, `BROWSERBASE_PROJECT_ID`, and `MODEL_API_KEY` are required for `stagehand-agent.yml` (compare job only; unit tests run without keys). `dspy-vertex` requires GCP credentials (`GOOGLE_APPLICATION_CREDENTIALS` or `gcloud auth`). `VERCEL_TOKEN` is required for `deploy-validate-rollback.yml`. `SHOPIFY_STORE_URL` is required for Shopify E2E tests. `DD_API_KEY` (optional DataDog free trial) enables CI Visibility and custom metrics across all frameworks. All utilities skip gracefully without it. The three new AI framework workflows (`langchain-rag`, `langgraph-agent`, `dspy-optimizer`) only call APIs on `workflow_dispatch` — lint runs for free on every push/PR.
 
 ### DataDog Observability
 
@@ -905,6 +937,7 @@ Two DataDog features run across all frameworks:
 | `failure-triage` | `triage.total_failures` · `triage.cluster_count` · `triage.root_cause` (per category) · `triage.cross_framework_incidents` |
 | `qms-evidence-collector` | `qms.clauses_covered` · `qms.evidence_files` · `qms.iso9001_clauses` · `qms.soc2_controls` · `qms.iso17025_clauses` |
 | `qa-mcp-server` | `mcp.tool_invocations` · `mcp.tool_errors` · `mcp.tool_duration_ms` |
+| `stagehand-agent` | `stagehand.traditional.duration_ms` · `stagehand.ai_driven.duration_ms` · `stagehand.ai_driven.tokens_used` · `stagehand.speed_ratio` · `stagehand.scenarios_passed` |
 
 All utilities follow the same graceful-skip pattern as SlackUtils: if `DD_API_KEY` is absent, a `[WARN]` is logged and execution continues, while the CI stays green.
 
