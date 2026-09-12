@@ -40,7 +40,6 @@ def detect_base_branch(repo: str) -> str:
     raw = _run_gh([
         "api", f"/repos/{repo}",
         "--jq", ".default_branch",
-        "-q",
     ])
     branch = raw.strip()
     return branch if branch and branch != "[]" else "main"
@@ -55,7 +54,6 @@ def fetch_active_branches(repo: str, limit: int = 30) -> list[dict]:
         "api", f"/repos/{repo}/branches",
         "--paginate",
         "--jq", ".[].name",
-        "-q",
     ])
 
     if not raw.strip() or raw.strip() == "[]":
@@ -82,7 +80,6 @@ def fetch_branch_diff(repo: str, base: str, branch: str) -> str:
     raw = _run_gh([
         "api", f"/repos/{repo}/compare/{base}...{branch}",
         "--jq", ".files",
-        "-q",
     ], timeout=60)
 
     return raw
