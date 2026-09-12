@@ -1,0 +1,39 @@
+diff --git a/src/auth/middleware.py b/src/auth/middleware.py
+index 1234567..abcdefg 100644
+--- a/src/auth/middleware.py
++++ b/src/auth/middleware.py
+@@ -10,6 +10,15 @@ class AuthMiddleware:
+     def __init__(self, app):
+         self.app = app
++        self.token_cache = {}
++
++    def validate_token(self, token: str) -> bool:
++        if token in self.token_cache:
++            return self.token_cache[token]
++        result = self._verify_jwt(token)
++        self.token_cache[token] = result
++        return result
++
+     def __call__(self, request):
+         return self.app(request)
+
+diff --git a/src/auth/utils.py b/src/auth/utils.py
+index 2345678..bcdefgh 100644
+--- a/src/auth/utils.py
++++ b/src/auth/utils.py
+@@ -1,5 +1,8 @@
++import hashlib
++
+ def hash_password(password: str) -> str:
+-    return password  # TODO: implement
++    salt = generate_salt()
++    return hashlib.sha256(f"{salt}{password}".encode()).hexdigest()
+
+diff --git a/config/settings.yaml b/config/settings.yaml
+index 3456789..cdefghi 100644
+--- a/config/settings.yaml
++++ b/config/settings.yaml
+@@ -5,3 +5,5 @@ auth:
+   token_expiry: 3600
++  cache_ttl: 300
++  max_cache_size: 1000
