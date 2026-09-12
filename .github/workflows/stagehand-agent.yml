@@ -1,0 +1,85 @@
+name: Stagehand Agent
+
+on:
+  push:
+    branches: [main]
+    paths: ['stagehand-agent/**']
+  pull_request:
+    branches: [main]
+    paths: ['stagehand-agent/**']
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Run mode'
+        required: false
+        default: 'compare'
+        type: choice
+        options:
+          - traditional
+          - ai
+          - compare
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stagehand-agent
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: stagehand-agent/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest pytest-asyncio
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+  compare:
+    if: github.event_name == 'workflow_dispatch'
+    needs: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stagehand-agent
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: stagehand-agent/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        if: contains(fromJSON('["traditional", "compare"]'), inputs.mode)
+        run: python -m playwright install chromium
+
+      - name: Run comparison
+        run: python run.py --mode ${{ inputs.mode }} --output output/comparison --format both
+        env:
+          BROWSERBASE_API_KEY: ${{ secrets.BROWSERBASE_API_KEY }}
+          BROWSERBASE_PROJECT_ID: ${{ secrets.BROWSERBASE_PROJECT_ID }}
+          MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_SITE: ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      - name: Upload comparison report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: stagehand-comparison-report
+          path: |
+            stagehand-agent/output/comparison.md
+            stagehand-agent/output/comparison.json
+          retention-days: 30

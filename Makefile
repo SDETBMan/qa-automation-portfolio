@@ -19,7 +19,7 @@
 #   postman    — Node.js 20+ (node --version)
 # ─────────────────────────────────────────────────────────────────────────────
 
-.PHONY: help all playwright selenium cucumber karate-perf cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report site-monitor site-monitor-baseline branch-collisions branch-collisions-semantic mcp-server-test triage-failures analyze-quality audit-pr portfolio-health portfolio-health-quick clean
+.PHONY: help all playwright selenium cucumber karate-perf cucumber-python ai-eval postman job-agent coding-agent fastapi-service fastapi-service-test cypress-test cypress-open k8s-apply k8s-delete k8s-status terraform-init terraform-validate terraform-fmt terraform-plan terraform-apply terraform-destroy terraform-clean langchain-rag langgraph-agent dspy-optimizer claims-diff claims-diff-test pact-consumer pact-verify flakiness-detector flakiness-detector-test vuln-report site-monitor site-monitor-baseline branch-collisions branch-collisions-semantic mcp-server-test stagehand-agent stagehand-agent-test triage-failures analyze-quality audit-pr portfolio-health portfolio-health-quick clean
 
 # Print help when `make` is called with no target
 help:
@@ -64,6 +64,8 @@ help:
 	@echo "  make branch-collisions      Run branch collision analysis (requires gh CLI)"
 	@echo "  make branch-collisions-semantic  Branch collisions with Claude semantic analysis"
 	@echo "  make mcp-server-test        Run qa-mcp-server pytest suite"
+	@echo "  make stagehand-agent        Run Stagehand vs Playwright comparison (requires API keys)"
+	@echo "  make stagehand-agent-test   Run stagehand-agent pytest suite"
 	@echo "  ──── Automation (Claude Code) ────"
 	@echo "  make triage-failures XML=<dir>  Headless failure triage on JUnit XML"
 	@echo "  make analyze-quality        Headless quality dashboard analysis"
@@ -93,6 +95,7 @@ help:
 	@echo "    site-monitor     — Python 3.11+"
 	@echo "    branch-collisions — Python 3.11+ · gh CLI authenticated"
 	@echo "    mcp-server-test  — Python 3.11+"
+	@echo "    stagehand-agent  — Python 3.11+ · BROWSERBASE_API_KEY · MODEL_API_KEY in stagehand-agent/.env"
 	@echo "    triage/quality/audit — claude CLI authenticated"
 	@echo "    portfolio-health — Node.js 20+ · claude CLI authenticated"
 	@echo "    cypress          — Node.js 20+"
@@ -369,6 +372,24 @@ mcp-server-test:
 	@echo ""
 	@echo ">>> [qa-mcp-server] Running tests..."
 	cd qa-mcp-server && pip install -r requirements.txt -q && \
+		pytest tests/ -v
+	@echo ""
+
+# ── Stagehand Agent ──────────────────────────────────────────────────────────
+
+stagehand-agent:
+	@echo ""
+	@echo ">>> [stagehand-agent] Running Stagehand vs Playwright comparison..."
+	cd stagehand-agent && pip install -r requirements.txt -q && \
+		python run.py --mode compare
+	@echo ""
+	@echo ">>> [stagehand-agent] Done. Report in stagehand-agent/output/"
+	@echo ""
+
+stagehand-agent-test:
+	@echo ""
+	@echo ">>> [stagehand-agent] Running tests..."
+	cd stagehand-agent && pip install -r requirements.txt -q pytest pytest-asyncio -q && \
 		pytest tests/ -v
 	@echo ""
 
