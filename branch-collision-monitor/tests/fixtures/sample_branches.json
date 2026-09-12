@@ -1,0 +1,41 @@
+[
+  {
+    "name": "feature/auth-refactor",
+    "commit": {
+      "sha": "abc123",
+      "commit": {
+        "author": {
+          "name": "Alice",
+          "date": "2026-08-30T10:00:00Z"
+        },
+        "message": "refactor: extract auth middleware"
+      }
+    }
+  },
+  {
+    "name": "feature/user-profile",
+    "commit": {
+      "sha": "def456",
+      "commit": {
+        "author": {
+          "name": "Bob",
+          "date": "2026-08-30T14:00:00Z"
+        },
+        "message": "feat: add user profile page"
+      }
+    }
+  },
+  {
+    "name": "fix/login-bug",
+    "commit": {
+      "sha": "ghi789",
+      "commit": {
+        "author": {
+          "name": "Charlie",
+          "date": "2026-08-31T09:00:00Z"
+        },
+        "message": "fix: resolve login redirect loop"
+      }
+    }
+  }
+]

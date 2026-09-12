@@ -1,0 +1,51 @@
+name: Branch Collision Monitor
+
+on:
+  push:
+    branches: [main]
+    paths: ['branch-collision-monitor/**']
+  pull_request:
+    branches: [main]
+    paths: ['branch-collision-monitor/**']
+  schedule:
+    - cron: '0 7 * * *'  # daily 07:00 UTC
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: branch-collision-monitor
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: branch-collision-monitor/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+      - name: Run collision analysis (demo)
+        run: python run.py --repo ${{ github.repository }} --output collision-report --format both
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_SITE:    ${{ vars.DD_SITE || 'datadoghq.com' }}
+
+      - name: Upload collision report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: collision-report
+          path: |
+            branch-collision-monitor/collision-report.md
+            branch-collision-monitor/collision-report.json
+          retention-days: 30

@@ -1,0 +1,45 @@
+diff --git a/src/auth/middleware.py b/src/auth/middleware.py
+index 1234567..zzzzzzz 100644
+--- a/src/auth/middleware.py
++++ b/src/auth/middleware.py
+@@ -10,6 +10,12 @@ class AuthMiddleware:
+     def __init__(self, app):
+         self.app = app
++        self.rate_limiter = RateLimiter()
++
++    def check_rate_limit(self, request) -> bool:
++        client_ip = request.client.host
++        return self.rate_limiter.allow(client_ip)
++
+     def __call__(self, request):
++        if not self.check_rate_limit(request):
++            return Response(status_code=429)
+         return self.app(request)
+
+diff --git a/src/users/profile.py b/src/users/profile.py
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/src/users/profile.py
+@@ -0,0 +1,20 @@
++class UserProfile:
++    def __init__(self, user_id: str):
++        self.user_id = user_id
++
++    def get_display_name(self) -> str:
++        return f"User {self.user_id}"
+
+diff --git a/tests/test_auth.py b/tests/test_auth.py
+index 4567890..defghij 100644
+--- a/tests/test_auth.py
++++ b/tests/test_auth.py
+@@ -15,3 +15,10 @@ class TestAuth:
+     def test_login(self):
+         assert login("user", "pass") is True
++
++    def test_rate_limit(self):
++        middleware = AuthMiddleware(mock_app)
++        for _ in range(100):
++            middleware.check_rate_limit(mock_request)
++        result = middleware.check_rate_limit(mock_request)
++        assert result is False
