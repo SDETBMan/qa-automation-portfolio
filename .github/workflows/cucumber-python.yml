@@ -183,7 +183,7 @@ jobs:
       # ── Notifications ────────────────────────────────────────────────────
       - name: Send Email Notification on Failure
         if: failure()
-        uses: dawidd6/action-send-mail@v18
+        uses: dawidd6/action-send-mail@v21
         with:
           server_address: smtp.gmail.com
           server_port: 465
